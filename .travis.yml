@@ -3,16 +3,13 @@
 
 dist: trusty
 language: rust
-services: docker
+rust: 
+  - nightly
 sudo: required
 
 # TODO Rust builds on stable by default, this can be
 # overridden on a case by case basis down below.
 
-env:
-  global:
-    # TODO Update this to match the name of your project.
-    - CRATE_NAME=eink-waveshare-rs
 
 matrix:
   # TODO These are all the build jobs. Adjust as necessary. Comment out what you
@@ -39,8 +36,10 @@ matrix:
 
     # Linux
     #- env: TARGET=aarch64-unknown-linux-gnu
-    - env: TARGET=arm-unknown-linux-gnueabi
-    - env: TARGET=armv7-unknown-linux-gnueabihf
+    # Raspberry Pi
+    - env: TARGET=arm-unknown-linux-gnueabi DISABLE_EXAMPLES=1
+    # Raspberry Pi 3...
+    - env: TARGET=armv7-unknown-linux-gnueabihf DISABLE_EXAMPLES=1
     #- env: TARGET=i686-unknown-linux-gnu
     #- env: TARGET=i686-unknown-linux-musl
     #- env: TARGET=mips-unknown-linux-gnu
@@ -71,10 +70,10 @@ matrix:
     # Bare metal
     # These targets don't support std and as such are likely not suitable for
     # most crates.
-     - env: TARGET=thumbv6m-none-eabi
-     - env: TARGET=thumbv7em-none-eabi
-     - env: TARGET=thumbv7em-none-eabihf
-     - env: TARGET=thumbv7m-none-eabi
+    - env: TARGET=thumbv6m-none-eabi
+    - env: TARGET=thumbv7em-none-eabi
+    - env: TARGET=thumbv7em-none-eabihf
+    - env: TARGET=thumbv7m-none-eabi
 
     # Testing other channels
     #- env: TARGET=x86_64-unknown-linux-gnu
@@ -87,14 +86,22 @@ before_install:
   - set -e
   - rustup self update
 
+
 install:
-  - sh ci/install.sh
-  - source ~/.cargo/env || true
+  - cargo install cargo-travis || true
+  - rustup override set nightly
 
 script:
-  - bash ci/script.sh
+  - cargo build
+  - cargo build --release
+  - cargo test
+  - cargo test --release
+  - cargo doc --release
 
-after_script: set +e
+after_success:
+  - cargo doc-upload
+
+
 
 cache: cargo
 before_cache:
