@@ -44,6 +44,8 @@
 //! 
 //! 
 //!
+//! BE CAREFUL! The Partial Drawing can "destroy" your display.
+//! It needs more testing first.
 
 
 use hal::{
@@ -531,8 +533,8 @@ where
     }
 
 
-    // Abstraction of setting the delay for simpler calls
-    fn delay_ms(&mut self, delay: u16) {
+    /// Abstraction of setting the delay for simpler calls 
+    pub fn delay_ms(&mut self, delay: u16) {
         self.delay.delay_ms(delay);
     }
 }
