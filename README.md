@@ -11,6 +11,7 @@ It was only tested in a mBED implementation, this one wasn't tested yet!!!
 - [ ] test f3 example
 - [ ] improve the partial drawing/check the timings/timing improvements/....
 - [ ] for later: add support or the smaller waveshare epds
+- [ ] License: Stay with ISC (=MIT) or go to Apache+MIT Dual Version as used in many other projects
 
 
 ## Drawing
