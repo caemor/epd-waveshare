@@ -1,0 +1,24 @@
+[package]
+name = "f3_stm32f30x"
+version = "0.1.0"
+authors = ["Christoph Groß <christoph.gross@student.uni-tuebingen.de>"]
+
+[dependencies]
+f3 = "0.5.3"
+cortex-m = {version = "0.4.3"}
+
+eink_waveshare_rs = { git = "https://github.com/Caemor/eink-waveshare-rs"}
+
+# only temporary until Digital::InputPin has arrived in f3
+embedded-hal = { version = "0.1.2", features = ["unproven"] }
+
+# for #no_std
+panic-abort = "0.1.1"
+
+# for handling 'language item required, but not found: 'eh_personality' in #no_std
+# see https://os.phil-opp.com/freestanding-rust-binary/ for more infos
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

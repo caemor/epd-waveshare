@@ -1,0 +1,12 @@
+[package]
+name = "embedded_linux"
+version = "0.1.0"
+authors = ["Christoph Groß <christoph.gross@student.uni-tuebingen.de>"]
+
+[dependencies]
+
+eink_waveshare_rs = { git = "https://github.com/Caemor/eink-waveshare-rs"}
+
+linux-embedded-hal = "0.1.1"
+
+embedded-hal = { version = "0.1.2", features = ["unproven"] }
