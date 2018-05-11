@@ -26,7 +26,7 @@
 //!
 //! # Examples
 //!
-//! ```
+//! ```ignore
 //! let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay).unwrap();
 //!
 //! let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
@@ -128,7 +128,7 @@ where
     /// 
     /// # Example
     /// 
-    /// ```
+    /// ```ignore
     /// //buffer = some image data;
     /// 
     /// let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay);
@@ -137,7 +137,6 @@ where
     /// 
     /// epd4in2.sleep();
     /// ```
-    /// testlajfafe
     pub fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Result<Self, E> {
         //TODO: width und height anpassbar machen?
         let width = 400;

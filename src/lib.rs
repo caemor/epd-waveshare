@@ -26,7 +26,7 @@
 //!
 //! # Examples
 //!
-//! ```
+//! ```ignore
 //! use eink-waveshare-rs::epd4in2::EPD4in2;
 //! 
 //! let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay).unwrap();
