@@ -45,7 +45,6 @@
 //! ```
 //! 
 //! 
-//! 
 //! BE CAREFUL! The Partial Drawing can "destroy" your display.
 //! It needs more testing first.
 #![no_std]
