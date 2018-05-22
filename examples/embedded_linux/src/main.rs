@@ -17,28 +17,31 @@ use lin_hal::Delay;
 
 // DigitalIn Hack as long as it's not in the linux_embedded_hal
 // from https://github.com/rudihorn/max31865/blob/extra_examples/examples/rpi.rs
+// (slightly changed now as OutputPin doesn't provide is_high and is_low anymore)
 extern crate embedded_hal;
-use embedded_hal::digital::{InputPin, OutputPin};
+use embedded_hal::digital::{InputPin};
 
 struct HackInputPin<'a> {
-    pin: &'a OutputPin
+    pin: &'a Pin
 }
 
 impl<'a> HackInputPin<'a> {
-    fn new(p : &'a OutputPin) -> HackInputPin {
+    fn new(p : &'a Pin) -> HackInputPin {
         HackInputPin {
             pin: p
         }
     }
 }
 
+//TODO: make it safer?? or handle the errors better?
+// now it defaults to is_low if an error appears
 impl<'a> InputPin for HackInputPin<'a> {
     fn is_low(&self) -> bool {
-        self.pin.is_low()
+        self.pin.get_value().unwrap_or(0) == 0
     }
 
     fn is_high(&self) -> bool {
-        self.pin.is_high()
+        self.pin.get_value().unwrap_or(0) == 1
     }
 }
 

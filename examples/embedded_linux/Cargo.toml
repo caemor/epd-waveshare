@@ -5,8 +5,9 @@ authors = ["Christoph Groß <christoph.gross@student.uni-tuebingen.de>"]
 
 [dependencies]
 
-eink_waveshare_rs = { git = "https://github.com/Caemor/eink-waveshare-rs"}
+#eink_waveshare_rs = { git = "https://github.com/Caemor/eink-waveshare-rs"}
+eink_waveshare_rs = { path = "../../"}
 
-linux-embedded-hal = "0.1.1"
+linux-embedded-hal = "0.2.0"
 
-embedded-hal = { version = "0.1.2", features = ["unproven"] }
+embedded-hal = { version = "0.2.1", features = ["unproven"] }

@@ -26,11 +26,11 @@ use hal::digital::{InputPin, OutputPin};
 
 //from https://github.com/rudihorn/max31865/tree/extra_examples/examples
 struct HackInputPin<'a> {
-    pin: &'a OutputPin
+    pin: &'a Pin
 }
 
 impl<'a> HackInputPin<'a> {
-    fn new(p : &'a OutputPin) -> HackInputPin {
+    fn new(p : &'a Pin) -> HackInputPin {
         HackInputPin {
             pin: p
         }
@@ -75,7 +75,7 @@ fn main() {
     //TODO: Fix when f3::hal includes Digital::InputPin
     //using the hack from rudihorn that Digital::OutputPin basically
     //contains the needed functions for Digital::InputPin
-    let busy = gpioe.pe4.into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
+    let busy = gpioe.pe4.into_floating_input(&mut gpioe.moder, &mut gpioe.pupdr);
     let busy_in = HackInputPin::new(&busy);
 
     let dc = gpioe.pe5.into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
