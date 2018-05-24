@@ -100,11 +100,11 @@ script:
   - cargo test
   - cargo test --release
   - cargo doc --release
-  - cd examples/embedded_linux && cargo build 
+  - cd examples/embedded_linux && cargo build && ../../
   #- cd ../f3_stm32f30x && cargo build
 
 after_success:
-  - cargo doc-upload
+  #- cargo doc-upload
 
 
 
