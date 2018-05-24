@@ -56,6 +56,7 @@ use hal::{
     spi::{Mode, Phase, Polarity},
 };
 
+pub mod drawing;
 pub mod epd4in2;
 use epd4in2::*;
 
