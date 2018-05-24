@@ -82,7 +82,7 @@ matrix:
     #  os: osx
     #  rust: nightly
 
-    - env: TEST_DIR=examples/embedded_linux
+    #- env: TEST_DIR=examples/embedded_linux
     #- env: TEST_DIR=examples/f3_stm32f30x
 
 before_install:
@@ -100,7 +100,7 @@ script:
   - cargo test
   - cargo test --release
   - cargo doc --release
-  - cd $TEST_DIR && cargo build
+  - cd examples/embedded_linux && cargo build && cd ../f3_stm32f30x && cargo build
 
 after_success:
   - cargo doc-upload
