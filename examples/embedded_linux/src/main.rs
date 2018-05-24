@@ -64,26 +64,26 @@ fn main() {
     spi.configure(&options).unwrap();
 
     // Configure Digital I/O Pin to be used as Chip Select for SPI
-    let cs = Pin::new(23);
+    let cs = Pin::new(7);//BCM7 CE0
     cs.export().unwrap();
     while !cs.is_exported() {}
     cs.set_direction(Direction::Out).unwrap();
     cs.set_value(1).unwrap();
 
-    let busy = Pin::new(26);
+    let busy = Pin::new(5);//pin 29
     busy.export().unwrap();
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).unwrap();
     busy.set_value(1).unwrap();
     let busy_in = HackInputPin::new(&busy);
 
-    let dc = Pin::new(27);
+    let dc = Pin::new(6); //pin 31 //bcm6
     dc.export().unwrap();
     while !dc.is_exported() {}
     dc.set_direction(Direction::Out).unwrap();
     dc.set_value(1).unwrap();
 
-    let rst = Pin::new(28);
+    let rst = Pin::new(16); //pin 36 //bcm16
     rst.export().unwrap();
     while !rst.is_exported() {}
     rst.set_direction(Direction::Out).unwrap();

@@ -1,3 +1,4 @@
+#![feature(start)]
 #![deny(unsafe_code)]
 #![no_std]
  
@@ -26,11 +27,11 @@ use hal::digital::{InputPin, OutputPin};
 
 //from https://github.com/rudihorn/max31865/tree/extra_examples/examples
 struct HackInputPin<'a> {
-    pin: &'a Pin
+    pin: &'a OutputPin
 }
 
 impl<'a> HackInputPin<'a> {
-    fn new(p : &'a Pin) -> HackInputPin {
+    fn new(p : &'a OutputPin) -> HackInputPin {
         HackInputPin {
             pin: p
         }
@@ -53,6 +54,7 @@ impl<'a> InputPin for HackInputPin<'a> {
 *
 */
 
+#[start]
 fn main() {
     let cp = cortex_m::Peripherals::take().unwrap();
     let p = stm32f30x::Peripherals::take().unwrap();
@@ -75,7 +77,8 @@ fn main() {
     //TODO: Fix when f3::hal includes Digital::InputPin
     //using the hack from rudihorn that Digital::OutputPin basically
     //contains the needed functions for Digital::InputPin
-    let busy = gpioe.pe4.into_floating_input(&mut gpioe.moder, &mut gpioe.pupdr);
+    //let busy = gpioe.pe4.into_floating_input(&mut gpioe.moder, &mut gpioe.pupdr);
+    let busy = gpioe.pe4.into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
     let busy_in = HackInputPin::new(&busy);
 
     let dc = gpioe.pe5.into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);

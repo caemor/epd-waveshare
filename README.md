@@ -4,6 +4,8 @@ IN WORK! Drivers for various EPDs from Waveshare. Currently only support for the
 Be careful with the partial updates!
 It was only tested in a mBED implementation, this one wasn't tested yet!!!
 
+Due to a broken 
+
 ## TODO's
 
 - [ ] add some basic buffer drawing abilities
@@ -29,8 +31,7 @@ Maybe add support for Non-Buffer drawing from the https://crates.io/crates/embed
 
 There are some examples in the examples folder.
 
-But be careful, I haven't found the time to actually test the examples yet and the pins are just choosen randomly atm.
-So thats something that needs to be done first.
+The f3 example is broken/working on a old version
 
 
 ## Documenation
