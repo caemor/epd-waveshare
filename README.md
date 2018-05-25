@@ -1,3 +1,5 @@
+[![Build status](https://travis-ci.org/caemor/eink-waveshare-rs.svg?branch=master)](https://travis-ci.org/caemor/eink-waveshare-rs)
+
 # eink-waveshare-rs
 IN WORK! Drivers for various EPDs from Waveshare. Currently only support for the 4.2 Black/White one
 
@@ -10,10 +12,10 @@ Due to a broken
 
 - [ ] add some basic buffer drawing abilities
 - [ ] test Embedded Linux (rpi) example
-- [ ] test f3 example
+- [ ] add f3 example
 - [ ] improve the partial drawing/check the timings/timing improvements/....
-- [ ] for later: add support or the smaller waveshare epds
-- [ ] License: Stay with ISC (=MIT) or go to Apache+MIT Dual Version as used in many other projects
+- [ ] for later: add support for the smaller waveshare epds
+- [ ] License: Stay with ISC (=MIT) or go to Apache+MIT Dual Version as used in many other projects?
 
 
 ## Drawing
@@ -33,5 +35,3 @@ There are some examples in the examples folder.
 
 The f3 example is broken/working on a old version
 
-
-## Documenation
