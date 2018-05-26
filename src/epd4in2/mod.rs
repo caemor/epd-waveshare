@@ -275,7 +275,10 @@ where
         self.delay_ms(2);
 
         self.send_command(Command::DATA_START_TRANSMISSION_2)?;
-        self.send_multiple_data(buffer)?;
+        //self.send_multiple_data(buffer)?;
+        for &elem in buffer.iter() {
+            self.send_data(elem)?;
+        }
         self.delay_ms(2);
 
         self.set_lut()?;
