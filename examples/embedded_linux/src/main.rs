@@ -55,23 +55,23 @@ impl<'a> InputPin for HackInputPin<'a> {
 fn main() {
 
     // Configure SPI
-    let mut spi = Spidev::open("/dev/spidev0.0").unwrap();
+    let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
     let options = SpidevOptions::new()
         .bits_per_word(8)
         .max_speed_hz(1_000_000)
         .mode(spidev::SPI_MODE_0)
         .build();
-    spi.configure(&options).unwrap();
+    spi.configure(&options).expect("spi configuration");
 
     // Configure Digital I/O Pin to be used as Chip Select for SPI
     let cs = Pin::new(7);//BCM7 CE0
-    cs.export().unwrap();
+    cs.export().expect("cs export");
     while !cs.is_exported() {}
-    cs.set_direction(Direction::Out).unwrap();
-    cs.set_value(1).unwrap();
+    cs.set_direction(Direction::Out).expect("CS Direction");
+    cs.set_value(1).expect("CS Value set to 1");
 
     let busy = Pin::new(5);//pin 29
-    busy.export().unwrap();
+    busy.export().expect("busy export");
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).unwrap();
     busy.set_value(1).unwrap();
