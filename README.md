@@ -10,7 +10,7 @@ Due to a broken
 
 ## TODO's
 
-- [ ] add some basic buffer drawing abilities
+
 - [ ] test Embedded Linux (rpi) example
 - [ ] add f3 example
 - [ ] improve the partial drawing/check the timings/timing improvements/....
@@ -18,11 +18,14 @@ Due to a broken
 - [ ] License: Stay with ISC (=MIT) or go to Apache+MIT Dual Version as used in many other projects?
 
 
-## Drawing
+## TODO: Drawing
+
+Limited by a i16::Max buffer_size at the moment, because thats already 32kB that should be okay for most embedded systems
 
 ### With a Buffer
 
-Is still missing at the moment. 
+- Chars, Strings and filled circles are still missing
+- maybe work with traits here for line_drawing and so on?
 
 ### Without a Buffer
 

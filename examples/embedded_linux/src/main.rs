@@ -93,7 +93,8 @@ fn main() {
 
     let delay = Delay {};
 
-
+    let white = Color::White;
+    let black = Color::Black;
  
     
 
@@ -103,15 +104,22 @@ fn main() {
 
     //let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
     let mut buffer = [0u8; 15000];
-    // draw something into the buffer
-    buffer[0] = 0xFF;
 
+    // draw something
     let graphics = Graphics::new(400, 300);
-    graphics.draw_line(&mut buffer, 0,0,400,300, &Color::Black); //(&self, buffer: &mut[u8], x0: u16, y0: u16, x1: u16, y1: u16, color: &Color)
- 
-    graphics.draw_line(&mut buffer, 100,100,200,100, &Color::White);
-    //graphics.draw_line(&mut buffer, 0,0,400,300, &Color::Black);
-    graphics.draw_filled_rectangle(&mut buffer, 200,200, 230, 230, &Color::Black);
+    graphics.clear(&mut buffer, &white);
+    graphics.draw_line(&mut buffer, 0,0,400,300, &Color::Black); 
+
+    graphics.draw_filled_rectangle(&mut buffer, 200,200, 230, 230, &Color::Black); 
+    graphics.draw_line(&mut buffer, 200,200,200,230, &Color::White);
+
+    graphics.draw_circle(&mut buffer, 200, 150, 130, &Color::Black);
+
+    graphics.draw_pixel(&mut buffer, 390, 290, &Color::Black);
+
+    graphics.draw_horizontal_line(&mut buffer, 0, 150, 400, &Color::Black);
+
+    graphics.draw_vertical_line(&mut buffer, 200, 50, 200, &Color::Black);
 
     epd4in2.display_and_transfer_frame(&buffer, None).expect("display and transfer error");
  

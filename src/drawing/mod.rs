@@ -55,20 +55,22 @@ pub enum Color {
 }
 
 impl Color {
-    fn get_color_value(&self) -> u8 {
+    fn get_bit_value(&self) -> u8 {
         match self {
-            Color::White => 0u8,
-            Color::Black => 1u8,            
+            Color::White => 1u8,
+            Color::Black => 0u8,            
         }
     }
 
-    fn get_full_byte_color(&self) -> u8 {
+    fn get_full_byte(&self) -> u8 {
         match self {
-            Color::White => 0u8,
-            Color::Black => 0xff,
+            Color::White => 0xff,
+            Color::Black => 0x00,
         }
     } 
 }
+
+
 
 
 
@@ -78,40 +80,46 @@ impl Graphics {
         Graphics {width, height, rotation: Displayorientation::Rotate0}
     }
 
-    pub fn clear(&mut self, buffer: &mut[u8], color: &Color) {
+    /// Clears/Fills the full buffer with `color`
+    pub fn clear(&self, buffer: &mut[u8], color: &Color) {
         for elem in buffer.iter_mut() {
-            *elem = color.get_full_byte_color();
+            *elem = color.get_full_byte();
         }
     }
 
+    /// Draw a single Pixel with `color`
+    /// 
+    /// limited to i16::max images (buffer_size) at the moment
     pub fn draw_pixel(&self, buffer: &mut[u8], x: u16, y: u16, color: &Color) {
         let (idx, bit) = match self.rotation {
             Displayorientation::Rotate0 | Displayorientation::Rotate180 
-                => ((x / 8 + (self.width / 8) * y) ,
+                => ((x as usize / 8 + (self.width as usize / 8) * y as usize) ,
                     0x80 >> (x % 8)),
             Displayorientation::Rotate90 | Displayorientation::Rotate270
-                => (y / 8 * self.width + x,
+                => (y as usize / 8 * self.width as usize + x as usize,
                     0x80 >> (y % 8)),
         };
 
-        if idx >= buffer.len() as u16 {
+        if idx >= buffer.len() {
             return;
         }
 
         match color {
-            Color::White => {
-                buffer[idx as usize] &= !bit; 
-            },
             Color::Black => {
-                buffer[idx as usize] |= bit;
+                buffer[idx] &= !bit; 
+            },
+            Color::White => {
+                buffer[idx] |= bit;
             }
         }
     }
 
+    ///TODO: implement!
     pub fn draw_char(&self, buffer: &mut[u8]) {
         unimplemented!(); 
     }
 
+    ///TODO: implement!
     pub fn draw_string(&self, buffer: &mut[u8]) {
         unimplemented!(); 
     }
@@ -167,6 +175,7 @@ impl Graphics {
         }
     }
 
+    /// Draw a horizontal line 
     /// TODO: maybe optimize by grouping up the bytes? But is it worth the longer and more complicated function? is it even faster?
     pub fn draw_horizontal_line(&self, buffer: &mut[u8], x: u16, y: u16, length: u16, color: &Color) {
         for i in 0..length {
@@ -174,13 +183,14 @@ impl Graphics {
         }
     }
 
-    ///
+    /// Draws a vertical line
     pub fn draw_vertical_line(&self, buffer: &mut[u8], x: u16, y: u16, length: u16, color: &Color) {
         for i in 0..length {
             self.draw_pixel(buffer, x, y + i, color);
         }
     }
 
+    /// Draws a rectangle. (x0,y0) is top left corner, (x1,y1) bottom right
     pub fn draw_rectangle(&self, buffer: &mut[u8], x0: u16, y0: u16, x1: u16, y1: u16, color: &Color) {
         let (min_x, max_x) = if x0 <= x1 { (x0, x1) } else { (x1, x0) };
         let (min_y, max_y) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
@@ -192,6 +202,7 @@ impl Graphics {
         self.draw_vertical_line(buffer, max_x, min_y, y_len, color);
     }
 
+    /// Draws a filled rectangle. For more info see draw_rectangle
     pub fn draw_filled_rectangle(&self, buffer: &mut[u8], x0: u16, y0: u16, x1: u16, y1: u16, color: &Color) {
         let (min_x, max_x) = if x0 <= x1 { (x0, x1) } else { (x1, x0) };
         let (min_y, max_y) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
@@ -209,6 +220,7 @@ impl Graphics {
     }
 
     //TODO: test if circle looks good
+    /// Draws a circle
     pub fn draw_circle(&self, buffer: &mut[u8], x: u16, y: u16, radius: u16, color: &Color) {
         let radius = radius as i16;
         let x_mid = x as i16;
@@ -259,15 +271,12 @@ impl Graphics {
 // }
 //     }
 
+    ///TODO: implement!
     pub fn draw_filled_circle(&self, buffer: &mut[u8]) {
         unimplemented!(); 
     }
 
-    pub fn send_multiple_data(&mut self, data: &mut[u8]) {
-        data[0] = 1;
-        let i = data.len() as u8;
-        data[1] = i;
-    }
+    
 }
 
 
@@ -278,15 +287,15 @@ mod graphics {
 
     #[test]
     fn test_filled_rectangle() {
-        let mut buffer = [0u8; 150];
+        let mut buffer = [Color::White.get_full_byte(); 150];
         let graphics = Graphics::new(40, 30);
         graphics.draw_filled_rectangle(&mut buffer, 0, 0, 40, 30, &Color::Black);
         
-        assert_eq!(buffer[0], 0xff);
+        assert_eq!(buffer[0], Color::Black.get_full_byte());
 
         for &elem in buffer.iter() {
             
-            assert_eq!(elem, 0xffu8);
+            assert_eq!(elem, Color::Black.get_full_byte());
         }
 
         
@@ -295,20 +304,20 @@ mod graphics {
     /// draw a 4x4 in the top left corner
     #[test]
     fn test_filled_rectangle2() {
-        let mut buffer = [0u8; 8];
+        let mut buffer = [Color::White.get_full_byte(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_filled_rectangle(&mut buffer, 0, 0, 4, 4, &Color::Black);
         
-        assert_eq!(buffer[0], 0xf0);
+        assert_eq!(buffer[0], 0x0f);
 
         let mut counter = 0;
         for &elem in buffer.iter() {
             counter += 1;           
 
             if counter <= 4 {
-                assert_eq!(elem, 0xf0);
+                assert_eq!(elem, 0x0f);
             } else {
-                assert_eq!(elem, 0x00);
+                assert_eq!(elem, Color::White.get_full_byte());
             }
         }
 
@@ -317,42 +326,42 @@ mod graphics {
 
     #[test]
     fn test_horizontal_line() {
-        let mut buffer = [0u8; 4];
+        let mut buffer = [Color::White.get_full_byte(); 4];
         let graphics = Graphics::new(16, 2);
         graphics.draw_horizontal_line(&mut buffer, 1, 0, 14, &Color::Black);
         
-        assert_eq!(buffer[0], 0x7f);
-        assert_eq!(buffer[1], 0xfe);
-        assert_eq!(buffer[2], 0x00);
-        assert_eq!(buffer[3], 0x00);
+        assert_eq!(buffer[0], 0x80);
+        assert_eq!(buffer[1], 0x01);
+        assert_eq!(buffer[2], Color::White.get_full_byte());
+        assert_eq!(buffer[3], Color::White.get_full_byte());
     }
 
     #[test]
     fn test_vertical_line() {
-        let mut buffer = [0u8; 8];
+        let mut buffer = [Color::White.get_full_byte(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_vertical_line(&mut buffer, 0, 0, 8, &Color::Black);
 
         graphics.draw_vertical_line(&mut buffer, 5, 0, 8, &Color::Black);
         
         
-        assert_eq!(buffer[0], 0x84);
+        assert_eq!(buffer[0], 0x7b);
 
         for &elem in buffer.iter() {
             
-            assert_eq!(elem, 0x84u8);
+            assert_eq!(elem, 0x7bu8);
         }
     }
 
     //test draw_line for compatibility with draw_vertical_line
     #[test]
     fn draw_line_1() {
-        let mut buffer = [0u8; 8];
+        let mut buffer = [Color::White.get_full_byte(); 8];
         let graphics = Graphics::new(8, 8);
 
         graphics.draw_vertical_line(&mut buffer, 5, 0, 8, &Color::Black);
 
-        let mut buffer2 = [0u8; 8];
+        let mut buffer2 = [Color::White.get_full_byte(); 8];
         let graphics2 = Graphics::new(8, 8);
 
         graphics2.draw_line(&mut buffer2, 5, 0, 5, 8, &Color::Black);       
@@ -365,11 +374,11 @@ mod graphics {
     //test draw_line for compatibility with draw_horizontal_line
     #[test]
     fn draw_line_2() {
-        let mut buffer = [0u8; 4];
+        let mut buffer = [Color::White.get_full_byte(); 4];
         let graphics = Graphics::new(16, 2);
         graphics.draw_horizontal_line(&mut buffer, 1, 0, 14, &Color::Black);
 
-        let mut buffer2 = [0u8; 4];
+        let mut buffer2 = [Color::White.get_full_byte(); 4];
         let graphics2 = Graphics::new(16, 2);
         graphics2.draw_line(&mut buffer2, 1, 0, 14, 0, &Color::Black);       
 
@@ -381,13 +390,13 @@ mod graphics {
     //test draw_line for diago
     #[test]
     fn draw_line_3() {
-        let mut buffer = [0u8; 8];
+        let mut buffer = [Color::White.get_full_byte(); 8];
         let graphics = Graphics::new(8, 8);
 
         graphics.draw_line(&mut buffer, 0, 0, 16, 16, &Color::Black);       
 
         for i in 0..buffer.len() {            
-            assert_eq!(buffer[i], 0x80 >> i % 8);
+            assert_eq!(buffer[i], !(0x80 >> i % 8));
         }
     }
 
@@ -395,18 +404,18 @@ mod graphics {
 
     #[test]
     fn test_pixel() {
-        let mut buffer = [0u8; 8];
+        let mut buffer = [Color::White.get_full_byte(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_pixel(&mut buffer, 1, 0, &Color::Black);
 
-        assert_eq!(buffer[0], 0x40);
+        assert_eq!(buffer[0], !0x40);
 
 
-        let mut buffer = [0u8; 16];
+        let mut buffer = [Color::White.get_full_byte(); 16];
         let graphics = Graphics::new(16, 8);
         graphics.draw_pixel(&mut buffer, 9, 0, &Color::Black);
-        assert_eq!(buffer[0], 0x00);
-        assert_eq!(buffer[1], 0x40);
+        assert_eq!(buffer[0], Color::White.get_full_byte());
+        assert_eq!(buffer[1], !0x40);
         
         for &elem in buffer.iter() {
             
