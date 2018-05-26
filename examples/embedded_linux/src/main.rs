@@ -74,7 +74,7 @@ fn main() {
     busy.export().expect("busy export");
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
-    busy.set_value(1).expect("busy Value set to 1");
+    //busy.set_value(1).expect("busy Value set to 1");
     let busy_in = HackInputPin::new(&busy);
 
     let dc = Pin::new(6); //pin 31 //bcm6
