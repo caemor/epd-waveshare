@@ -64,7 +64,7 @@ fn main() {
     spi.configure(&options).expect("spi configuration");
 
     // Configure Digital I/O Pin to be used as Chip Select for SPI
-    let cs = Pin::new(7);//BCM7 CE0
+    let cs = Pin::new(26);//BCM7 CE0
     cs.export().expect("cs export");
     while !cs.is_exported() {}
     cs.set_direction(Direction::Out).expect("CS Direction");
