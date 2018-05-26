@@ -13,6 +13,8 @@ use lin_hal::sysfs_gpio::Direction;
 use lin_hal::Delay;
 
 // activate spi, gpio in raspi-config
+// needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
+// see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
 
 // DigitalIn Hack as long as it's not in the linux_embedded_hal

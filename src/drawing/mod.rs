@@ -87,7 +87,7 @@ impl Graphics {
     pub fn draw_pixel(&self, buffer: &mut[u8], x: u16, y: u16, color: &Color) {
         let (idx, bit) = match self.rotation {
             Displayorientation::Rotate0 | Displayorientation::Rotate180 
-                => ((x + self.width * y) / 8,
+                => ((x / 8 + (self.width / 8) * y) ,
                     0x80 >> (x % 8)),
             Displayorientation::Rotate90 | Displayorientation::Rotate270
                 => (y / 8 * self.width + x,
