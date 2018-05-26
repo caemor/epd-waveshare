@@ -5,7 +5,7 @@ extern crate linux_embedded_hal as lin_hal;
 extern crate eink_waveshare_rs;
 
 
-use eink_waveshare_rs::{epd4in2::EPD4in2};
+use eink_waveshare_rs::{epd4in2::EPD4in2, drawing::{Graphics, Color}};
 
 use lin_hal::spidev::{self, SpidevOptions};
 use lin_hal::{Pin, Spidev};
@@ -103,7 +103,14 @@ fn main() {
     let mut buffer = [0u8; 15000];
     // draw something into the buffer
     buffer[0] = 0xFF;
+
+    let graphics = Graphics::new(400, 300);
+    graphics.draw_line(&mut buffer, 0,0,400,300, &Color::Black); //(&self, buffer: &mut[u8], x0: u16, y0: u16, x1: u16, y1: u16, color: &Color)
  
+    graphics.draw_line(&mut buffer, 100,100,200,100, &Color::White);
+    //graphics.draw_line(&mut buffer, 0,0,400,300, &Color::Black);
+    graphics.draw_filled_rectangle(&mut buffer, 200,200, 230, 230, &Color::Black);
+
     epd4in2.display_and_transfer_frame(&buffer, None).expect("display and transfer error");
  
     epd4in2.delay_ms(3000);

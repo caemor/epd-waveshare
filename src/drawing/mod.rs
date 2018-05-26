@@ -131,6 +131,7 @@ impl Graphics {
 //    }
 // }
     //bresenham algorithm for lines
+    /// draw line 
     pub fn draw_line(&self, buffer: &mut[u8], x0: u16, y0: u16, x1: u16, y1: u16, color: &Color) {
         let mut x0 = x0 as i16;
         let x1 = x1 as i16;
