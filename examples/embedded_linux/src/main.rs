@@ -12,7 +12,7 @@ use lin_hal::{Pin, Spidev};
 use lin_hal::sysfs_gpio::Direction;
 use lin_hal::Delay;
 
-
+// activate spi, gpio in raspi-config
 
 
 // DigitalIn Hack as long as it's not in the linux_embedded_hal
@@ -73,21 +73,21 @@ fn main() {
     let busy = Pin::new(5);//pin 29
     busy.export().expect("busy export");
     while !busy.is_exported() {}
-    busy.set_direction(Direction::In).unwrap();
-    busy.set_value(1).unwrap();
+    busy.set_direction(Direction::In).expect("busy Direction");
+    busy.set_value(1).expect("busy Value set to 1");
     let busy_in = HackInputPin::new(&busy);
 
     let dc = Pin::new(6); //pin 31 //bcm6
-    dc.export().unwrap();
+    dc.export().expect("dc export");
     while !dc.is_exported() {}
-    dc.set_direction(Direction::Out).unwrap();
-    dc.set_value(1).unwrap();
+    dc.set_direction(Direction::Out).expect("dc Direction");
+    dc.set_value(1).expect("dc Value set to 1");
 
     let rst = Pin::new(16); //pin 36 //bcm16
-    rst.export().unwrap();
+    rst.export().expect("rst export");
     while !rst.is_exported() {}
-    rst.set_direction(Direction::Out).unwrap();
-    rst.set_value(1).unwrap();   
+    rst.set_direction(Direction::Out).expect("rst Direction");
+    rst.set_value(1).expect("rst Value set to 1");   
 
     let delay = Delay {};
 
@@ -97,7 +97,7 @@ fn main() {
 
     //TODO: wait for Digital::InputPin
     //fixed currently with the HackInputPin, see further above
-    let mut epd4in2 = EPD4in2::new(spi, cs, busy_in, dc, rst, delay).unwrap();
+    let mut epd4in2 = EPD4in2::new(spi, cs, busy_in, dc, rst, delay).expect("eink inialize error");
 
     //let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
     let mut buffer = [0u8; 15000];
