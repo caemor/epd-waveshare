@@ -104,11 +104,11 @@ fn main() {
     // draw something into the buffer
     buffer[0] = 0xFF;
  
-    epd4in2.display_and_transfer_frame(&buffer, None).unwrap();
+    epd4in2.display_and_transfer_frame(&buffer, None).expect("display and transfer error");
  
     epd4in2.delay_ms(3000);
 
-    epd4in2.clear_frame(None).unwrap();
+    epd4in2.clear_frame(None).expect("clear frame error");
 
-    epd4in2.sleep().unwrap();
+    epd4in2.sleep().expect("sleeping error");
 }
