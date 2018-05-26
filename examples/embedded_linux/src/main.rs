@@ -111,7 +111,7 @@ fn main() {
     graphics.draw_line(&mut buffer, 0,0,400,300, &Color::Black); 
 
     graphics.draw_filled_rectangle(&mut buffer, 200,200, 230, 230, &Color::Black); 
-    graphics.draw_line(&mut buffer, 200,200,200,230, &Color::White);
+    graphics.draw_line(&mut buffer, 202,202,218,228, &Color::White);
 
     graphics.draw_circle(&mut buffer, 200, 150, 130, &Color::Black);
 
@@ -124,6 +124,28 @@ fn main() {
     epd4in2.display_and_transfer_frame(&buffer, None).expect("display and transfer error");
  
     epd4in2.delay_ms(3000);
+
+    epd4in2.clear_frame(None).expect("clear frame error");
+
+    let mut small_buffer = [0xff; 128];
+    let circle_graphics = Graphics::new(32,32);
+    graphics.draw_circle(&mut small_buffer, 16,16, 10, &Color::Black);
+
+    epd4in2.set_partial_window(&small_buffer, 16,16, 32,32, 2, false);
+    epd4in2.display_frame_quick();
+
+    epd4in2.set_partial_window(&small_buffer, 128,64, 32,32, 2, false);
+    epd4in2.display_frame_quick();
+
+    epd4in2.set_partial_window(&small_buffer, 320,24, 32,32, 2, false);
+    epd4in2.display_frame_quick();
+
+    epd4in2.set_partial_window(&small_buffer, 160,240, 32,32, 2, false);
+    epd4in2.display_frame_quick();
+
+    epd4in2.delay_ms(3000);
+
+    
 
     epd4in2.clear_frame(None).expect("clear frame error");
 

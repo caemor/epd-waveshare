@@ -211,6 +211,9 @@ where
     /// Transmit partial data to the SRAM of the EPD,
     /// the final parameter dtm chooses between the 2
     /// internal buffers 
+    /// 
+    /// Normally it should be dtm2, so use false
+    /// 
     /// BUFFER needs to be of size: w / 8 * l !
     pub fn set_partial_window(&mut self, buffer: &[u8], x: u16, y: u16, w: u16, l: u16, is_dtm1: bool) -> Result<(), E> {
         if buffer.len() as u16 != w / 8 * l {
