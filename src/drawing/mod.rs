@@ -151,9 +151,9 @@ impl Graphics {
 
     ///TODO: implement!
     /// no autobreak line yet
-    pub fn draw_string(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &[char], color: &Color) {
+    pub fn draw_string(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, color: &Color) {
         let mut counter = 0;
-        for &input_char in input.iter() {
+        for input_char in input.chars() {
             self.draw_char(buffer, x0 + counter, y0, input_char, color);
             counter += 1;
         }
