@@ -140,6 +140,7 @@ impl Graphics {
         }
     }
 
+    /// font map doesn't work as expected, so everything with chars and string is broken atm
     ///TODO: implement!
     pub fn draw_char(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, color: &Color) {
         let mut counter = 0;
