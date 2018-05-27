@@ -1,4 +1,5 @@
 
+mod font;
 
 
 #[derive(Clone, Copy)]
@@ -114,14 +115,48 @@ impl Graphics {
         }
     }
 
-    ///TODO: implement!
-    pub fn draw_char(&self, buffer: &mut[u8]) {
-        unimplemented!(); 
+    /// Draw a single Pixel with `color`
+    /// 
+    /// limited to i16::max images (buffer_size) at the moment
+    fn draw_byte(&self, buffer: &mut[u8], x: u16, y: u16, filling: u8, color: &Color) {
+        let idx = match self.rotation {
+            Displayorientation::Rotate0 | Displayorientation::Rotate180 
+                => x as usize / 8 + (self.width as usize / 8) * y as usize,
+            Displayorientation::Rotate90 | Displayorientation::Rotate270
+                => y as usize / 8 + (self.width as usize / 8) * x as usize,
+        };
+
+        if idx >= buffer.len() {
+            return;
+        }
+
+        match color {
+            Color::Black => {
+                buffer[idx] = !filling; 
+            },
+            Color::White => {
+                buffer[idx] = filling;
+            }
+        }
     }
 
     ///TODO: implement!
-    pub fn draw_string(&self, buffer: &mut[u8]) {
-        unimplemented!(); 
+    pub fn draw_char(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, color: &Color) {
+        let mut counter = 0;
+        for &elem in font::to_bitmap(input).iter() {
+            self.draw_byte(buffer, x0, y0 + counter * self.width, elem, color);
+            counter += 1;
+        }
+    }
+
+    ///TODO: implement!
+    /// no autobreak line yet
+    pub fn draw_string(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &[char], color: &Color) {
+        let mut counter = 0;
+        for &input_char in input.iter() {
+            self.draw_char(buffer, x0 + counter, y0, input_char, color);
+            counter += 1;
+        }
     }
 
 //     void plotLine(int x0, int y0, int x1, int y1)
