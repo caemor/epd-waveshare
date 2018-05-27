@@ -132,10 +132,10 @@ impl Graphics {
 
         match color {
             Color::Black => {
-                buffer[idx] = filling; 
+                buffer[idx] = !filling; 
             },
             Color::White => {
-                buffer[idx] = !filling;
+                buffer[idx] = filling;
             }
         }
     }
@@ -444,6 +444,28 @@ mod graphics {
         graphics.draw_pixel(&mut buffer, 1, 0, &Color::Black);
 
         assert_eq!(buffer[0], !0x40);
+
+
+        let mut buffer = [Color::White.get_full_byte(); 16];
+        let graphics = Graphics::new(16, 8);
+        graphics.draw_pixel(&mut buffer, 9, 0, &Color::Black);
+        assert_eq!(buffer[0], Color::White.get_full_byte());
+        assert_eq!(buffer[1], !0x40);
+        
+        for &elem in buffer.iter() {
+            
+            //assert_eq!(elem, 0x00u8);
+        }
+    }
+
+    #[test]
+    fn test_byte() {
+        let mut buffer = [Color::White.get_full_byte(); 8];
+        let graphics = Graphics::new(8, 8);
+        graphics.draw_byte(&mut buffer, 0, 0, 0xff, &Color::Black);
+
+        assert_eq!(buffer[0], Color::Black.get_full_byte());
+        assert_eq!(buffer[1], Color::White.get_full_byte());
 
 
         let mut buffer = [Color::White.get_full_byte(); 16];
