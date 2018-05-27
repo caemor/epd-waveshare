@@ -150,6 +150,8 @@ fn main() {
     epd4in2.delay_ms(3000);
     //pub fn draw_string(&self, buffer: &mut[u8], x0: u16, y0: u16, input: String, color: &Color) {
     graphics.draw_string(&mut buffer, 16, 16, &['h', 'e', 'l', 'l', 'o'], &Color::Black);
+    graphics.draw_char(&mut buffer, 250, 250, '#', &Color::Black);
+    graphics.draw_char(&mut buffer, 300, 16, '7', &Color::Black);
     epd4in2.display_and_transfer_frame(&buffer, None).expect("display and transfer error");
 
     epd4in2.delay_ms(3000);

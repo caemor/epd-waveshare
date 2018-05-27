@@ -132,10 +132,10 @@ impl Graphics {
 
         match color {
             Color::Black => {
-                buffer[idx] = !filling; 
+                buffer[idx] = filling; 
             },
             Color::White => {
-                buffer[idx] = filling;
+                buffer[idx] = !filling;
             }
         }
     }
