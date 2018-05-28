@@ -61,6 +61,8 @@ use hal::{
 mod lut;
 use self::lut::*;
 
+use drawing::Color;
+
 pub mod command;
 pub use command::Command as Command;
 
@@ -338,8 +340,8 @@ where
     /// 
     /// TODO: should that option be removed? E.g. the struct contains an additional default background value
     /// which is settable?
-    pub fn clear_frame(&mut self, reset_color: Option<u8>) -> Result<(), E> {
-        let reset_color: u8 = reset_color.unwrap_or(0xff);
+    pub fn clear_frame(&mut self, reset_color: Option<Color>) -> Result<(), E> {
+        let reset_color: Color = reset_color.unwrap_or(Color::White);
 
         self.send_resolution()?;
 
@@ -348,7 +350,7 @@ where
         self.send_command(Command::DATA_START_TRANSMISSION_1)?;
         self.delay_ms(2);
         for _ in 0..size {
-            self.send_data(reset_color)?;
+            self.send_data(reset_color.get_full_byte())?;
         }
 
         self.delay_ms(2);
@@ -356,7 +358,7 @@ where
         self.send_command(Command::DATA_START_TRANSMISSION_2)?;
         self.delay_ms(2);
         for _ in 0..size {
-            self.send_data(reset_color)?;
+            self.send_data(reset_color.get_full_byte())?;
         }
         Ok(())
     }
