@@ -110,7 +110,7 @@ impl Color {
 }
 
 
-
+#[allow(dead_code)]
 pub struct Graphics {
     width: u16,
     height: u16,
@@ -184,8 +184,10 @@ impl Graphics {
     }
 
     ///TODO: implement!
+    /// TODO: use Fonts
     pub fn draw_char(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, font: &Font, color: &Color) {
         let mut counter = 0;
+        let _a = font.get_char(input);
         for &elem in font::bitmap_8x8(input).iter() {
             self.draw_byte(buffer, x0, y0 + counter * self.width, elem, color);
             counter += 1;
@@ -202,7 +204,7 @@ impl Graphics {
         }
     }
 
-    ///TODO: implement!
+    ///TODO: test!
     pub fn draw_char_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, color: &Color) {
         let mut counter = 0;
         for &elem in font::bitmap_8x8(input).iter() {
@@ -213,7 +215,7 @@ impl Graphics {
         }
     }
 
-    ///TODO: implement!
+    ///TODO: test!
     /// no autobreak line yet
     pub fn draw_string_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, color: &Color) {
         let mut counter = 0;
