@@ -152,3 +152,18 @@ impl Command {
 	    self as u8
 	}
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn command_addr() {
+		assert_eq!(Command::POWER_SAVING.addr(), 0xE3);
+
+		assert_eq!(Command::PANEL_SETTING.addr(), 0x00);
+
+		assert_eq!(Command::DISPLAY_REFRESH.addr(), 0x12);        
+    }
+}
