@@ -101,7 +101,8 @@ mod tests {
 
 
 
-
+//bad font as the order is not the one we want to use
+//goes from bottom left -> up -> right
 pub(crate) fn bitmap_8x8(input: char) -> [u8; 8] {
     // Populate the array with the data from the character array at the right index
     match input {
