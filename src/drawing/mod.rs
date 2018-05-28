@@ -1,5 +1,6 @@
 
 mod font;
+use self::font::Font;
 
 
 #[derive(Clone, Copy)]
@@ -15,11 +16,11 @@ pub enum Displayorientation {
 }
 
 //WARNING: Adapt for bigger sized displays!
-pub struct DisplayDescription {
-    width: u16,
-    height: u16,
-    buffer_size: u16
-}
+// pub struct DisplayDescription {
+//     width: u16,
+//     height: u16,
+//     buffer_size: u16
+// }
 
 // impl Display_Description {
 //     pub fn new(width: u16, height: u16, buffer_size: u16) -> Display_Description {
@@ -43,12 +44,7 @@ impl Display {
     }
 }
 
-pub struct Graphics {
-    width: u16,
-    height: u16,
-    rotation: Displayorientation,
-    //buffer: Box<u8>//[u8; 15000],   
-}
+
 
 pub enum Color {
     Black,
@@ -56,24 +52,71 @@ pub enum Color {
 }
 
 impl Color {
-    fn get_bit_value(&self) -> u8 {
+    pub(crate) fn _get_bit_value(&self) -> u8 {
         match self {
             Color::White => 1u8,
             Color::Black => 0u8,            
         }
     }
 
-    fn get_full_byte(&self) -> u8 {
+    pub(crate) fn get_full_byte(&self) -> u8 {
         match self {
             Color::White => 0xff,
             Color::Black => 0x00,
         }
-    } 
+    }
+
+    //position counted from the left (highest value) from 0 to 7
+    //remember: 1 is white, 0 is black
+    pub(crate) fn get_color(input: u8, pos: u8) -> Color {
+        match ((input >> (7 - pos)) & 1u8) > 0u8 {
+            true    => Color::White,
+            false   => Color::Black
+        }
+    }
+
+    fn inverse_color(color: &Color) -> Color {
+        match color {
+            Color::White => Color::Black,
+            Color::Black => Color::White,
+        }
+    }
+
+    fn normal_color(color: &Color) -> Color {
+        match color {
+            Color::White => Color::White,
+            Color::Black => Color::Black,
+        }
+    }
+
+    //position counted from the left (highest value) from 0 to 7
+    //remember: 1 is white, 0 is black
+    pub(crate) fn _is_drawable_pixel(input: u8, pos: u8) -> bool {
+        ((input >> (7 - pos)) & 1u8) > 0u8
+    }
+
+
+    pub(crate) fn convert_color(input: u8, pos: u8, foreground_color: &Color) -> Color {
+        //match color: 
+        //      - white for "nothing to draw"/background drawing
+        //      - black for pixel to draw
+        //
+        //foreground color is the color you want to have in the foreground
+        match Color::get_color(input, pos) {
+            Color::White => Color::normal_color(foreground_color),
+            Color::Black => Color::inverse_color(foreground_color)
+        }
+    }
 }
 
 
 
-
+pub struct Graphics {
+    width: u16,
+    height: u16,
+    rotation: Displayorientation,
+    //buffer: Box<u8>//[u8; 15000],   
+}
 
 impl Graphics {
     /// width needs to be a multiple of 8!
@@ -141,9 +184,9 @@ impl Graphics {
     }
 
     ///TODO: implement!
-    pub fn draw_char(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, color: &Color) {
+    pub fn draw_char(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, font: &Font, color: &Color) {
         let mut counter = 0;
-        for &elem in font::to_bitmap(input).iter() {
+        for &elem in font::bitmap_8x8(input).iter() {
             self.draw_byte(buffer, x0, y0 + counter * self.width, elem, color);
             counter += 1;
         }
@@ -151,10 +194,31 @@ impl Graphics {
 
     ///TODO: implement!
     /// no autobreak line yet
-    pub fn draw_string(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, color: &Color) {
+    pub fn draw_string(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, font: &Font, color: &Color) {
         let mut counter = 0;
         for input_char in input.chars() {
-            self.draw_char(buffer, x0 + counter, y0, input_char, color);
+            self.draw_char(buffer, x0 + counter, y0, input_char, font, color);
+            counter += font.get_char_width(input_char) as u16;
+        }
+    }
+
+    ///TODO: implement!
+    pub fn draw_char_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, color: &Color) {
+        let mut counter = 0;
+        for &elem in font::bitmap_8x8(input).iter() {
+            for i in 0..8u8 {
+                self.draw_pixel(buffer, x0 + counter, y0 + 7 - i as u16, &Color::convert_color(elem, i, color))
+            }
+            counter += 1;
+        }
+    }
+
+    ///TODO: implement!
+    /// no autobreak line yet
+    pub fn draw_string_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, color: &Color) {
+        let mut counter = 0;
+        for input_char in input.chars() {
+            self.draw_char_8x8(buffer, x0 + counter*8, y0, input_char, color);
             counter += 1;
         }
     }
@@ -307,7 +371,7 @@ impl Graphics {
 //     }
 
     ///TODO: implement!
-    pub fn draw_filled_circle(&self, buffer: &mut[u8]) {
+    pub fn draw_filled_circle(&self, _buffer: &mut[u8]) {
         unimplemented!(); 
     }
 
@@ -451,11 +515,6 @@ mod graphics {
         graphics.draw_pixel(&mut buffer, 9, 0, &Color::Black);
         assert_eq!(buffer[0], Color::White.get_full_byte());
         assert_eq!(buffer[1], !0x40);
-        
-        for &elem in buffer.iter() {
-            
-            //assert_eq!(elem, 0x00u8);
-        }
     }
 
     #[test]
@@ -465,30 +524,69 @@ mod graphics {
         graphics.draw_byte(&mut buffer, 0, 0, 0xff, &Color::Black);
 
         assert_eq!(buffer[0], Color::Black.get_full_byte());
-        assert_eq!(buffer[1], Color::White.get_full_byte());
 
+        for i in 1..buffer.len() {
+            assert_eq!(buffer[i], Color::White.get_full_byte());
+        } 
 
-        let mut buffer = [Color::White.get_full_byte(); 16];
-        let graphics = Graphics::new(16, 8);
-        graphics.draw_pixel(&mut buffer, 9, 0, &Color::Black);
-        assert_eq!(buffer[0], Color::White.get_full_byte());
-        assert_eq!(buffer[1], !0x40);
-        
-        for &elem in buffer.iter() {
-            
-            //assert_eq!(elem, 0x00u8);
-        }
+        graphics.draw_byte(&mut buffer, 0, 0, 0x5A, &Color::Black)  ;
+        assert_eq!(buffer[0], !0x5A);
     }
 
-    // #[test]
-    // #[should_panic]
-    // fn test_any_panic() {
-    //     divide_non_zero_result(1, 0);
-    // }
+    #[test]
+    fn test_char_with_8x8_font() {
 
-    // #[test]
-    // #[should_panic(expected = "Divide result is zero")]
-    // fn test_specific_panic() {
-    //     divide_non_zero_result(1, 10);
-    // }
+        // Test !
+        let mut buffer = [Color::White.get_full_byte(); 8];
+        let graphics = Graphics::new(8, 8);
+        graphics.draw_char_8x8(&mut buffer, 0, 0, '!', &Color::Black);
+
+        for i in 0..5 {
+            assert_eq!(buffer[i], !0x20);
+        }
+        assert_eq!(buffer[5], Color::White.get_full_byte());
+        assert_eq!(buffer[6], !0x20);
+        assert_eq!(buffer[7], Color::White.get_full_byte());  
+
+
+        // Test H
+        let mut buffer = [Color::White.get_full_byte(); 8];
+        let graphics = Graphics::new(8, 8);
+        graphics.draw_char_8x8(&mut buffer, 0, 0, 'H', &Color::Black);
+
+        for i in 0..3 {
+            assert_eq!(buffer[i], !0x88);
+        }
+        assert_eq!(buffer[3], !0xF8);        
+        for i in 4..7 {
+            assert_eq!(buffer[i], !0x88);
+        }
+        assert_eq!(buffer[7], Color::White.get_full_byte());  
+    }
+
+    #[test]
+    fn test_string_with_8x8_font() {
+
+        // Test !H
+        let mut buffer = [Color::White.get_full_byte(); 16];
+        let graphics = Graphics::new(16, 8);
+        graphics.draw_string_8x8(&mut buffer, 0, 0, "!H", &Color::Black);
+
+        for i in 0..5 {
+            assert_eq!(buffer[i*2], !0x20);
+        }
+        assert_eq!(buffer[5*2], Color::White.get_full_byte());
+        assert_eq!(buffer[6*2], !0x20);
+        assert_eq!(buffer[7*2], Color::White.get_full_byte());  
+
+
+        for i in 0..3 {
+            assert_eq!(buffer[i*2 + 1], !0x88);
+        }
+        assert_eq!(buffer[3*2 + 1], !0xF8);        
+        for i in 4..7 {
+            assert_eq!(buffer[i*2 + 1], !0x88);
+        }
+        assert_eq!(buffer[7*2 + 1], Color::White.get_full_byte());
+    }
 }
