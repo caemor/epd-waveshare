@@ -56,6 +56,10 @@ mod tests {
 
     #[test]
     fn fonts_test() {
+        // don#t draw this, as it's just a test and not thought for drawing
+        // because the bitmap has column-bytes here, which is not what we use
+        // and you will get not get what you expect on your eink-screen
+        // but that doesn't change the "value" of the test
         let bitmap = [
             0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00, // '!'
             0x00, 0x07, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, // '"'

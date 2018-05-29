@@ -59,7 +59,7 @@ impl Color {
         }
     }
 
-    pub(crate) fn get_full_byte(&self) -> u8 {
+    pub(crate) fn get_byte_value(&self) -> u8 {
         match self {
             Color::White => 0xff,
             Color::Black => 0x00,
@@ -68,10 +68,10 @@ impl Color {
 
     //position counted from the left (highest value) from 0 to 7
     //remember: 1 is white, 0 is black
-    pub(crate) fn get_color(input: u8, pos: u8) -> Color {
-        match ((input >> (7 - pos)) & 1u8) > 0u8 {
-            true    => Color::White,
-            false   => Color::Black
+    pub(crate) fn get_color(input: u8, pos: u8, color: &Color) -> Color {
+        match Color::is_drawable_pixel(input, pos) {
+            true    => Color::normal_color(color),
+            false   => Color::inverse_color(color)
         }
     }
 
@@ -91,7 +91,7 @@ impl Color {
 
     //position counted from the left (highest value) from 0 to 7
     //remember: 1 is white, 0 is black
-    pub(crate) fn _is_drawable_pixel(input: u8, pos: u8) -> bool {
+    pub(crate) fn is_drawable_pixel(input: u8, pos: u8) -> bool {
         ((input >> (7 - pos)) & 1u8) > 0u8
     }
 
@@ -102,9 +102,9 @@ impl Color {
         //      - black for pixel to draw
         //
         //foreground color is the color you want to have in the foreground
-        match Color::get_color(input, pos) {
-            Color::White => Color::normal_color(foreground_color),
-            Color::Black => Color::inverse_color(foreground_color)
+        match Color::is_drawable_pixel(input, pos) {
+            true => Color::normal_color(foreground_color),
+            false => Color::inverse_color(foreground_color)
         }
     }
 }
@@ -127,7 +127,7 @@ impl Graphics {
     /// Clears/Fills the full buffer with `color`
     pub fn clear(&self, buffer: &mut[u8], color: &Color) {
         for elem in buffer.iter_mut() {
-            *elem = color.get_full_byte();
+            *elem = color.get_byte_value();
         }
     }
 
@@ -205,9 +205,44 @@ impl Graphics {
         }
     }
 
-    ///TODO: test!
+    
+    //TODO: add support for font_height = 0
+    //TODO: add support for star offset in y direction, before 
+    fn draw_char_helper(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, font: &Font, color: &Color) {
+        //width: u8, height: u8, charbuffer: &[u8]
+        //TODO: font.get_char(input) -> FontChar {width, height, [u8]}
+
+        let buff = [0xffu8, 1,2,3];
+        let char_width = 11;
+
+        
+        let mut row_counter = 0;
+        let mut width_counter = 0u8;
+        for &elem in buff.iter() {
+            for _ in 0..8 {
+
+                self.draw_pixel(
+                    buffer, 
+                    x0 + width_counter as u16, 
+                    y0 + row_counter, 
+                    &Color::get_color(elem, width_counter % 8, color));
+
+                //Widthcounter shows how far we are in x direction 
+                width_counter += 1;
+                // if we have reached
+                if width_counter >= char_width {
+                    width_counter = 0;
+                    row_counter += 1;
+                    break;
+                }
+            }
+        }
+    }
+
+    /// Draws a single 8x8 Char somewhere (1 pixel padding included)
     pub fn draw_char_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, color: &Color) {
         let mut counter = 0;
+        // includes special draw_char instructions as this one is ordered columnwise and not rowwise (first byte == first 8 pixel columnwise)
         for &elem in font::bitmap_8x8(input).iter() {
             for i in 0..8u8 {
                 self.draw_pixel(buffer, x0 + counter, y0 + 7 - i as u16, &Color::convert_color(elem, i, color))
@@ -216,7 +251,10 @@ impl Graphics {
         }
     }
 
-    ///TODO: test!
+    /// Draws Strings with 8x8 Chars (1 pixel padding included)
+    /// 
+    /// Is quite small for the 400x300 E-Ink
+    /// 
     /// no autobreak line yet
     pub fn draw_string_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, color: &Color) {
         let mut counter = 0;
@@ -321,9 +359,79 @@ impl Graphics {
         }
     }
 
-    //TODO: test if circle looks good
+
+fn draw_circle_helper(&self, buffer: &mut[u8], x0: u16, y0: u16, radius: u16, filled: bool, color: &Color) {
+    let mut x = radius - 1;
+    let mut y = 0;
+    let mut dx = 1;
+    let mut dy = 1;
+    let mut err: i16 = dx - 2 * radius as i16;
+
+    while x >= y {
+        if filled {
+            self.circle_helper_filled_putpixel(buffer, x0, y0, x, y, color);
+        } else {
+            self.circle_helper_putpixel(buffer, x0, y0, x, y, color);
+        }
+
+        if err <= 0 {
+            y += 1;
+            err += dy;
+            dy += 2;
+        }
+
+        if err > 0 {
+            x -= 1;
+            dx += 2;
+            err += dx - 2 * radius as i16;
+        }
+    }
+
+}
+
+fn circle_helper_putpixel(&self, buffer: &mut[u8], x0: u16, y0: u16,  x: u16, y: u16, color: &Color) {
+    self.draw_horizontal_line(buffer, x0 - x, y0 + y, 2*x, color);
+    // self.draw_pixel(buffer, x0 + x, y0 + y, color);
+    // self.draw_pixel(buffer, x0 - x, y0 + y, color);
+
+    self.draw_horizontal_line(buffer, x0 - y, y0 + x, 2*y, color);
+    // self.draw_pixel(buffer, x0 + y, y0 + x, color);
+    // self.draw_pixel(buffer, x0 - y, y0 + x, color);
+    
+    self.draw_horizontal_line(buffer, x0 - x, y0 - y, 2*x, color);
+    // self.draw_pixel(buffer, x0 - x, y0 - y, color);
+    // self.draw_pixel(buffer, x0 + x, y0 - y, color);
+
+    self.draw_horizontal_line(buffer, x0 - y, y0 - y, 2*y, color);
+    // self.draw_pixel(buffer, x0 - y, y0 - x, color);
+    // self.draw_pixel(buffer, x0 + y, y0 - x, color);
+    
+}
+
+//TODO: Test
+fn circle_helper_filled_putpixel(&self, buffer: &mut[u8], x0: u16, y0: u16,  x: u16, y: u16, color: &Color) {
+    self.draw_pixel(buffer, x0 + x, y0 + y, color);
+    self.draw_pixel(buffer, x0 + y, y0 + x, color);
+    self.draw_pixel(buffer, x0 - y, y0 + x, color);
+    self.draw_pixel(buffer, x0 - x, y0 + y, color);
+    self.draw_pixel(buffer, x0 - x, y0 - y, color);
+    self.draw_pixel(buffer, x0 - y, y0 - x, color);
+    self.draw_pixel(buffer, x0 + y, y0 - x, color);
+    self.draw_pixel(buffer, x0 + x, y0 - y, color);
+}
+
+
+
+
+    ///TODO: test if circle looks good
     /// Draws a circle
-    pub fn draw_circle(&self, buffer: &mut[u8], x: u16, y: u16, radius: u16, color: &Color) {
+    pub fn draw_circle(&self, buffer: &mut[u8], x0: u16, y0: u16, radius: u16, color: &Color) {
+        self.draw_circle_helper(buffer, x0, y0, radius, false, color);
+    }
+
+    ///TODO: test if circle looks good
+    /// Draws a circle
+    pub fn draw_circle2(&self, buffer: &mut[u8], x: u16, y: u16, radius: u16, color: &Color) {
         let radius = radius as i16;
         let x_mid = x as i16;
         let y_mid = y as i16;
@@ -354,32 +462,29 @@ impl Graphics {
             }
         }
     }
-//         }
-//         unimplemented!(); 
 
 
-//         void plotCircle(int xm, int ym, int r)
-// {
-//    int x = -r, y = 0, err = 2-2*r; /* II. Quadrant */ 
-//    do {
-//       setPixel(xm-x, ym+y); /*   I. Quadrant */
-//       setPixel(xm-y, ym-x); /*  II. Quadrant */
-//       setPixel(xm+x, ym-y); /* III. Quadrant */
-//       setPixel(xm+y, ym+x); /*  IV. Quadrant */
-//       r = err;
-//       if (r <= y) err += ++y*2+1;           /* e_xy+e_y < 0 */
-//       if (r > x || err > y) err += ++x*2+1; /* e_xy+e_x > 0 or no 2nd y-step */
-//    } while (x < 0);
-// }
-//     }
-
-    ///TODO: implement!
-    pub fn draw_filled_circle(&self, _buffer: &mut[u8]) {
-        unimplemented!(); 
+    ///TODO: test!
+    pub fn draw_filled_circle(&self, buffer: &mut[u8], x0: u16, y0: u16, radius: u16, color: &Color) {
+        self.draw_circle_helper(buffer, x0, y0, radius, true, color);
     }
 
     
 }
+
+
+/*
+
+############   ############  ############  ############
+    ##         ##            #                 ##      
+    ##         ##            #                 ##      
+    ##         ######         #####            ##      
+    ##         ######              #####       ##      
+    ##         ##                       #      ##      
+    ##         ##                       #      ##      
+    ##         ############  ############      ##      
+
+*/
 
 
 
@@ -389,15 +494,15 @@ mod graphics {
 
     #[test]
     fn test_filled_rectangle() {
-        let mut buffer = [Color::White.get_full_byte(); 150];
+        let mut buffer = [Color::White.get_byte_value(); 150];
         let graphics = Graphics::new(40, 30);
         graphics.draw_filled_rectangle(&mut buffer, 0, 0, 40, 30, &Color::Black);
         
-        assert_eq!(buffer[0], Color::Black.get_full_byte());
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &elem in buffer.iter() {
             
-            assert_eq!(elem, Color::Black.get_full_byte());
+            assert_eq!(elem, Color::Black.get_byte_value());
         }
 
         
@@ -406,7 +511,7 @@ mod graphics {
     /// draw a 4x4 in the top left corner
     #[test]
     fn test_filled_rectangle2() {
-        let mut buffer = [Color::White.get_full_byte(); 8];
+        let mut buffer = [Color::White.get_byte_value(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_filled_rectangle(&mut buffer, 0, 0, 4, 4, &Color::Black);
         
@@ -419,7 +524,7 @@ mod graphics {
             if counter <= 4 {
                 assert_eq!(elem, 0x0f);
             } else {
-                assert_eq!(elem, Color::White.get_full_byte());
+                assert_eq!(elem, Color::White.get_byte_value());
             }
         }
 
@@ -428,19 +533,19 @@ mod graphics {
 
     #[test]
     fn test_horizontal_line() {
-        let mut buffer = [Color::White.get_full_byte(); 4];
+        let mut buffer = [Color::White.get_byte_value(); 4];
         let graphics = Graphics::new(16, 2);
         graphics.draw_horizontal_line(&mut buffer, 1, 0, 14, &Color::Black);
         
         assert_eq!(buffer[0], 0x80);
         assert_eq!(buffer[1], 0x01);
-        assert_eq!(buffer[2], Color::White.get_full_byte());
-        assert_eq!(buffer[3], Color::White.get_full_byte());
+        assert_eq!(buffer[2], Color::White.get_byte_value());
+        assert_eq!(buffer[3], Color::White.get_byte_value());
     }
 
     #[test]
     fn test_vertical_line() {
-        let mut buffer = [Color::White.get_full_byte(); 8];
+        let mut buffer = [Color::White.get_byte_value(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_vertical_line(&mut buffer, 0, 0, 8, &Color::Black);
 
@@ -458,12 +563,12 @@ mod graphics {
     //test draw_line for compatibility with draw_vertical_line
     #[test]
     fn draw_line_1() {
-        let mut buffer = [Color::White.get_full_byte(); 8];
+        let mut buffer = [Color::White.get_byte_value(); 8];
         let graphics = Graphics::new(8, 8);
 
         graphics.draw_vertical_line(&mut buffer, 5, 0, 8, &Color::Black);
 
-        let mut buffer2 = [Color::White.get_full_byte(); 8];
+        let mut buffer2 = [Color::White.get_byte_value(); 8];
         let graphics2 = Graphics::new(8, 8);
 
         graphics2.draw_line(&mut buffer2, 5, 0, 5, 8, &Color::Black);       
@@ -476,11 +581,11 @@ mod graphics {
     //test draw_line for compatibility with draw_horizontal_line
     #[test]
     fn draw_line_2() {
-        let mut buffer = [Color::White.get_full_byte(); 4];
+        let mut buffer = [Color::White.get_byte_value(); 4];
         let graphics = Graphics::new(16, 2);
         graphics.draw_horizontal_line(&mut buffer, 1, 0, 14, &Color::Black);
 
-        let mut buffer2 = [Color::White.get_full_byte(); 4];
+        let mut buffer2 = [Color::White.get_byte_value(); 4];
         let graphics2 = Graphics::new(16, 2);
         graphics2.draw_line(&mut buffer2, 1, 0, 14, 0, &Color::Black);       
 
@@ -492,7 +597,7 @@ mod graphics {
     //test draw_line for diago
     #[test]
     fn draw_line_3() {
-        let mut buffer = [Color::White.get_full_byte(); 8];
+        let mut buffer = [Color::White.get_byte_value(); 8];
         let graphics = Graphics::new(8, 8);
 
         graphics.draw_line(&mut buffer, 0, 0, 16, 16, &Color::Black);       
@@ -506,30 +611,30 @@ mod graphics {
 
     #[test]
     fn test_pixel() {
-        let mut buffer = [Color::White.get_full_byte(); 8];
+        let mut buffer = [Color::White.get_byte_value(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_pixel(&mut buffer, 1, 0, &Color::Black);
 
         assert_eq!(buffer[0], !0x40);
 
 
-        let mut buffer = [Color::White.get_full_byte(); 16];
+        let mut buffer = [Color::White.get_byte_value(); 16];
         let graphics = Graphics::new(16, 8);
         graphics.draw_pixel(&mut buffer, 9, 0, &Color::Black);
-        assert_eq!(buffer[0], Color::White.get_full_byte());
+        assert_eq!(buffer[0], Color::White.get_byte_value());
         assert_eq!(buffer[1], !0x40);
     }
 
     #[test]
     fn test_byte() {
-        let mut buffer = [Color::White.get_full_byte(); 8];
+        let mut buffer = [Color::White.get_byte_value(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_byte(&mut buffer, 0, 0, 0xff, &Color::Black);
 
-        assert_eq!(buffer[0], Color::Black.get_full_byte());
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for i in 1..buffer.len() {
-            assert_eq!(buffer[i], Color::White.get_full_byte());
+            assert_eq!(buffer[i], Color::White.get_byte_value());
         } 
 
         graphics.draw_byte(&mut buffer, 0, 0, 0x5A, &Color::Black)  ;
@@ -540,20 +645,20 @@ mod graphics {
     fn test_char_with_8x8_font() {
 
         // Test !
-        let mut buffer = [Color::White.get_full_byte(); 8];
+        let mut buffer = [Color::White.get_byte_value(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_char_8x8(&mut buffer, 0, 0, '!', &Color::Black);
 
         for i in 0..5 {
             assert_eq!(buffer[i], !0x20);
         }
-        assert_eq!(buffer[5], Color::White.get_full_byte());
+        assert_eq!(buffer[5], Color::White.get_byte_value());
         assert_eq!(buffer[6], !0x20);
-        assert_eq!(buffer[7], Color::White.get_full_byte());  
+        assert_eq!(buffer[7], Color::White.get_byte_value());  
 
 
         // Test H
-        let mut buffer = [Color::White.get_full_byte(); 8];
+        let mut buffer = [Color::White.get_byte_value(); 8];
         let graphics = Graphics::new(8, 8);
         graphics.draw_char_8x8(&mut buffer, 0, 0, 'H', &Color::Black);
 
@@ -564,23 +669,23 @@ mod graphics {
         for i in 4..7 {
             assert_eq!(buffer[i], !0x88);
         }
-        assert_eq!(buffer[7], Color::White.get_full_byte());  
+        assert_eq!(buffer[7], Color::White.get_byte_value());  
     }
 
     #[test]
     fn test_string_with_8x8_font() {
 
         // Test !H
-        let mut buffer = [Color::White.get_full_byte(); 16];
+        let mut buffer = [Color::White.get_byte_value(); 16];
         let graphics = Graphics::new(16, 8);
         graphics.draw_string_8x8(&mut buffer, 0, 0, "!H", &Color::Black);
 
         for i in 0..5 {
             assert_eq!(buffer[i*2], !0x20);
         }
-        assert_eq!(buffer[5*2], Color::White.get_full_byte());
+        assert_eq!(buffer[5*2], Color::White.get_byte_value());
         assert_eq!(buffer[6*2], !0x20);
-        assert_eq!(buffer[7*2], Color::White.get_full_byte());  
+        assert_eq!(buffer[7*2], Color::White.get_byte_value());  
 
 
         for i in 0..3 {
@@ -590,6 +695,6 @@ mod graphics {
         for i in 4..7 {
             assert_eq!(buffer[i*2 + 1], !0x88);
         }
-        assert_eq!(buffer[7*2 + 1], Color::White.get_full_byte());
+        assert_eq!(buffer[7*2 + 1], Color::White.get_byte_value());
     }
 }

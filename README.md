@@ -1,26 +1,36 @@
 [![Build Status](https://travis-ci.com/Caemor/eink-waveshare-rs.svg?branch=master)](https://travis-ci.com/Caemor/eink-waveshare-rs)
 
 # eink-waveshare-rs
-IN WORK! Drivers for various EPDs from Waveshare. Currently only support for the 4.2 Black/White one
+
+IN WORK! Drivers for various EPDs from Waveshare. 
+
+Currently only support for the 4.2 Black/White one
 
 Be careful with the partial updates!
-It was only tested in a mBED implementation, this one wasn't tested yet!!!
-
-Due to a broken 
+It was only tested in a mBED implementation, the rust one wasn't tested enough yet!!!
 
 ## TODO's
 
-
-- [ ] test Embedded Linux (rpi) example
-- [ ] add f3 example
+- [ ] add more example (e.g. for f3)
 - [ ] improve the partial drawing/check the timings/timing improvements/....
 - [ ] for later: add support for the smaller waveshare epds
 - [ ] License: Stay with ISC (=MIT) or go to Apache+MIT Dual Version as used in many other projects?
 
 
-## TODO: Drawing
+## Graphics/Drawing
 
-Limited by a i16::Max buffer_size at the moment, because thats already 32kB that should be okay for most embedded systems
+Supports:
+- Lines
+- Squares
+- Circles
+- Pixels
+- Chars
+- Strings
+
+Chars and Strings work with a 8x8-Font.
+
+Support for bigger sized/independent Fonts is in work.
+
 
 ### With a Buffer
 
@@ -34,7 +44,5 @@ Maybe add support for Non-Buffer drawing from the https://crates.io/crates/embed
 
 ## Examples
 
-There are some examples in the examples folder.
-
-The f3 example is broken/working on a old version
+There is an example for Raspberry Pi in the example folder.
 

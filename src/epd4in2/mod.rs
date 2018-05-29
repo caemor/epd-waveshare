@@ -350,7 +350,7 @@ where
         self.send_command(Command::DATA_START_TRANSMISSION_1)?;
         self.delay_ms(2);
         for _ in 0..size {
-            self.send_data(reset_color.get_full_byte())?;
+            self.send_data(reset_color.get_byte_value())?;
         }
 
         self.delay_ms(2);
@@ -358,7 +358,7 @@ where
         self.send_command(Command::DATA_START_TRANSMISSION_2)?;
         self.delay_ms(2);
         for _ in 0..size {
-            self.send_data(reset_color.get_full_byte())?;
+            self.send_data(reset_color.get_byte_value())?;
         }
         Ok(())
     }
