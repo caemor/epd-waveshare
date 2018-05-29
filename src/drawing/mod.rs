@@ -122,9 +122,7 @@ impl Graphics {
         }
     }
 
-    /// font map doesn't work as expected, so everything with chars and string is broken atm
-    ///TODO: implement!
-    /// TODO: use Fonts
+    ///TODO: test!
     pub fn draw_char(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, font: &Font, color: &Color) {
         self.draw_char_helper(buffer, x0, y0, input, font, color);
     }

@@ -5,7 +5,7 @@ extern crate linux_embedded_hal as lin_hal;
 extern crate eink_waveshare_rs;
 
 
-use eink_waveshare_rs::{epd4in2::EPD4in2, drawing::{Graphics, Color}};
+use eink_waveshare_rs::{epd4in2::EPD4in2, drawing::{Graphics, color::Color}};
 
 use lin_hal::spidev::{self, SpidevOptions};
 use lin_hal::{Pin, Spidev};
