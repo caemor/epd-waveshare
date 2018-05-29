@@ -1,4 +1,4 @@
-[![Build status](https://travis-ci.org/caemor/eink-waveshare-rs.svg?branch=master)](https://travis-ci.org/caemor/eink-waveshare-rs)
+[![Build status](https://travis-ci.org/caemor/eink-waveshare-rs.svg?branch=master)](https://travis-ci.com/Caemor/eink-waveshare-rs)
 
 # eink-waveshare-rs
 IN WORK! Drivers for various EPDs from Waveshare. Currently only support for the 4.2 Black/White one
