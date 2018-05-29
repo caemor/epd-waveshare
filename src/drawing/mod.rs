@@ -100,6 +100,7 @@ impl Graphics {
     /// Draw a single Pixel with `color`
     /// 
     /// limited to i16::max images (buffer_size) at the moment
+    #[allow(dead_code)]
     fn draw_byte(&self, buffer: &mut[u8], x: u16, y: u16, filling: u8, color: &Color) {
         let idx = match self.rotation {
             Displayorientation::Rotate0 | Displayorientation::Rotate180 
