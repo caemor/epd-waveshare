@@ -61,7 +61,7 @@ use hal::{
 mod lut;
 use self::lut::*;
 
-use drawing::Color;
+use drawing::color::Color;
 
 pub mod command;
 pub use command::Command as Command;

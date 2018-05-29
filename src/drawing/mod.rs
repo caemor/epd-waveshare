@@ -1,6 +1,9 @@
 
-mod font;
+pub mod font;
 use self::font::Font;
+
+pub mod color;
+use self::color::Color;
 
 
 #[derive(Clone, Copy)]
@@ -44,70 +47,6 @@ impl Display {
     }
 }
 
-
-
-pub enum Color {
-    Black,
-    White
-}
-
-impl Color {
-    pub(crate) fn _get_bit_value(&self) -> u8 {
-        match self {
-            Color::White => 1u8,
-            Color::Black => 0u8,            
-        }
-    }
-
-    pub(crate) fn get_byte_value(&self) -> u8 {
-        match self {
-            Color::White => 0xff,
-            Color::Black => 0x00,
-        }
-    }
-
-    //position counted from the left (highest value) from 0 to 7
-    //remember: 1 is white, 0 is black
-    pub(crate) fn get_color(input: u8, pos: u8, color: &Color) -> Color {
-        match Color::is_drawable_pixel(input, pos) {
-            true    => Color::normal_color(color),
-            false   => Color::inverse_color(color)
-        }
-    }
-
-    fn inverse_color(color: &Color) -> Color {
-        match color {
-            Color::White => Color::Black,
-            Color::Black => Color::White,
-        }
-    }
-
-    fn normal_color(color: &Color) -> Color {
-        match color {
-            Color::White => Color::White,
-            Color::Black => Color::Black,
-        }
-    }
-
-    //position counted from the left (highest value) from 0 to 7
-    //remember: 1 is white, 0 is black
-    pub(crate) fn is_drawable_pixel(input: u8, pos: u8) -> bool {
-        ((input >> (7 - pos)) & 1u8) > 0u8
-    }
-
-
-    pub(crate) fn convert_color(input: u8, pos: u8, foreground_color: &Color) -> Color {
-        //match color: 
-        //      - white for "nothing to draw"/background drawing
-        //      - black for pixel to draw
-        //
-        //foreground color is the color you want to have in the foreground
-        match Color::is_drawable_pixel(input, pos) {
-            true => Color::normal_color(foreground_color),
-            false => Color::inverse_color(foreground_color)
-        }
-    }
-}
 
 
 #[allow(dead_code)]
@@ -187,15 +126,10 @@ impl Graphics {
     ///TODO: implement!
     /// TODO: use Fonts
     pub fn draw_char(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, font: &Font, color: &Color) {
-        let mut counter = 0;
-        let _a = font.get_char(input);
-        for &elem in font::bitmap_8x8(input).iter() {
-            self.draw_byte(buffer, x0, y0 + counter * self.width, elem, color);
-            counter += 1;
-        }
+        self.draw_char_helper(buffer, x0, y0, input, font, color);
     }
 
-    ///TODO: implement!
+    ///TODO: test!
     /// no autobreak line yet
     pub fn draw_string(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, font: &Font, color: &Color) {
         let mut counter = 0;
@@ -207,13 +141,14 @@ impl Graphics {
 
     
     //TODO: add support for font_height = 0
-    //TODO: add support for star offset in y direction, before 
+    //TODO: add support for char offset in y direction to reduce font file size
     fn draw_char_helper(&self, buffer: &mut[u8], x0: u16, y0: u16, input: char, font: &Font, color: &Color) {
         //width: u8, height: u8, charbuffer: &[u8]
         //TODO: font.get_char(input) -> FontChar {width, height, [u8]}
+        //TODO: font.get_char_offset(input) -> u16
 
-        let buff = [0xffu8, 1,2,3];
-        let char_width = 11;
+        let buff = font.get_char(input);
+        let char_width = font.get_char_width(input);
 
         
         let mut row_counter = 0;
