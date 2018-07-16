@@ -1,18 +1,27 @@
 # eink-waveshare-rs [![Build Status](https://travis-ci.com/Caemor/eink-waveshare-rs.svg?branch=master)](https://travis-ci.com/Caemor/eink-waveshare-rs)
 
-This library contains a driver for the [4.2 Inch E-Paper Moduel](https://www.waveshare.com/wiki/4.2inch_e-Paper_Module) from Waveshare.
+This library contains a driver for the [4.2 Inch E-Paper Module](https://www.waveshare.com/wiki/4.2inch_e-Paper_Module) from Waveshare.
 
 Support for more (especially the smaller and faster ones) should follow after the library around the 4.2" EInk is stable and tested enough.
 
+# (Supported) Devices
 
-## 4.2 Inch E-Ink
+| Device | Colors | Partial Refresh | Supported | Tested |
+| :---: | --- | :---: | :---: | :---: |
+| 4.2 Inch B/W | Black, White | Not officially [1] | ✔ | ✔ |
+| 1.54 Inch B/W | Black, White | ✔ |  |  |
+| 2.13 Inch B/W | Black, White | ✔ |  |  |
+| 2.9 Inch B/W | Black, White | ✔ |  |  |
 
-Out of the Box the original driver from Waveshare supported only full updates. 
 
-Currently only support for the 4.2 Black/White one
+## 4.2 Inch E-Ink Black/White
 
-Be careful with the partial updates!
+Out of the Box the original driver from Waveshare only supports full updates. 
+
+But behind Be careful with the partial updates!
 It was only tested in a mBED implementation, the rust one wasn't tested enough yet!!!
+
+[1]: It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
 
 ### Interface
 
@@ -51,4 +60,7 @@ Support for bigger sized/independent Fonts is in work.
 ## Examples
 
 There is an example for Raspberry Pi in the example folder.
+
+
+
 
