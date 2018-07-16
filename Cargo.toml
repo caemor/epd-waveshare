@@ -3,6 +3,11 @@ name = "eink_waveshare_rs"
 version = "0.1.0"
 authors = ["Christoph Groß <christoph.gross@student.uni-tuebingen.de>"]
 
+
+[features]
+default = []
+epd4in2_fast_update = []
+
 [dependencies]
 
 

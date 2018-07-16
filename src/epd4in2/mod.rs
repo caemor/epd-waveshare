@@ -44,8 +44,7 @@
 //! 
 //! 
 //!
-//! BE CAREFUL! The Partial Drawing can "destroy" your display.
-//! It needs more testing first.
+//! BE CAREFUL! The screen can get ghosting/burn-ins through the Partial Fast Update Drawing.
 
 
 use hal::{
@@ -268,7 +267,6 @@ where
 
         self.send_command(Command::VCOM_AND_DATA_INTERVAL_SETTING)?;
         //TODO: this was a send_command instead of a send_data. check if it's alright and doing what it should do (setting the default values)
-        //oldTODO is this really a command here or shouldn't that be data?
         //self.send_command_u8(0x97)?; //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
         self.send_data(0x97)?;
 
@@ -324,6 +322,7 @@ where
     /// the necessary stuff
     /// TODO: check delay!!!
     /// Displays the frame data from SRAM
+    #[cfg(feature = "epd4in2_fast_update")] 
     pub fn display_frame_quick(&mut self) -> Result<(), E> {
         self.set_lut_quick()?;
         self.send_command(Command::DISPLAY_REFRESH)?;
@@ -423,7 +422,8 @@ where
     /// Fill the look-up table for a quick display (partial refresh)
     /// 
     /// Is automatically done by [EPD4in2::display_frame_quick()](EPD4in2::display_frame_quick()) 
-    /// //TODO: make public? 
+    /// //TODO: make public?
+    #[cfg(feature = "epd4in2_fast_update")] 
     fn set_lut_quick(&mut self) -> Result<(), E> {
         self.set_lut_helper(
             &LUT_VCOM0_QUICK,
