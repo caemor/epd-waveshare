@@ -8,7 +8,7 @@ Support for more (especially the smaller and faster ones) should follow after th
 
 | Device | Colors | Partial Refresh | Supported | Tested |
 | :---: | --- | :---: | :---: | :---: |
-| 4.2 Inch B/W | Black, White | Not officially [1](#42-inch-e-ink-blackwhite) | ✔ | ✔ |
+| 4.2 Inch B/W | Black, White | Not officially [[1](#42-inch-e-ink-blackwhite)] | ✔ | ✔ |
 | 1.54 Inch B/W | Black, White | ✔ |  |  |
 | 2.13 Inch B/W | Black, White | ✔ |  |  |
 | 2.9 Inch B/W | Black, White | ✔ |  |  |
@@ -18,9 +18,7 @@ Support for more (especially the smaller and faster ones) should follow after th
 
 Out of the Box the original driver from Waveshare only supports full updates. 
 
-But behind Be careful with the partial updates!
-It was only tested in a Mbed implementation, the rust one wasn't tested enough yet!!!
-
+Be careful with the quick refresh updates:
 [1]: It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
 
 ### Interface
