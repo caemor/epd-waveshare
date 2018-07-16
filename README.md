@@ -18,8 +18,8 @@ Support for more (especially the smaller and faster ones) should follow after th
 
 Out of the Box the original driver from Waveshare only supports full updates. 
 
-Be careful with the quick refresh updates:
-[1]: It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
+- [1]: Be careful with the quick refresh updates: <br>
+It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
 
 ### Interface
 
