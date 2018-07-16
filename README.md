@@ -4,29 +4,29 @@ This library contains a driver for the [4.2 Inch E-Paper Module](https://www.wav
 
 Support for more (especially the smaller and faster ones) should follow after the library around the 4.2" EInk is stable and tested enough.
 
-# (Supported) Devices
+## (Supported) Devices
 
 | Device | Colors | Partial Refresh | Supported | Tested |
 | :---: | --- | :---: | :---: | :---: |
-| 4.2 Inch B/W | Black, White | Not officially [1] | ✔ | ✔ |
+| 4.2 Inch B/W | Black, White | Not officially [1](#42-inch-e-ink-blackwhite) | ✔ | ✔ |
 | 1.54 Inch B/W | Black, White | ✔ |  |  |
 | 2.13 Inch B/W | Black, White | ✔ |  |  |
 | 2.9 Inch B/W | Black, White | ✔ |  |  |
 
 
-## 4.2 Inch E-Ink Black/White
+### 4.2 Inch E-Ink Black/White
 
 Out of the Box the original driver from Waveshare only supports full updates. 
 
 But behind Be careful with the partial updates!
-It was only tested in a mBED implementation, the rust one wasn't tested enough yet!!!
+It was only tested in a Mbed implementation, the rust one wasn't tested enough yet!!!
 
 [1]: It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
 
 ### Interface
 
 | Interface | Description |
-| :---: |  :---: |
+| :---: |  :--- |
 | VCC 	|   3.3V |
 | GND   | 	GND |
 | DIN   | 	SPI MOSI |
