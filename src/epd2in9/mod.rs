@@ -57,54 +57,108 @@ use hal::{
     digital::*
 };
 
-//The Lookup Tables for the Display
-mod lut;
-use self::lut::*;
+mod constants;
+use self::constants::*;
 
 use drawing::color::Color;
 
 pub mod command;
 pub use command::Command as Command;
 
-//TODO: test spi mode
-/// SPI mode - 
-/// For more infos see [Requirements: SPI](index.html#spi)
-pub const SPI_MODE: Mode = Mode {
-    phase: Phase::CaptureOnFirstTransition,
-    polarity: Polarity::IdleLow,
-};
+use interface::*;
 
-
-
-
-
-
-
-
+use interface::data_interface::DataInterface;
 
 /// EPD4in2 driver
 ///
-pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
+pub struct EPD2in9<SPI, CS, BUSY, DC, RST, D> {
     /// SPI
-    spi: SPI,
-    /// CS for SPI
-    cs: CS,
-    /// Low for busy, Wait until display is ready!
-    busy: BUSY,
-    /// Data/Command Control Pin (High for data, Low for command)
-    dc: DC,
-    /// Pin for Reseting
-    rst: RST,
-    /// The concrete Delay implementation
-    delay: D,
+    interface: DataInterface<SPI, CS, BUSY, DC, RST, D>,
     /// Width
-    width: u16,
+    width: u32,
     /// Height
-    height: u16,   
+    height: u32,   
 }
 
 
-impl<SPI, CS, BUSY, DC, RST, D, E> EPD4in2<SPI, CS, BUSY, DC, RST, D>
+impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
+where 
+    SPI: Write<u8, Error = E>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+    D: DelayUs<u16> + DelayMs<u16>
+{
+
+}
+
+
+impl<SPI, CS, BUSY, DC, RST, D, E> WaveshareInterface<SPI, CS, BUSY, DC, RST, D, E> for EPD2in9<SPI, CS, BUSY, DC, RST, D>
+where 
+    SPI: Write<u8, Error = E>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+    D: DelayUs<u16> + DelayMs<u16>,
+{ 
+    fn get_width(&self) -> u32 {
+       self.width
+    }
+
+    fn get_height(&self) -> u32 {
+        self.height
+    }
+
+
+    fn new(
+        spi: SPI, 
+        cs: CS, 
+        busy: BUSY, 
+        dc: DC, 
+        rst: RST, 
+        delay: D
+    ) -> Result<Self, E> {                
+        let width = WIDTH as u32;
+        let height = HEIGHT as u32;
+
+        let mut interface = DataInterface::new(spi, cs, busy, dc, rst, delay);
+
+        let mut epd = EPD2in9 {interface, width, height};
+
+
+        epd.init()?;
+
+        Ok(epd)
+    }
+
+
+
+    fn init(&mut self) -> Result<(), E> {
+        //TODO: 
+        Ok(())
+    }
+    fn sleep(&mut self) -> Result<(), E> {
+        Ok(())
+    }
+    fn reset(&mut self) {
+        //TODO: 
+    }
+    fn wait_until_idle(&mut self) {
+
+    }
+    fn delay_ms(&mut self, delay: u32) {
+
+    }
+
+}
+
+
+/*
+
+
+impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
 where 
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
@@ -141,8 +195,8 @@ where
     /// ```
     pub fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Result<Self, E> {
         //TODO: width und height anpassbar machen?
-        let width = 400;
-        let height = 300;
+        let width = WIDTH as u16;
+        let height = HEIGHT as u16;
 
         let mut epd4in2 = EPD4in2 {spi, cs, busy, dc, rst, delay, width, height };
 
@@ -390,22 +444,7 @@ where
         Ok(())
     }
 
-    /// Resets the device.
-    /// 
-    /// Often used to awake the module from deep sleep. See [EPD4in2::sleep()](EPD4in2::sleep())
-    /// 
-    /// TODO: Takes at least 400ms of delay alone, can it be shortened?
-    pub fn reset(&mut self) {
-        self.rst.set_low();
 
-        //TODO: why 200ms? (besides being in the waveshare code)
-        self.delay_ms(200);
-
-        self.rst.set_high();
-
-        //TODO: same as 3 lines above
-        self.delay_ms(200);
-    }
 
 
 
@@ -463,89 +502,12 @@ where
         Ok(())
     }
 
-    /// Basic function for sending [Commands](Command). 
-    /// 
-    /// Enables direct interaction with the device with the help of [EPD4in2::send_data()](EPD4in2::send_data())
-    /// Should rarely be needed!
-    /// //TODO: make public? 
-    fn send_command(&mut self, command: Command) -> Result<(), E> {
-        // low for commands
-        self.dc.set_low(); 
 
-        // Transfer the command over spi
-        self.with_cs(|epd| {
-            epd.spi.write(&[command.addr()])
-        })
-    }
-
-    /// Basic function for sending a single u8 of data over spi
-    /// 
-    /// Enables direct interaction with the device with the help of [EPD4in2::send_command()](EPD4in2::send_command())
-    /// 
-    /// Should rarely be needed!
-    /// //TODO: make public? 
-    fn send_data(&mut self, val: u8) -> Result<(), E> {
-        // high for data
-        self.dc.set_high();
-
-        // Transfer data (u8) over spi
-        self.with_cs(|epd| {
-            epd.spi.write(&[val])
-        })
-    }
-
-    /// Basic function for sending an array of u8-values of data over spi
-    /// 
-    /// Enables direct interaction with the device with the help of [EPD4in2::send_command()](EPD4in2::send_command())
-    /// 
-    /// Should rarely be needed!
-    /// //TODO: make public? 
-    fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), E> {
-        // high for data
-        self.dc.set_high();
-
-        // Transfer data (u8-array) over spi
-        self.with_cs(|epd| {
-            epd.spi.write(data)
-        })
-    }
-
-    // spi write helper/abstraction function
-    fn with_cs<F>(&mut self, f: F) -> Result<(), E>
-    where 
-        F: FnOnce(&mut Self) -> Result<(), E>,
-    {
-        // activate spi with cs low
-        self.cs.set_low();
-        // transfer spi data
-        let result = f(self);
-        // deativate spi with cs high
-        self.cs.set_high();
-        // return result
-        result
-    }
-
-
-    /// Waits until device isn't busy anymore (busy == HIGH)
-    /// 
-    /// This is normally handled by the more complicated commands themselves,
-    /// but in the case you send data and commands directly you might need to check
-    /// if the device is still busy
-    pub fn wait_until_idle(&mut self) {
-        //low: busy, high: idle
-        while self.busy.is_low() {
-            //TODO: shorten the time? it was 100 in the beginning
-            self.delay_ms(10);
-        }
-    }
-
-
-    /// Abstraction of setting the delay for simpler calls 
-    pub fn delay_ms(&mut self, delay: u16) {
-        self.delay.delay_ms(delay);
-    }
 }
 
+
+
+*/
 
 
 
