@@ -3,7 +3,6 @@ use hal::{
         spi::Write,
         delay::*
     },
-    spi::{Mode, Phase, Polarity},
     digital::*
 };
 
@@ -11,7 +10,7 @@ use interface::Command;
 
 /// EPD4in2 driver
 ///
-pub struct DataInterface<SPI, CS, BUSY, DC, RST, D> {
+pub(crate) struct DataInterface<SPI, CS, BUSY, DC, RST, D> {
     /// SPI
     spi: SPI,
     /// CS for SPI
@@ -36,7 +35,7 @@ where
     RST: OutputPin,
     D: DelayUs<u16> + DelayMs<u16>,
 {
-    pub fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Self {
+    pub(crate) fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Self {
         DataInterface {spi, cs, busy, dc, rst, delay }
     }
     
@@ -45,7 +44,7 @@ where
     /// Enables direct interaction with the device with the help of [EPD4in2::send_data()](EPD4in2::send_data())
     /// Should rarely be needed!
     /// //TODO: make public? 
-    fn send_command<T: Command>(&mut self, command: T) -> Result<(), E> {
+    pub(crate) fn send_command<T: Command>(&mut self, command: T) -> Result<(), E> {
         // low for commands
         self.dc.set_low(); 
 
@@ -61,7 +60,7 @@ where
     /// 
     /// Should rarely be needed!
     /// //TODO: make public? 
-    fn send_data(&mut self, val: u8) -> Result<(), E> {
+    pub(crate) fn send_data(&mut self, val: u8) -> Result<(), E> {
         // high for data
         self.dc.set_high();
 
@@ -77,7 +76,7 @@ where
     /// 
     /// Should rarely be needed!
     /// //TODO: make public? 
-    fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), E> {
+    pub(crate) fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), E> {
         // high for data
         self.dc.set_high();
 
@@ -88,7 +87,7 @@ where
     }
 
     // spi write helper/abstraction function
-    fn with_cs<F>(&mut self, f: F) -> Result<(), E>
+    pub(crate) fn with_cs<F>(&mut self, f: F) -> Result<(), E>
     where 
         F: FnOnce(&mut Self) -> Result<(), E>,
     {
@@ -108,7 +107,7 @@ where
     /// This is normally handled by the more complicated commands themselves,
     /// but in the case you send data and commands directly you might need to check
     /// if the device is still busy
-    pub fn wait_until_idle(&mut self) {
+    pub(crate) fn wait_until_idle(&mut self) {
         //low: busy, high: idle
         while self.busy.is_low() {
             //TODO: shorten the time? it was 100 in the beginning
@@ -117,17 +116,19 @@ where
     }
 
 
-    /// Abstraction of setting the delay for simpler calls 
-    pub fn delay_ms(&mut self, delay: u16) {
+    /// Abstraction of setting the delay for simpler calls
+    /// 
+    /// maximum delay ~65 seconds (u16:max in ms)
+    pub(crate) fn delay_ms(&mut self, delay: u16) {
         self.delay.delay_ms(delay);
     }
 
-        /// Resets the device.
+    /// Resets the device.
     /// 
     /// Often used to awake the module from deep sleep. See [EPD4in2::sleep()](EPD4in2::sleep())
     /// 
     /// TODO: Takes at least 400ms of delay alone, can it be shortened?
-    pub fn reset(&mut self) {
+    pub(crate) fn reset(&mut self) {
         self.rst.set_low();
 
         //TODO: why 200ms? (besides being in the waveshare code)

@@ -1,5 +1,8 @@
 //! SPI Commands for the Waveshare 2.9" E-Ink Display
 
+use interface;
+
+
 /// EPD2IN9 commands
 /// 
 /// Should rarely (never?) be needed directly.
@@ -10,7 +13,7 @@
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
-pub(crate) enum Command {
+pub enum Command {
     /// Driver Output control 	
 	/// 	3 Databytes: 
 	/// 	A[7:0]
@@ -39,9 +42,9 @@ pub(crate) enum Command {
 
 
 
-impl Command {
+impl interface::Command for Command {
 	/// Returns the address of the command
-	pub fn addr(self) -> u8 {
+	fn address(self) -> u8 {
 	    self as u8
 	}
 }
@@ -49,11 +52,12 @@ impl Command {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::Command;
+	use interface::Command as CommandTrait;
 
     #[test]
     fn command_addr() {
-		//assert_eq!(Command::POWER_SAVING.addr(), 0xE3);
+		assert_eq!(Command::DRIVER_OUTPUT_CONTROL.address(), 0x01);
 
 		//assert_eq!(Command::PANEL_SETTING.addr(), 0x00);
 

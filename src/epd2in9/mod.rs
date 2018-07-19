@@ -53,7 +53,6 @@ use hal::{
         spi::Write,
         delay::*
     },
-    spi::{Mode, Phase, Polarity},
     digital::*
 };
 
@@ -69,7 +68,7 @@ use interface::*;
 
 use interface::data_interface::DataInterface;
 
-/// EPD4in2 driver
+/// EPD2in9 driver
 ///
 pub struct EPD2in9<SPI, CS, BUSY, DC, RST, D> {
     /// SPI
@@ -79,7 +78,6 @@ pub struct EPD2in9<SPI, CS, BUSY, DC, RST, D> {
     /// Height
     height: u32,   
 }
-
 
 impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
 where 
@@ -103,6 +101,7 @@ where
     RST: OutputPin,
     D: DelayUs<u16> + DelayMs<u16>,
 { 
+    
     fn get_width(&self) -> u32 {
        self.width
     }
@@ -136,20 +135,45 @@ where
 
 
     fn init(&mut self) -> Result<(), E> {
-        //TODO: 
-        Ok(())
+        unimplemented!()
     }
     fn sleep(&mut self) -> Result<(), E> {
-        Ok(())
+        unimplemented!()
     }
     fn reset(&mut self) {
-        //TODO: 
+        self.interface.reset()
     }
-    fn wait_until_idle(&mut self) {
 
+    fn delay_ms(&mut self, delay: u16) {
+        self.interface.delay_ms(delay)
     }
-    fn delay_ms(&mut self, delay: u32) {
 
+    
+
+    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E>{
+        unimplemented!()
+    }
+
+    fn update_partial_frame(&mut self, buffer: &[u8], x: u16, y: u16, width: u16, height: u16) -> Result<(), E>{
+        unimplemented!()
+    }
+
+    
+    fn display_frame(&mut self) -> Result<(), E>{
+        unimplemented!()
+    }
+
+    // TODO: add this abstraction function
+    // fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>;
+
+    
+    fn clear_frame(&mut self) -> Result<(), E>{
+        unimplemented!()
+    }
+
+    /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())
+    fn set_background_color(&mut self, color: Color){
+        unimplemented!()
     }
 
 }
