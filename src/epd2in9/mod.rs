@@ -62,21 +62,23 @@ use self::constants::*;
 use drawing::color::Color;
 
 pub mod command;
-pub use command::Command as Command;
+pub use self::command::Command;
 
 use interface::*;
 
-use interface::data_interface::DataInterface;
+use interface::connection_interface::ConnectionInterface;
 
 /// EPD2in9 driver
 ///
 pub struct EPD2in9<SPI, CS, BUSY, DC, RST, D> {
     /// SPI
-    interface: DataInterface<SPI, CS, BUSY, DC, RST, D>,
+    interface: ConnectionInterface<SPI, CS, BUSY, DC, RST, D>,
     /// Width
     width: u32,
     /// Height
-    height: u32,   
+    height: u32,  
+    /// Color
+    color: Color, 
 }
 
 impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
@@ -122,9 +124,11 @@ where
         let width = WIDTH as u32;
         let height = HEIGHT as u32;
 
-        let mut interface = DataInterface::new(spi, cs, busy, dc, rst, delay);
+        let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
 
-        let mut epd = EPD2in9 {interface, width, height};
+        let color = Color::White;
+
+        let mut epd = EPD2in9 {interface, width, height, color};
 
 
         epd.init()?;
@@ -135,11 +139,26 @@ where
 
 
     fn init(&mut self) -> Result<(), E> {
+        self.reset();
+
+
+
+
         unimplemented!()
     }
+
     fn sleep(&mut self) -> Result<(), E> {
-        unimplemented!()
+
+        self.interface.send_command(Command::DEEP_SLEEP_MODE)?;
+        // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
+        //TODO: is 0x00 needed here?
+        self.interface.send_data(0x00)?;
+
+        self.interface.wait_until_idle(false);
+        Ok(())
     }
+
+
     fn reset(&mut self) {
         self.interface.reset()
     }
@@ -165,6 +184,9 @@ where
 
     // TODO: add this abstraction function
     // fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>;
+    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>{
+        unimplemented!()
+    }
 
     
     fn clear_frame(&mut self) -> Result<(), E>{
@@ -173,7 +195,7 @@ where
 
     /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())
     fn set_background_color(&mut self, color: Color){
-        unimplemented!()
+        self.color = color;
     }
 
 }

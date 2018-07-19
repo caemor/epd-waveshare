@@ -5,7 +5,7 @@ extern crate linux_embedded_hal as lin_hal;
 extern crate eink_waveshare_rs;
 
 
-use eink_waveshare_rs::{epd4in2::EPD4in2, drawing::{Graphics, color::Color}};
+use eink_waveshare_rs::{epd4in2::EPD4in2, drawing::{Graphics, color::Color}, interface::WaveshareInterface};
 
 use lin_hal::spidev::{self, SpidevOptions};
 use lin_hal::{Pin, Spidev};
@@ -120,27 +120,27 @@ fn main() {
 
     graphics.draw_vertical_line(200, 50, 200, &Color::Black);
 
-    epd4in2.display_and_transfer_frame(graphics.get_buffer(), None).expect("display and transfer error");
+    epd4in2.update_and_display_frame(graphics.get_buffer()).expect("display and transfer error");
  
     epd4in2.delay_ms(3000);
 
-    epd4in2.clear_frame(None).expect("clear frame error");
+    epd4in2.clear_frame().expect("clear frame error");
 
     //Test fast updating a bit more
     let mut small_buffer = [0x00; 128];
     let mut circle_graphics = Graphics::new(32,32, &mut small_buffer);
     circle_graphics.draw_circle(16,16, 10, &Color::Black);
 
-    epd4in2.set_partial_window(circle_graphics.get_buffer(), 16,16, 32, 32, false).expect("Partial Window Error");
+    epd4in2.update_partial_frame(circle_graphics.get_buffer(), 16,16, 32, 32).expect("Partial Window Error");
     epd4in2.display_frame().expect("Display Frame Error");
 
-    epd4in2.set_partial_window(circle_graphics.get_buffer(), 128,64, 32, 32, false).expect("Partial Window Error");
+    epd4in2.update_partial_frame(circle_graphics.get_buffer(), 128,64, 32, 32).expect("Partial Window Error");
     epd4in2.display_frame().expect("Display Frame Error");
 
-    epd4in2.set_partial_window(circle_graphics.get_buffer(), 320,24, 32, 32, false).expect("Partial Window Error");
+    epd4in2.update_partial_frame(circle_graphics.get_buffer(), 320,24, 32, 32).expect("Partial Window Error");
     epd4in2.display_frame().expect("Display Frame Error");
 
-    epd4in2.set_partial_window(circle_graphics.get_buffer(), 160,240, 32, 32, false).expect("Partial Window Error");
+    epd4in2.update_partial_frame(circle_graphics.get_buffer(), 160,240, 32, 32).expect("Partial Window Error");
     epd4in2.display_frame().expect("Display Frame Error");
 
     epd4in2.delay_ms(3000);
@@ -152,7 +152,7 @@ fn main() {
     graphics.draw_string_8x8(16, 16, "hello", &Color::Black);
     graphics.draw_char_8x8(250, 250, '#', &Color::Black);
     graphics.draw_char_8x8(300, 16, '7', &Color::Black);
-    epd4in2.display_and_transfer_frame(graphics.get_buffer(), None).expect("display and transfer error");
+    epd4in2.update_and_display_frame(graphics.get_buffer()).expect("display and transfer error");
 
     epd4in2.delay_ms(3000);
 

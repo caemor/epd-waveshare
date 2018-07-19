@@ -1,5 +1,5 @@
 //! SPI Commands for the Waveshare 4.2" E-Ink Display
-
+use interface;
 /// EPD4IN2 commands
 /// 
 /// Should rarely (never?) be needed directly.
@@ -146,9 +146,9 @@ pub enum Command {
 
 
 
-impl Command {
+impl interface::Command for Command {
 	/// Returns the address of the command
-	pub fn addr(self) -> u8 {
+	fn address(self) -> u8 {
 	    self as u8
 	}
 }
@@ -157,13 +157,14 @@ impl Command {
 #[cfg(test)]
 mod tests {
     use super::*;
+	use interface::Command as CommandTrait;
 
     #[test]
     fn command_addr() {
-		assert_eq!(Command::POWER_SAVING.addr(), 0xE3);
+		assert_eq!(Command::POWER_SAVING.address(), 0xE3);
 
-		assert_eq!(Command::PANEL_SETTING.addr(), 0x00);
+		assert_eq!(Command::PANEL_SETTING.address(), 0x00);
 
-		assert_eq!(Command::DISPLAY_REFRESH.addr(), 0x12);        
+		assert_eq!(Command::DISPLAY_REFRESH.address(), 0x12);        
     }
 }

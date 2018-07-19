@@ -10,7 +10,7 @@ use interface::Command;
 
 /// EPD4in2 driver
 ///
-pub(crate) struct DataInterface<SPI, CS, BUSY, DC, RST, D> {
+pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST, D> {
     /// SPI
     spi: SPI,
     /// CS for SPI
@@ -26,7 +26,7 @@ pub(crate) struct DataInterface<SPI, CS, BUSY, DC, RST, D> {
 }
 
 
-impl<SPI, CS, BUSY, DC, RST, D, E> DataInterface<SPI, CS, BUSY, DC, RST, D>
+impl<SPI, CS, BUSY, DC, RST, D, E> ConnectionInterface<SPI, CS, BUSY, DC, RST, D>
 where 
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
@@ -36,12 +36,12 @@ where
     D: DelayUs<u16> + DelayMs<u16>,
 {
     pub(crate) fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Self {
-        DataInterface {spi, cs, busy, dc, rst, delay }
+        ConnectionInterface {spi, cs, busy, dc, rst, delay }
     }
     
     /// Basic function for sending [Commands](Command). 
     /// 
-    /// Enables direct interaction with the device with the help of [EPD4in2::send_data()](EPD4in2::send_data())
+    /// Enables direct interaction with the device with the help of [send_data()](ConnectionInterface::send_data())
     /// Should rarely be needed!
     /// //TODO: make public? 
     pub(crate) fn send_command<T: Command>(&mut self, command: T) -> Result<(), E> {
@@ -56,7 +56,7 @@ where
 
     /// Basic function for sending a single u8 of data over spi
     /// 
-    /// Enables direct interaction with the device with the help of [EPD4in2::send_command()](EPD4in2::send_command())
+    /// Enables direct interaction with the device with the help of [Esend_command()](ConnectionInterface::send_command())
     /// 
     /// Should rarely be needed!
     /// //TODO: make public? 
@@ -72,7 +72,7 @@ where
 
     /// Basic function for sending an array of u8-values of data over spi
     /// 
-    /// Enables direct interaction with the device with the help of [EPD4in2::send_command()](EPD4in2::send_command())
+    /// Enables direct interaction with the device with the help of [send_command()](EPD4in2::send_command())
     /// 
     /// Should rarely be needed!
     /// //TODO: make public? 
@@ -107,11 +107,18 @@ where
     /// This is normally handled by the more complicated commands themselves,
     /// but in the case you send data and commands directly you might need to check
     /// if the device is still busy
-    pub(crate) fn wait_until_idle(&mut self) {
+    /// 
+    /// is_busy_low
+    ///     - TRUE for epd4in2, epd1in54, epd2in13, epd2in7, epd5in83, epd7in5
+    /// 
+    ///     - FALSE for epd2in9
+    /// Most likely there was a mistake with the 2in9 busy connection
+    pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
+        self.delay_ms(1);
         //low: busy, high: idle
-        while self.busy.is_low() {
+        while (is_busy_low && self.busy.is_low()) || (!is_busy_low && self.busy.is_high()) {
             //TODO: shorten the time? it was 100 in the beginning
-            self.delay_ms(10);
+            self.delay_ms(5);
         }
     }
 

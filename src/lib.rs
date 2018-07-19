@@ -58,7 +58,8 @@ use hal::{
 
 pub mod drawing;
 pub mod epd4in2;
-use epd4in2::*;
+
+
 
 pub mod epd2in9;
 

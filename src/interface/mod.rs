@@ -9,7 +9,7 @@ use hal::{
 
 use drawing::color::Color;
 
-pub mod data_interface;
+pub mod connection_interface;
 
 //TODO: test spi mode
 /// SPI mode - 
@@ -24,6 +24,18 @@ use core::marker::Sized;
 pub(crate) trait Command {
     fn address(self) -> u8;
 }
+
+
+//TODO add LUT trait with set_fast_lut
+// and set_manual_lut and set_normal_lut or sth like that
+// for partial updates
+
+pub trait LUTSupport<Error> {
+    fn set_lut(&mut self) -> Result<(), Error>;
+    fn set_lut_quick(&mut self) -> Result<(), Error>;
+    fn set_lut_manual(&mut self, data: &[u8]) -> Result<(), Error>;
+}
+
 
 pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST, D, E>
     where 
@@ -63,16 +75,26 @@ pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST, D, E>
     fn init(&mut self) -> Result<(), E>;
 
 
-
+    // void DisplayFrame(const unsigned char* frame_buffer);
+    /// Transmit a full frame to the SRAM of the DPD
+    /// 
     fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E>;
 
+    //TODO: is dtm always used?
+    /// Transmit partial data to the SRAM of the EPD,
+    /// the final parameter dtm chooses between the 2
+    /// internal buffers 
+    /// 
+    /// Normally it should be dtm2, so use false
+    /// 
+    /// BUFFER needs to be of size: w / 8 * l !
     fn update_partial_frame(&mut self, buffer: &[u8], x: u16, y: u16, width: u16, height: u16) -> Result<(), E>;
 
     /// Displays the frame data from SRAM
     fn display_frame(&mut self) -> Result<(), E>;
 
     // TODO: add this abstraction function
-    // fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>;
+    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>;
 
     /// Clears the frame from the buffer
     /// 
@@ -102,10 +124,7 @@ pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST, D, E>
     fn delay_ms(&mut self, delay: u16);
 
     /*
-    -display_frame
-    -clear_frame
-    -set_full_frame
-    -set_partial_frame
+
 
     //
     -set_quick_lut?
