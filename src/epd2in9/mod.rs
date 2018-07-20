@@ -46,6 +46,8 @@
 //!
 //! BE CAREFUL! The Partial Drawing can "destroy" your display.
 //! It needs more testing first.
+//! 
+//! Is initalised with slow full LUT
 
 
 use hal::{
@@ -68,17 +70,19 @@ use interface::*;
 
 use interface::connection_interface::ConnectionInterface;
 
+
+
 /// EPD2in9 driver
 ///
 pub struct EPD2in9<SPI, CS, BUSY, DC, RST, D> {
     /// SPI
     interface: ConnectionInterface<SPI, CS, BUSY, DC, RST, D>,
     /// Width
-    width: u32,
+    width: u16,
     /// Height
-    height: u32,  
+    height: u16,  
     /// Color
-    color: Color, 
+    background_color: Color, 
 }
 
 impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
@@ -104,11 +108,11 @@ where
     D: DelayUs<u16> + DelayMs<u16>,
 { 
     
-    fn get_width(&self) -> u32 {
-       self.width
+    fn get_width(&self) -> u16 {
+        self.width
     }
 
-    fn get_height(&self) -> u32 {
+    fn get_height(&self) -> u16 {
         self.height
     }
 
@@ -121,14 +125,14 @@ where
         rst: RST, 
         delay: D
     ) -> Result<Self, E> {                
-        let width = WIDTH as u32;
-        let height = HEIGHT as u32;
+        let width = WIDTH as u16;
+        let height = HEIGHT as u16;
 
         let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
 
-        let color = Color::White;
+        let background_color = Color::White;
 
-        let mut epd = EPD2in9 {interface, width, height, color};
+        let mut epd = EPD2in9 {interface, width, height, background_color};
 
 
         epd.init()?;
@@ -139,12 +143,48 @@ where
 
 
     fn init(&mut self) -> Result<(), E> {
+        
+        
         self.reset();
 
+        // 3 Databytes:
+        // A[7:0]
+        // 0.. A[8]
+        // 0.. B[2:0]
+        // Default Values: A = Height of Screen (0x127), B = 0x00 (GD, SM and TB=0?)
+        self.interface.send_command(Command::DRIVER_OUTPUT_CONTROL)?;
+        self.interface.send_data(HEIGHT as u8)?;
+        self.interface.send_data((HEIGHT >> 8) as u8)?;
+        self.interface.send_data(0x00)?;
 
+        // 3 Databytes: (and default values from datasheet and arduino)
+        // 1 .. A[6:0]  = 0xCF | 0xD7
+        // 1 .. B[6:0]  = 0xCE | 0xD6
+        // 1 .. C[6:0]  = 0x8D | 0x9D
+        //TODO: test
+        self.interface.send_command(Command::BOOSTER_SOFT_START_CONTROL)?;
+        self.interface.send_data(0xD7)?;
+        self.interface.send_data(0xD6)?;
+        self.interface.send_data(0x9D)?;
 
+        // One Databyte with value 0xA8 for 7V VCOM
+        self.interface.send_command(Command::WRITE_VCOM_REGISTER)?;
+        self.interface.send_data(0xA8)?;
 
-        unimplemented!()
+        // One Databyte with default value 0x1A for 4 dummy lines per gate
+        self.interface.send_command(Command::SET_DUMMY_LINE_PERIOD)?;
+        self.interface.send_data(0x1A)?;
+
+        // One Databyte with default value 0x08 for 2us per line
+        self.interface.send_command(Command::SET_GATE_LINE_WIDTH)?;
+        self.interface.send_data(0x08)?;
+
+        // One Databyte with default value 0x03
+        //  -> address: x increment, y increment, address counter is updated in x direction
+        self.interface.send_command(Command::DATA_ENTRY_MODE_SETTING)?;
+        self.interface.send_data(0x03)?;
+
+        self.set_lut()
     }
 
     fn sleep(&mut self) -> Result<(), E> {
@@ -154,7 +194,7 @@ where
         //TODO: is 0x00 needed here?
         self.interface.send_data(0x00)?;
 
-        self.interface.wait_until_idle(false);
+        self.wait_until_idle();
         Ok(())
     }
 
@@ -170,39 +210,57 @@ where
     
 
     fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E>{
-        unimplemented!()
+        self.use_full_frame()?;
+
+        self.interface.send_command(Command::WRITE_RAM)?;
+        self.interface.send_multiple_data(buffer)
     }
 
+    //TODO: update description: last 3 bits will be ignored for width and x_pos
     fn update_partial_frame(&mut self, buffer: &[u8], x: u16, y: u16, width: u16, height: u16) -> Result<(), E>{
-        unimplemented!()
+        self.set_ram_area(x, y, x + width, y + height)?;
+        self.set_ram_counter(x, y)?;
+
+        self.interface.send_command(Command::WRITE_RAM)?;
+        self.interface.send_multiple_data(buffer)
     }
 
     
     fn display_frame(&mut self) -> Result<(), E>{
-        unimplemented!()
+        // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
+        //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
+        self.interface.send_command(Command::DISPLAY_UPDATE_CONTROL_2)?;
+        self.interface.send_data(0xC4)?;
+
+        self.interface.send_command(Command::MASTER_ACTIVATION)?;
+        // MASTER Activation should not be interupted to avoid currption of panel images
+        // therefore a terminate command is send
+        self.interface.send_command(Command::TERMINATE_COMMANDS_AND_FRAME_WRITE)
     }
 
-    // TODO: add this abstraction function
-    // fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>;
+    
     fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>{
-        unimplemented!()
+        self.update_frame(buffer)?;
+        self.display_frame()
     }
 
     
     fn clear_frame(&mut self) -> Result<(), E>{
-        unimplemented!()
+        self.use_full_frame()?;
+
+        // clear the ram with the background color
+        let color = self.background_color.get_byte_value();
+
+        self.interface.send_command(Command::WRITE_RAM)?;        
+        self.interface.send_data_x_times(color, WIDTH / 8 * HEIGHT)
     }
 
     /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())
-    fn set_background_color(&mut self, color: Color){
-        self.color = color;
+    fn set_background_color(&mut self, background_color: Color){
+        self.background_color = background_color;
     }
 
 }
-
-
-/*
-
 
 impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
 where 
@@ -213,356 +271,71 @@ where
     RST: OutputPin,
     D: DelayUs<u16> + DelayMs<u16>,
 {
-    /// Get the width of the display
-    pub fn get_width(&self) -> u16 {
-        self.width
-    }
-
-    /// Get the height of the display
-    pub fn get_height(&self) -> u16 {
-        self.height
+    fn wait_until_idle(&mut self) {
+        self.interface.wait_until_idle(false);
     }
     
+    pub(crate) fn use_full_frame(&mut self) -> Result<(), E> {
+        // choose full frame/ram
+        self.set_ram_area(0, 0, WIDTH - 1, HEIGHT - 1)?;
+
+        // start from the beginning
+        self.set_ram_counter(0,0)
+    }
     
-    /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
-    /// 
-    /// This already initialises the device. That means [EPD4in2::init()](EPD4in2::init()) isn't needed directly afterwards
-    /// 
-    /// # Example
-    /// 
-    /// ```ignore
-    /// //buffer = some image data;
-    /// 
-    /// let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay);
-    /// 
-    /// epd4in2.display_and_transfer_frame(buffer, None);
-    /// 
-    /// epd4in2.sleep();
-    /// ```
-    pub fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Result<Self, E> {
-        //TODO: width und height anpassbar machen?
-        let width = WIDTH as u16;
-        let height = HEIGHT as u16;
+    pub(crate) fn set_ram_area(&mut self, start_x: u16, start_y: u16, end_x: u16, end_y: u16) -> Result<(), E> {
+        assert!(start_x < end_x);
+        assert!(start_y < end_y);
 
-        let mut epd4in2 = EPD4in2 {spi, cs, busy, dc, rst, delay, width, height };
+        // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
+        // aren't relevant        
+        self.interface.send_command(Command::SET_RAM_X_ADDRESS_START_END_POSITION)?;
+        self.interface.send_data((start_x >> 3) as u8)?;
+        self.interface.send_data((end_x >> 3) as u8)?;
 
-        epd4in2.init()?;
-
-        Ok(epd4in2)
+        // 2 Databytes: A[7:0] & 0..A[8] for each - start and end
+        self.interface.send_command(Command::SET_RAM_Y_ADDRESS_START_END_POSITION)?;
+        self.interface.send_data(start_y as u8)?;
+        self.interface.send_data((start_y >> 8) as u8)?;
+        self.interface.send_data(end_y as u8)?;
+        self.interface.send_data((end_y >> 8) as u8)
     }
 
+    pub(crate) fn set_ram_counter(&mut self, x: u16, y: u16) -> Result<(), E> {
+        // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
+        // aren't relevant
+        self.interface.send_command(Command::SET_RAM_X_ADDRESS_COUNTER)?;
+        self.interface.send_data((x >> 3) as u8)?;
 
+        // 2 Databytes: A[7:0] & 0..A[8]
+        self.interface.send_command(Command::SET_RAM_Y_ADDRESS_COUNTER)?;
+        self.interface.send_data(y as u8)?;
+        self.interface.send_data((y >> 8) as u8)?;
 
-    /// This initialises the EPD and powers it up
-    /// 
-    /// This function is already called from [EPD4in2::new()](EPD4in2::new())
-    /// 
-    /// This function calls [EPD4in2::reset()](EPD4in2::reset()),
-    /// so you don't need to call reset your self when trying to wake your device up
-    /// after setting it to sleep.
-    pub fn init(&mut self) -> Result<(), E> {
-        // reset the device
-        self.reset();
-
-        // set the power settings
-        self.send_command(Command::POWER_SETTING)?;
-        self.send_data(0x03)?; //VDS_EN, VDG_EN
-        self.send_data(0x00)?; //VCOM_HV, VGHL_LV[1], VGHL_LV[0]
-        self.send_data(0x2b)?; //VDH
-        self.send_data(0x2b)?; //VDL
-        self.send_data(0xff)?; //VDHR
-
-        // start the booster
-        self.send_command(Command::BOOSTER_SOFT_START)?;
-        for _ in 0..3 {
-            self.send_data(0x17)?; //07 0f 17 1f 27 2F 37 2f 
-        }
-
-        // power on
-        self.send_command(Command::POWER_ON)?;
-        self.wait_until_idle();
-
-        // set the panel settings
-        self.send_command(Command::PANEL_SETTING)?;
-        // 0x0F Red Mode, LUT from OTP
-        // 0x1F B/W Mode, LUT from OTP
-        // 0x2F Red Mode, LUT set by registers
-        // 0x3F B/W Mode, LUT set by registers
-        self.send_data(0x3F)?;
-
-        // the values used by waveshare before for the panel settings
-        // instead of our one liner:
-        // SendData(0xbf);    // KW-BF   KWR-AF  BWROTP 0f
-        // SendData(0x0b);
-
-        // Set Frequency, 200 Hz didn't work on my board
-        // 150Hz and 171Hz wasn't tested yet
-        // TODO: Test these other frequencies
-        // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz 
-        self.send_command(Command::PLL_CONTROL)?;
-        self.send_data(0x3A)?;
-
-        Ok(())
-    }
-
-
-
-
-
-    
-    /// Transmit partial data to the SRAM of the EPD,
-    /// the final parameter dtm chooses between the 2
-    /// internal buffers 
-    /// 
-    /// Normally it should be dtm2, so use false
-    /// 
-    /// BUFFER needs to be of size: w / 8 * l !
-    pub fn set_partial_window(&mut self, buffer: &[u8], x: u16, y: u16, w: u16, l: u16, is_dtm1: bool) -> Result<(), E> {
-        if buffer.len() as u16 != w / 8 * l {
-            //TODO: panic!! or sth like that
-            //return Err("Wrong buffersize");
-        }
-
-        self.send_command(Command::PARTIAL_IN)?;
-        self.send_command(Command::PARTIAL_WINDOW)?;
-        self.send_data((x >> 8) as u8)?;
-        let tmp = x & 0xf8;
-        self.send_data(tmp as u8)?; // x should be the multiple of 8, the last 3 bit will always be ignored
-        let tmp = tmp + w - 1;
-        self.send_data((tmp >> 8) as u8)?;
-        self.send_data((tmp | 0x07) as u8)?;
-
-        self.send_data((y >> 8) as u8)?;
-        self.send_data(y as u8)?;
-
-        self.send_data(((y + l - 1) >> 8) as u8)?;
-        self.send_data((y + l - 1) as u8)?;
-
-        self.send_data(0x01)?; // Gates scan both inside and outside of the partial window. (default) 
-
-        if is_dtm1 {
-            self.send_command(Command::DATA_START_TRANSMISSION_1)?
-        } else {
-            self.send_command(Command::DATA_START_TRANSMISSION_2)?
-        }
-
-        self.send_multiple_data(buffer)?;
-
-        self.send_command(Command::PARTIAL_OUT)
-    }
-
-    
-
-    // void DisplayFrame(const unsigned char* frame_buffer);
-    /// Display the frame data from SRAM
-    /// Uses the SLOW!! full update/refresh
-    /// Default color: 0xff
-    /// 
-    pub fn display_and_transfer_frame(&mut self, buffer: &[u8], color: Option<u8>) -> Result<(), E>{
-        let color = color.unwrap_or(0xff);
-
-        self.send_resolution()?;
-
-        self.send_command(Command::VCM_DC_SETTING)?;
-        self.send_data(0x12)?;
-
-        self.send_command(Command::VCOM_AND_DATA_INTERVAL_SETTING)?;
-        //TODO: this was a send_command instead of a send_data. check if it's alright and doing what it should do (setting the default values)
-        //oldTODO is this really a command here or shouldn't that be data?
-        //self.send_command_u8(0x97)?; //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.send_data(0x97)?;
-
-
-        self.send_command(Command::DATA_START_TRANSMISSION_1)?;
-        for _ in 0..(buffer.len()) {
-            self.send_data(color)?;
-        }
-        self.delay_ms(2);
-
-        self.send_command(Command::DATA_START_TRANSMISSION_2)?;
-        //self.send_multiple_data(buffer)?;
-        for &elem in buffer.iter() {
-            self.send_data(elem)?;
-        }
-        self.delay_ms(2);
-
-        self.set_lut()?;
-
-        self.send_command(Command::DISPLAY_REFRESH)?;
-        //TODO: adapt time, is this long delay really needed?
-        self.delay_ms(10);
-        self.wait_until_idle();
-
-        Ok(())
-    }
-
-    fn send_resolution(&mut self) -> Result<(), E> {
-        let w = self.get_width();
-        let h = self.get_height();
-
-        self.send_command(Command::RESOLUTION_SETTING)?;
-        self.send_data((w >> 8) as u8)?;
-        self.send_data(w as u8)?;
-        self.send_data((h >> 8) as u8)?;
-        self.send_data(h as u8)
-    }
-
-    /// Displays the frame data from SRAM
-    pub fn display_frame(&mut self) -> Result<(), E> {
-        self.set_lut()?;
-        self.send_command(Command::DISPLAY_REFRESH)?;
-
-        self.delay_ms(100);
         self.wait_until_idle();
         Ok(())
     }
 
-    /// Same as display_frame(), but with nearly no delay
-    /// and uses the fast/partial refresh LUT
-    /// needs more testing!!!
-    /// maybe delay can be fully removed as wait_until_idle should do
-    /// the necessary stuff
-    /// TODO: check delay!!!
-    /// Displays the frame data from SRAM
-    pub fn display_frame_quick(&mut self) -> Result<(), E> {
-        self.set_lut_quick()?;
-        self.send_command(Command::DISPLAY_REFRESH)?;
-
-        self.delay_ms(1);
-        self.wait_until_idle();
-        Ok(())
+    /// Uses the slower full update 
+    pub fn set_lut(&mut self) -> Result<(), E> {
+        self.set_lut_helper(&LUT_FULL_UPDATE)
     }
 
-    
-    /// Clears the frame from the buffer
-    /// 
-    /// Set a reset_color if you want a different from the default 0xff
-    /// 
-    /// TODO: should that option be removed? E.g. the struct contains an additional default background value
-    /// which is settable?
-    pub fn clear_frame(&mut self, reset_color: Option<Color>) -> Result<(), E> {
-        let reset_color: Color = reset_color.unwrap_or(Color::White);
-
-        self.send_resolution()?;
-
-        let size = self.width / 8 * self.height;
-
-        self.send_command(Command::DATA_START_TRANSMISSION_1)?;
-        self.delay_ms(2);
-        for _ in 0..size {
-            self.send_data(reset_color.get_byte_value())?;
-        }
-
-        self.delay_ms(2);
-
-        self.send_command(Command::DATA_START_TRANSMISSION_2)?;
-        self.delay_ms(2);
-        for _ in 0..size {
-            self.send_data(reset_color.get_byte_value())?;
-        }
-        Ok(())
+    /// Uses the quick partial refresh 
+    pub fn set_lut_quick(&mut self) -> Result<(), E> {
+        self.set_lut_helper(&LUT_PARTIAL_UPDATE)
     }
 
-    /// Let the device enter deep-sleep mode to save power. 
-    /// 
-    /// The deep sleep mode returns to standby with a hardware reset. 
-    /// But you can also use [EPD4in2::reset()](EPD4in2::reset()) to awaken.
-    /// But as you need to power it up once more anyway you can also just directly use [EPD4in2::init()](EPD4in2::init()) for resetting
-    /// and initialising which already contains the reset
-    pub fn sleep(&mut self) -> Result<(), E> {
-        self.send_command(Command::VCOM_AND_DATA_INTERVAL_SETTING)?;
-        self.send_data(0x17)?; //border floating
-        self.send_command(Command::VCM_DC_SETTING)?; // VCOM to 0V
-        self.send_command(Command::PANEL_SETTING)?;
-        self.delay_ms(100);
-
-        self.send_command(Command::POWER_SETTING)?; //VG&VS to 0V fast
-        for _ in 0..4 {
-            self.send_data(0x00)?;
-        }
-        self.delay_ms(100);
-
-        self.send_command(Command::POWER_OFF)?;
-        self.wait_until_idle();
-        self.send_command(Command::DEEP_SLEEP)?;
-        self.send_data(0xA5)?;
-
-        Ok(())
+    //TODO: assert length for LUT is exactly 30
+    fn set_lut_manual(&mut self, buffer: &[u8]) -> Result<(), E> {
+        self.set_lut_helper(buffer)
     }
 
 
-
-
-
-    /// Fill the look-up table for the EPD
-    //TODO: make public? 
-    fn set_lut(&mut self) -> Result<(), E> {
-        self.set_lut_helper(
-            &LUT_VCOM0,
-            &LUT_WW,
-            &LUT_BW,
-            &LUT_WB,
-            &LUT_BB)
+    fn set_lut_helper(&mut self, buffer: &[u8]) -> Result<(), E> {
+        assert!(buffer.len() == 30);
+        self.interface.send_command(Command::WRITE_LUT_REGISTER)?;
+        self.interface.send_multiple_data(buffer)
     }
-
-    /// Fill the look-up table for a quick display (partial refresh)
-    /// 
-    /// Is automatically done by [EPD4in2::display_frame_quick()](EPD4in2::display_frame_quick()) 
-    /// //TODO: make public? 
-    fn set_lut_quick(&mut self) -> Result<(), E> {
-        self.set_lut_helper(
-            &LUT_VCOM0_QUICK,
-            &LUT_WW_QUICK,
-            &LUT_BW_QUICK,
-            &LUT_WB_QUICK,
-            &LUT_BB_QUICK)
-    }
-
-    fn set_lut_helper(&mut self, 
-            lut_vcom: &[u8],
-            lut_ww: &[u8],
-            lut_bw: &[u8],
-            lut_wb: &[u8],
-            lut_bb: &[u8]) -> Result<(), E> 
-    {
-        //vcom
-        self.send_command(Command::LUT_FOR_VCOM)?;
-        self.send_multiple_data(lut_vcom)?;
-
-        //ww --
-        self.send_command(Command::LUT_WHITE_TO_WHITE)?;
-        self.send_multiple_data(lut_ww)?;
-
-        //bw r
-        self.send_command(Command::LUT_BLACK_TO_WHITE)?;
-        self.send_multiple_data(lut_bw)?;
-
-        //wb w
-        self.send_command(Command::LUT_WHITE_TO_BLACK)?;
-        self.send_multiple_data(lut_wb)?;
-
-        //bb b
-        self.send_command(Command::LUT_BLACK_TO_BLACK)?;
-        self.send_multiple_data(lut_bb)?;
-
-        Ok(())
-    }
-
 
 }
-
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-

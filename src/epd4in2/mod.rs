@@ -78,9 +78,9 @@ pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
     /// Connection Interface
     interface: ConnectionInterface<SPI, CS, BUSY, DC, RST, D>,
     /// Width
-    width: u32,
+    width: u16,
     /// Height
-    height: u32,
+    height: u16,
     /// Background Color
     color: Color,
 }
@@ -95,11 +95,11 @@ where
     RST: OutputPin,
     D: DelayUs<u16> + DelayMs<u16>,
 {
-    fn get_width(&self) -> u32 {
+    fn get_width(&self) -> u16 {
         self.width
     }
 
-    fn get_height(&self) -> u32 {
+    fn get_height(&self) -> u16 {
         self.height
     }
 
@@ -119,8 +119,8 @@ where
     /// epd4in2.sleep();
     /// ```
     fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Result<Self, E> {
-        let width = WIDTH as u32;
-        let height = HEIGHT as u32;
+        let width = WIDTH as u16;
+        let height = HEIGHT as u16;
 
         let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
         let color = Color::White;
@@ -234,6 +234,7 @@ where
 
         self.send_command(Command::DATA_START_TRANSMISSION_2)?;
         //self.send_multiple_data(buffer)?;
+        
         for &elem in buffer.iter() {
             self.send_data(elem)?;
         }

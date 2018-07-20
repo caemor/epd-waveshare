@@ -47,10 +47,10 @@ pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST, D, E>
         D: DelayUs<u16> + DelayMs<u16>,
 {
     /// Get the width of the display
-    fn get_width(&self) -> u32;
+    fn get_width(&self) -> u16;
 
     /// Get the height of the display
-    fn get_height(&self) -> u32;
+    fn get_height(&self) -> u16;
 
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     /// 

@@ -70,6 +70,25 @@ where
         })
     }
 
+    /// Basic function for sending a single u8 of data over spi
+    /// 
+    /// Enables direct interaction with the device with the help of [Esend_command()](ConnectionInterface::send_command())
+    /// 
+    /// Should rarely be needed!
+    /// //TODO: make public? 
+    pub(crate) fn send_data_x_times(&mut self, val: u8, repetitions: u16) -> Result<(), E> {
+        // high for data
+        self.dc.set_high();
+
+        // Transfer data (u8) over spi
+        self.with_cs(|epd| {
+            for _ in 0..repetitions {
+                epd.spi.write(&[val])?;
+            }
+            Ok(())           
+        })
+    }
+
     /// Basic function for sending an array of u8-values of data over spi
     /// 
     /// Enables direct interaction with the device with the help of [send_command()](EPD4in2::send_command())

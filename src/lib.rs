@@ -47,6 +47,8 @@
 //! 
 //! BE CAREFUL! The Partial Drawing can "destroy" your display.
 //! It needs more testing first.
+//! 
+//! TODO: Make more assertions about buffersizes?
 #![no_std]
 
 
