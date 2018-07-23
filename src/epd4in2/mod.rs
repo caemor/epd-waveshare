@@ -105,7 +105,7 @@ where
 
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
-    /// This already initialises the device. That means [EPD4in2::init()](EPD4in2::init()) isn't needed directly afterwards
+    /// This already initialises the device. That means [init()](init()) isn't needed directly afterwards
     ///
     /// # Example
     ///
@@ -136,6 +136,7 @@ where
         Ok(epd)
     }
 
+    /// blablabla
     fn init(&mut self) -> Result<(), E> {
         // reset the device
         self.reset();

@@ -97,7 +97,7 @@ pub enum Command {
 	LOW_POWER_DETECTION = 0x51,
 	/// This command defines non-overlap period of Gate and Source.
 	TCON_SETTING = 0x60,
-	/// This command defines alternative resolution and this setting is of higher priority than the RES[1:0] in R00H (PSR).
+	/// This command defines alternative resolution and this setting is of higher priority than the RES\[1:0\] in R00H (PSR).
 	RESOLUTION_SETTING = 0x61,
 	/// This command defines the Fist Active Gate and First Active Source of active channels.
 	GSST_SETTING = 0x65,

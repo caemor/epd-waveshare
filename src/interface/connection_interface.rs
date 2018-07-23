@@ -128,9 +128,10 @@ where
     /// if the device is still busy
     /// 
     /// is_busy_low
-    ///     - TRUE for epd4in2, epd1in54, epd2in13, epd2in7, epd5in83, epd7in5
     /// 
-    ///     - FALSE for epd2in9
+    ///  - TRUE for epd4in2, epd1in54, epd2in13, epd2in7, epd5in83, epd7in5
+    ///  - FALSE for epd2in9
+    /// 
     /// Most likely there was a mistake with the 2in9 busy connection
     pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
         self.delay_ms(1);
