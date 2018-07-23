@@ -47,6 +47,8 @@
 //! 
 //! BE CAREFUL! The Partial Drawing can "destroy" your display.
 //! It needs more testing first.
+//! 
+//! TODO: Make more assertions about buffersizes?
 #![no_std]
 
 
@@ -58,7 +60,14 @@ use hal::{
 
 pub mod drawing;
 pub mod epd4in2;
-use epd4in2::*;
+
+
+
+pub mod epd2in9;
+
+pub mod interface;
+
+
 
 //TODO: test spi mode
 /// SPI mode - 
