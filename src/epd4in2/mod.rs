@@ -136,7 +136,6 @@ where
         Ok(epd)
     }
 
-    /// blablabla
     fn init(&mut self) -> Result<(), E> {
         // reset the device
         self.reset();
