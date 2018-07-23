@@ -6,6 +6,7 @@ authors = ["Christoph Groß <christoph.gross@student.uni-tuebingen.de>"]
 
 [features]
 default = []
+# Activates the fast LUT for EPD4in2
 epd4in2_fast_update = []
 
 [dependencies]
