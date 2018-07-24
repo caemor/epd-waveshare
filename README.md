@@ -11,7 +11,7 @@ Support for more (especially the smaller and faster ones) should follow after th
 | 4.2 Inch B/W | Black, White | Not officially [[1](#42-inch-e-ink-blackwhite)] | ✔ | ✔ |
 | 1.54 Inch B/W | Black, White | ✔ |  |  |
 | 2.13 Inch B/W | Black, White | ✔ |  |  |
-| 2.9 Inch B/W | Black, White | ✔ |  |  |
+| 2.9 Inch B/W | Black, White | ✔ | ✔ |  |
 
 
 ### 4.2 Inch E-Ink Black/White
