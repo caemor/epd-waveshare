@@ -8,7 +8,7 @@ use hal::{
 
 use interface::Command;
 
-/// EPD4in2 driver
+/// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
 pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST, D> {
     /// SPI

@@ -3,34 +3,27 @@ use hal::{
         spi::Write,
         delay::*
     },
-    spi::{Mode, Phase, Polarity},
     digital::*
 };
+use core::marker::Sized;
+
 
 use drawing::color::Color;
 
+/// Interface for the physical connection between display and the controlling device
 pub mod connection_interface;
 
-//TODO: test spi mode
-/// SPI mode - 
-/// For more infos see [Requirements: SPI](index.html#spi)
-pub const SPI_MODE: Mode = Mode {
-    phase: Phase::CaptureOnFirstTransition,
-    polarity: Polarity::IdleLow,
-};
 
-use core::marker::Sized;
-
+/// All commands need to have this trait which gives the address of the command
+/// which needs to be send via SPI with activated CommandsPin (Data/Command Pin in CommandMode)
 pub(crate) trait Command {
     fn address(self) -> u8;
 }
 
 
-//TODO add LUT trait with set_fast_lut
-// and set_manual_lut and set_normal_lut or sth like that
+//TODO: add LUT trait with set_fast_lut and set_manual_lut and set_normal_lut or sth like that?
 // for partial updates
-
-pub trait LUTSupport<Error> {
+trait LUTSupport<Error> {
     fn set_lut(&mut self) -> Result<(), Error>;
     fn set_lut_quick(&mut self) -> Result<(), Error>;
     fn set_lut_manual(&mut self, data: &[u8]) -> Result<(), Error>;
@@ -122,37 +115,4 @@ pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST, D, E>
     /// 
     /// maximum delay ~65 seconds (u16:max in ms)
     fn delay_ms(&mut self, delay: u16);
-
-    /*
-
-
-    //
-    -set_quick_lut?
-    -set_normal_mode
-
-
-    fn clear_frame(&mut self, reset_color: Option<Color>) -> Result<(), E>
-
-    fn display_frame_quick(&mut self) -> Result<(), E>
-
-    fn display_frame(&mut self) -> Result<(), E>
-
-    pub fn display_and_transfer_frame(
-    &mut self, 
-    buffer: &[u8], 
-    color: Option<u8>
-) -> Result<(), E>
-
-    pub fn set_partial_window(
-    &mut self, 
-    buffer: &[u8], 
-    x: u16, 
-    y: u16, 
-    w: u16, 
-    l: u16, 
-    is_dtm1: bool
-) -> Result<(), E>
-
-*/
-
 }

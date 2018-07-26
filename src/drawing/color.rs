@@ -1,11 +1,11 @@
-
-
+/// Only for the B/W Displays atm
 pub enum Color {
     Black,
     White
 }
 
 impl Color {
+    /// Get the color encoding of the color for one bit
     pub fn get_bit_value(&self) -> u8 {
         match self {
             Color::White => 1u8,
@@ -13,6 +13,7 @@ impl Color {
         }
     }
 
+    /// Gets a full byte of black or white pixels
     pub fn get_byte_value(&self) -> u8 {
         match self {
             Color::White => 0xff,
@@ -20,8 +21,13 @@ impl Color {
         }
     }
 
-    //position counted from the left (highest value) from 0 to 7
-    //remember: 1 is white, 0 is black
+
+    /// Get the color encoding of a specific bit in a byte
+    /// 
+    /// input is the byte where one bit is gonna be selected
+    /// pos is counted from the left (highest value) from 0 to 7
+    /// remember: 1 is white, 0 is black
+    /// Color is the color you want to draw with in the foreground
     pub(crate) fn get_color(input: u8, pos: u8, color: &Color) -> Color {
         match Color::is_drawable_pixel(input, pos) {
             true    => Color::normal_color(color),
@@ -29,6 +35,7 @@ impl Color {
         }
     }
 
+    // Inverses the given color from Black to White or from White to Black
     fn inverse_color(color: &Color) -> Color {
         match color {
             Color::White => Color::Black,
@@ -36,7 +43,8 @@ impl Color {
         }
     }
 
-    
+    // Gives you a new owned copy of the color
+    //TODO: just use clone?
     fn normal_color(color: &Color) -> Color {
         match color {
             Color::White => Color::White,
@@ -50,7 +58,7 @@ impl Color {
         ((input >> (7 - pos)) & 1u8) > 0u8
     }
 
-
+    //TODO: does basically the same as get_color, so remove one of them?
     pub(crate) fn convert_color(input: u8, pos: u8, foreground_color: &Color) -> Color {
         //match color: 
         //      - white for "nothing to draw"/background drawing

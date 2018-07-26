@@ -1,10 +1,4 @@
 //! A simple Driver for the Waveshare E-Ink Displays via SPI
-//! 
-//! The other Waveshare E-Ink Displays should be added later on, atm it's only the 4.2"-Display
-//! 
-//! Build with the help of documentation/code from [Waveshare](https://www.waveshare.com/wiki/4.2inch_e-Paper_Module), 
-//! [Ben Krasnows partial Refresh tips](https://benkrasnow.blogspot.de/2017/10/fast-partial-refresh-on-42-e-paper.html) and
-//! the driver documents in the `pdfs`-folder as orientation.
 //!
 //! This driver was built using [`embedded-hal`] traits.
 //!
@@ -44,12 +38,10 @@
 //! epd4in2.sleep();
 //! ```
 //! 
-//! 
-//! BE CAREFUL! The Partial Drawing can "destroy" your display.
-//! It needs more testing first.
-//! 
-//! TODO: Make more assertions about buffersizes?
+//!
 #![no_std]
+
+//TODO: Make more assertions about buffersizes?
 
 
 extern crate embedded_hal as hal;
