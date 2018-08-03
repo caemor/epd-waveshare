@@ -1,12 +1,12 @@
 # eink-waveshare-rs [![Build Status](https://travis-ci.com/Caemor/eink-waveshare-rs.svg?branch=master)](https://travis-ci.com/Caemor/eink-waveshare-rs)
 
-This library contains a driver for the [4.2 Inch E-Paper Module](https://www.waveshare.com/wiki/4.2inch_e-Paper_Module) from Waveshare.
+This library contains a driver for E-Paper Modules  from Waveshare.
 
-Support for more (especially the smaller and faster ones) should follow after the library around the 4.2" EInk is stable and tested enough.
+Support for more than the 4.2" EPD (especially the smaller and faster ones) is in the work.
 
 ## (Supported) Devices
 
-| Device (with Link) | Colors | Flexible | Partial Refresh | Supported | Tested |
+| Device (with Link) | Colors | Flexible Display | Partial Refresh | Supported | Tested |
 | :---: | --- | :---: | :---: | :---: | :---: |
 | [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[1](#42-inch-e-ink-blackwhite)] | ✔ | ✔ |
 | [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ |  |  |
