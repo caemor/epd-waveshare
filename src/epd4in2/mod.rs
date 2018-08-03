@@ -73,7 +73,8 @@ pub const SPI_MODE: Mode = Mode {
 
 /// EPD4in2 driver
 ///
-pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
+pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D>
+  {
     /// Connection Interface
     interface: ConnectionInterface<SPI, CS, BUSY, DC, RST, D>,
     /// Width
@@ -84,15 +85,17 @@ pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
     color: Color,
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, E> WaveshareInterface<SPI, CS, BUSY, DC, RST, D, E>
-    for EPD4in2<SPI, CS, BUSY, DC, RST, D>
-where
-    SPI: Write<u8, Error = E>,
+
+
+impl<SPI, CS, BUSY, DataCommand, RST, Delay, Error> WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, Error>
+    for EPD4in2<SPI, CS, BUSY, DataCommand, RST, Delay>
+where 
+    SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
-    DC: OutputPin,
+    DataCommand: OutputPin,
     RST: OutputPin,
-    D: DelayUs<u16> + DelayMs<u16>,
+    Delay: DelayUs<u16> + DelayMs<u16>,
 {
     fn get_width(&self) -> u16 {
         self.width
@@ -117,11 +120,11 @@ where
     ///
     /// epd4in2.sleep();
     /// ```
-    fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Result<Self, E> {
+    fn new(interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>) -> Result<Self, Error> {
         let width = WIDTH as u16;
         let height = HEIGHT as u16;
 
-        let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
+        
         let color = Color::White;
         let mut epd = EPD4in2 {
             interface,
@@ -135,7 +138,7 @@ where
         Ok(epd)
     }
 
-    fn init(&mut self) -> Result<(), E> {
+    fn init(&mut self) -> Result<(), Error> {
         // reset the device
         self.reset();
 
