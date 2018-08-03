@@ -34,6 +34,28 @@ It's possible with this driver but might lead to ghosting / burn-in effects ther
 | RST   | 	External reset pin (Low for reset) |
 | BUSY  | 	Busy state output pin (Low for busy)  |
 
+### Display Configs
+
+There are two types of Display Configurations used in Wavedshare EPDs, which also needs to be set on the "new" E-Paper Driver HAT.
+They are also called A and B, but you shouldn't get confused and mix it with the Type A,B,C and D of the various Displays, which just describe different types (colored variants) or new versions. In the Display Config the seperation is most likely due to included fast partial refresh of the displays. In a Tabular form: 
+
+| Type A | Tybe B |
+| :---: |  :---: |
+| 1.54in (A) | 1.54in (B) |
+| 2.13in (A) | 1.54in (C) |
+| 2.13in (D) | 2.13in (B) |
+| 2.9in (A)  | 2.13in (C) |
+|            | 2.7in  (A) |
+|            | 2.7in  (B) |
+|            | 2.9in  (B) |
+|            | 2.9in  (C) |
+|            | 4.2in  (A) |
+|            | 4.2in  (B) |
+|            | 4.2in  (C) |
+|            | 7.5in  (A) |
+|            | 7.5in  (B) |
+|            | 7.5in  (C) |
+
 ## TODO's
 
 - [ ] add more examples (e.g. for f3)
