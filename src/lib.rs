@@ -59,6 +59,8 @@ pub mod epd2in9;
 
 pub mod interface;
 
+pub mod type_a;
+
 
 
 //TODO: test spi mode

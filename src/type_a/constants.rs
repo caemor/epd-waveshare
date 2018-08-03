@@ -1,6 +1,3 @@
-pub(crate) const WIDTH: u16 = 128;
-pub(crate) const HEIGHT: u16 = 296;
-
 // Original Waveforms from Waveshare
 pub(crate) const LUT_FULL_UPDATE: [u8; 30] =[
     0x02, 0x02, 0x01, 0x11, 0x12, 0x12, 0x22, 0x22, 
