@@ -21,12 +21,6 @@ pub(crate) trait Command {
 }
 
 
-pub trait Displays {
-    fn width(self) -> u8;
-    fn height(self) -> u8;
-}
-
-
 
 
 //TODO: add LUT trait with set_fast_lut and set_manual_lut and set_normal_lut or sth like that?
