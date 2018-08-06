@@ -22,10 +22,7 @@
 const WIDTH: u16 = 200;
 const HEIGHT: u16 = 200;
 const DPI: u16 = 184;
-
-
-use epds::EPD;
-
+const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 use hal::{
     blocking::{
@@ -100,11 +97,8 @@ where
     fn new(
         interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>
     ) -> Result<Self, E> {
-        let epd = EPD::new(WIDTH, HEIGHT);
-        let background_color = Color::White;
 
-        let mut epd = EPD1in54 {interface, /*epd,*/ background_color};
-
+        let mut epd = EPD1in54 {interface, background_color: DEFAULT_BACKGROUND_COLOR};
 
         epd.init()?;
 
