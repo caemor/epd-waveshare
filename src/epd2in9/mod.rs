@@ -295,9 +295,9 @@ where
     }
 
     //TODO: assert length for LUT is exactly 30
-    fn set_lut_manual(&mut self, buffer: &[u8]) -> Result<(), E> {
-        self.set_lut_helper(buffer)
-    }
+    //fn set_lut_manual(&mut self, buffer: &[u8]) -> Result<(), E> {
+    //    self.set_lut_helper(buffer)
+    //}
 
 
     fn set_lut_helper(&mut self, buffer: &[u8]) -> Result<(), E> {

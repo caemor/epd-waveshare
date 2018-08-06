@@ -141,7 +141,7 @@ impl<'a> Graphics<'a> {
         let mut counter = 0;
         for input_char in input.chars() {
             self.draw_char(x0 + counter, y0, input_char, font, color);
-            counter += font.get_char_width(input_char) as u16;
+            counter += u16::from(font.get_char_width(input_char));
         }
     }
 
@@ -163,7 +163,7 @@ impl<'a> Graphics<'a> {
             for _ in 0..8 {
 
                 self.draw_pixel( 
-                    x0 + width_counter as u16, 
+                    x0 + u16::from(width_counter), 
                     y0 + row_counter, 
                     &Color::get_color(elem, width_counter % 8, color));
 
@@ -183,9 +183,9 @@ impl<'a> Graphics<'a> {
     pub fn draw_char_8x8(&mut self, x0: u16, y0: u16, input: char, color: &Color) {
         let mut counter = 0;
         // includes special draw_char instructions as this one is ordered columnwise and not rowwise (first byte == first 8 pixel columnwise)
-        for &elem in font::bitmap_8x8(input).iter() {
+        for &elem in (&font::bitmap_8x8(input)).iter() {
             for i in 0..8u8 {
-                self.draw_pixel(x0 + counter, y0 + 7 - i as u16, &Color::convert_color(elem, i, color))
+                self.draw_pixel(x0 + counter, y0 + 7 - u16::from(i), &Color::convert_color(elem, i, color))
             }
             counter += 1;
         }
@@ -197,10 +197,8 @@ impl<'a> Graphics<'a> {
     /// 
     /// no autobreak line yet
     pub fn draw_string_8x8(&mut self, x0: u16, y0: u16, input: &str, color: &Color) {
-        let mut counter = 0;
-        for input_char in input.chars() {
-            self.draw_char_8x8(x0 + counter*8, y0, input_char, color);
-            counter += 1;
+        for (counter, input_char) in input.chars().enumerate() {
+            self.draw_char_8x8(x0 + counter as u16*8, y0, input_char, color);
         }
     }
 

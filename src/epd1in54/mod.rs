@@ -21,7 +21,7 @@
 
 const WIDTH: u16 = 200;
 const HEIGHT: u16 = 200;
-const DPI: u16 = 184;
+//const DPI: u16 = 184;
 const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 use hal::{
@@ -292,9 +292,9 @@ where
     }
 
     //TODO: assert length for LUT is exactly 30
-    fn set_lut_manual(&mut self, buffer: &[u8]) -> Result<(), E> {
-        self.set_lut_helper(buffer)
-    }
+    //fn set_lut_manual(&mut self, buffer: &[u8]) -> Result<(), E> {
+    //    self.set_lut_helper(buffer)
+    //}
 
 
     fn set_lut_helper(&mut self, buffer: &[u8]) -> Result<(), E> {

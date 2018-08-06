@@ -8,7 +8,7 @@ use interface;
 /// Should rarely (never?) be needed directly.
 /// 
 /// For more infos about the addresses and what they are doing look into the pdfs 
-//#[allow(dead_code)]
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
