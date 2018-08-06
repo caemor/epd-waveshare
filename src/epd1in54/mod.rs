@@ -35,9 +35,11 @@ use hal::{
     digital::*
 };
 
-
-use type_a::luts::*;
-pub use type_a::command::Command;
+use type_a::{
+    LUT_FULL_UPDATE,
+    LUT_PARTIAL_UPDATE,
+    command::Command
+};
 
 use drawing::color::Color;
 
@@ -53,7 +55,7 @@ use interface::connection_interface::ConnectionInterface;
 
 /// EPD2in9 driver
 ///
-pub struct EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay> {
+pub struct EPD1in54<SPI, CS, BUSY, DataCommand, RST, Delay> {
     /// SPI
     interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>,
     /// EPD (width, height)
@@ -62,7 +64,7 @@ pub struct EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay> {
     background_color: Color, 
 }
 
-impl<SPI, CS, BUSY, DataCommand, RST, Delay, E> EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay>
+impl<SPI, CS, BUSY, DataCommand, RST, Delay, E> EPD1in54<SPI, CS, BUSY, DataCommand, RST, Delay>
 where 
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
@@ -76,7 +78,7 @@ where
 
 
 impl<SPI, CS, BUSY, DataCommand, RST, Delay, E> WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, E> 
-    for EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay>
+    for EPD1in54<SPI, CS, BUSY, DataCommand, RST, Delay>
 where 
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
@@ -101,7 +103,7 @@ where
         let epd = EPD::new(WIDTH, HEIGHT);
         let background_color = Color::White;
 
-        let mut epd = EPD2in9 {interface, /*epd,*/ background_color};
+        let mut epd = EPD1in54 {interface, /*epd,*/ background_color};
 
 
         epd.init()?;
@@ -231,7 +233,7 @@ where
 
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
+impl<SPI, CS, BUSY, DC, RST, D, E> EPD1in54<SPI, CS, BUSY, DC, RST, D>
 where 
     SPI: Write<u8, Error = E>,
     CS: OutputPin,

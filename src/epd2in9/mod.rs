@@ -34,8 +34,11 @@ use hal::{
 };
 
 
-use type_a::luts::*;
-pub use type_a::command::Command;
+use type_a::{
+    LUT_FULL_UPDATE,
+    LUT_PARTIAL_UPDATE,
+    command::Command
+};
 
 use drawing::color::Color;
 
