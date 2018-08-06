@@ -10,7 +10,7 @@ use interface::Command;
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
-pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST, D> {
+pub struct ConnectionInterface<SPI, CS, BUSY, DC, RST, D> {
     /// SPI
     spi: SPI,
     /// CS for SPI
@@ -35,7 +35,7 @@ where
     RST: OutputPin,
     Delay: DelayUs<u16> + DelayMs<u16>,
 {
-    pub(crate) fn new(spi: SPI, cs: CS, busy: BUSY, dc: DataCommand, rst: RST, delay: Delay) -> Self {
+    pub fn new(spi: SPI, cs: CS, busy: BUSY, dc: DataCommand, rst: RST, delay: Delay) -> Self {
         ConnectionInterface {spi, cs, busy, dc, rst, delay }
     }
     

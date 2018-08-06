@@ -2,14 +2,16 @@
 
 This library contains a driver for E-Paper Modules  from Waveshare.
 
-Support for more than the 4.2" EPD (especially the smaller and faster ones) is in the work.
+Support for more than the 4.2in EPD (especially the smaller and faster ones) is in the work.
+
+The 2.9in (A) and 1.54 (A) variant should both work but aren't tested yet.
 
 ## (Supported) Devices
 
 | Device (with Link) | Colors | Flexible Display | Partial Refresh | Supported | Tested |
 | :---: | --- | :---: | :---: | :---: | :---: |
 | [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[1](#42-inch-e-ink-blackwhite)] | ✔ | ✔ |
-| [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ |  |  |
+| [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ |  |
 | [2.13 Inch B/W (A)](https://www.waveshare.com/product/2.13inch-e-paper-hat.htm) | Black, White | ✕ | ✔ |  |  |
 | [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ |  |
 

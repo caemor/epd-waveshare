@@ -91,8 +91,8 @@ mod tests {
     fn command_addr() {
 		assert_eq!(Command::DRIVER_OUTPUT_CONTROL.address(), 0x01);
 
-		assert_eq!(Command::SET_RAM_X_ADDRESS_COUNTER.addr(), 0x4E);
+		assert_eq!(Command::SET_RAM_X_ADDRESS_COUNTER.address(), 0x4E);
 
-		assert_eq!(Command::TERMINATE_COMMANDS_AND_FRAME_WRITE.addr(), 0xFF);        
+		assert_eq!(Command::TERMINATE_COMMANDS_AND_FRAME_WRITE.address(), 0xFF);        
     }
 }

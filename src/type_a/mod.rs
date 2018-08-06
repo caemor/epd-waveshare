@@ -28,8 +28,8 @@ use hal::{
     digital::*
 };
 
-mod constants;
-use self::constants::*;
+pub(crate) mod luts;
+use self::luts::*;
 
 use drawing::color::Color;
 
@@ -40,17 +40,18 @@ use interface::*;
 
 use interface::connection_interface::ConnectionInterface;
 
+use epds::EPD;
 
 
+pub(crate) const WIDTH: u16 = 128;
+pub(crate) const HEIGHT: u16 = 296;
 /// EPD2in9 driver
 ///
 pub struct EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay> {
     /// SPI
     interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>,
-    /// Width
-    width: u16,
-    /// Height
-    height: u16,  
+    /// EPD (width, height)
+    epd: EPD,
     /// Color
     background_color: Color, 
 }
@@ -80,24 +81,21 @@ where
 { 
     
     fn get_width(&self) -> u16 {
-        self.width
+        self.epd.width
     }
 
     fn get_height(&self) -> u16 {
-        self.height
+        self.epd.height
     }
 
 
     fn new(
-        interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>,
-        display: Displays
-    ) -> Result<Self, E> {                
-        let width = WIDTH as u16;
-        let height = HEIGHT as u16;
-
+        interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>
+    ) -> Result<Self, E> {
+        let epd = EPD::new(WIDTH, HEIGHT);
         let background_color = Color::White;
 
-        let mut epd = EPD2in9 {interface, width, height, background_color};
+        let mut epd = EPD2in9 {interface, epd, background_color};
 
 
         epd.init()?;
@@ -118,8 +116,8 @@ where
         // 0.. B[2:0]
         // Default Values: A = Height of Screen (0x127), B = 0x00 (GD, SM and TB=0?)
         self.interface.send_command(Command::DRIVER_OUTPUT_CONTROL)?;
-        self.interface.send_data(HEIGHT as u8)?;
-        self.interface.send_data((HEIGHT >> 8) as u8)?;
+        self.interface.send_data(self.epd.height as u8)?;
+        self.interface.send_data((self.epd.height >> 8) as u8)?;
         self.interface.send_data(0x00)?;
 
         // 3 Databytes: (and default values from datasheet and arduino)
@@ -217,7 +215,7 @@ where
         let color = self.background_color.get_byte_value();
 
         self.interface.send_command(Command::WRITE_RAM)?;        
-        self.interface.send_data_x_times(color, WIDTH / 8 * HEIGHT)
+        self.interface.send_data_x_times(color, self.epd.width / 8 * self.epd.height)
     }
 
     /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())
@@ -241,8 +239,11 @@ where
     }
     
     pub(crate) fn use_full_frame(&mut self) -> Result<(), E> {
+        let width = self.epd.width;
+        let height = self.epd.height;
+
         // choose full frame/ram
-        self.set_ram_area(0, 0, WIDTH - 1, HEIGHT - 1)?;
+        self.set_ram_area(0, 0, width - 1, height - 1)?;
 
         // start from the beginning
         self.set_ram_counter(0,0)

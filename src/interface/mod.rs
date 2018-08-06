@@ -7,7 +7,6 @@ use hal::{
 };
 use core::marker::Sized;
 
-
 use drawing::color::Color;
 
 /// Interface for the physical connection between display and the controlling device
@@ -26,6 +25,8 @@ pub trait Displays {
     fn width(self) -> u8;
     fn height(self) -> u8;
 }
+
+
 
 
 //TODO: add LUT trait with set_fast_lut and set_manual_lut and set_normal_lut or sth like that?
@@ -56,7 +57,7 @@ pub trait WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, Error>
     /// 
     /// This already initialises the device. That means [init()](WaveshareInterface::init()) isn't needed directly afterwards
     fn new(
-        interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>,
+        interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>
     ) -> Result<Self, Error>
         where Self: Sized;
 

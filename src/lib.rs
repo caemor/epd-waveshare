@@ -53,14 +53,13 @@ use hal::{
 pub mod drawing;
 pub mod epd4in2;
 
-
+mod epds;
 
 pub mod epd2in9;
 
 pub mod interface;
 
 pub mod type_a;
-
 
 
 //TODO: test spi mode
