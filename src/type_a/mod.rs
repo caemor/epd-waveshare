@@ -1,5 +1,4 @@
-pub mod command;
-pub use self::command::Command;
+pub(crate) mod command;
 
 // Original Waveforms from Waveshare
 pub(crate) const LUT_FULL_UPDATE: [u8; 30] =[

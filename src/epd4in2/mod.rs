@@ -60,7 +60,7 @@ use self::constants::*;
 use drawing::color::Color;
 
 pub mod command;
-pub use self::command::Command;
+use self::command::Command;
 
 
 /// EPD4in2 driver

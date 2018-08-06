@@ -11,7 +11,7 @@ use interface;
 //#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
-pub enum Command {
+pub(crate) enum Command {
     /// Driver Output control 	
 	/// 	3 Databytes: 
 	/// 	A[7:0]
