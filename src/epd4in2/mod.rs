@@ -62,15 +62,6 @@ use drawing::color::Color;
 pub mod command;
 pub use self::command::Command;
 
-use epds::EPD;
-
-pub(crate) fn new() -> EPD {
-    EPD::new(
-        constants::WIDTH, 
-        constants::HEIGHT
-    )
-}
-
 
 /// EPD4in2 driver
 ///
