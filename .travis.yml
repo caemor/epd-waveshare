@@ -98,8 +98,8 @@ script:
   - cargo build
   - cargo build --release
   - cargo test
-  - cargo test --release
-  - cargo doc --release
+  - cargo test --all-features --release
+  - cargo doc --all-features --release
   - cd examples/embedded_linux && cargo build && cd ../../
   #- cd ../f3_stm32f30x && cargo build
 
