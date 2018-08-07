@@ -1,19 +1,17 @@
-//! SPI Commands for the Waveshare 2.9" E-Ink Display
+//! SPI Commands for the Waveshare 2.9" and 1.54" E-Ink Display
 
 use interface;
 
 
-/// EPD2IN9 commands
+/// EPD1in54 and EPD2IN9 commands
 /// 
 /// Should rarely (never?) be needed directly.
 /// 
 /// For more infos about the addresses and what they are doing look into the pdfs 
-/// 
-/// The description of the single commands is mostly taken from IL0398.pdf
-//#[allow(dead_code)]
+#[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
-pub enum Command {
+pub(crate) enum Command {
     /// Driver Output control 	
 	/// 	3 Databytes: 
 	/// 	A[7:0]
@@ -28,6 +26,7 @@ pub enum Command {
 	/// 	1.. C[6:0]
 	/// 	Default: A[7:0] = 0xCF, B[7:0] = 0xCE, C[7:0] = 0x8D
 	BOOSTER_SOFT_START_CONTROL = 0x0C,
+    GATE_SCAN_START_POSITION = 0x0F,
 	//TODO: useful?
 	// GATE_SCAN_START_POSITION = 0x0F,
 	/// Deep Sleep Mode Control
@@ -92,8 +91,8 @@ mod tests {
     fn command_addr() {
 		assert_eq!(Command::DRIVER_OUTPUT_CONTROL.address(), 0x01);
 
-		//assert_eq!(Command::PANEL_SETTING.addr(), 0x00);
+		assert_eq!(Command::SET_RAM_X_ADDRESS_COUNTER.address(), 0x4E);
 
-		//assert_eq!(Command::DISPLAY_REFRESH.addr(), 0x12);        
+		assert_eq!(Command::TERMINATE_COMMANDS_AND_FRAME_WRITE.address(), 0xFF);        
     }
 }

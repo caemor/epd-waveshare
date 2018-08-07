@@ -29,9 +29,10 @@ impl Color {
     /// remember: 1 is white, 0 is black
     /// Color is the color you want to draw with in the foreground
     pub(crate) fn get_color(input: u8, pos: u8, color: &Color) -> Color {
-        match Color::is_drawable_pixel(input, pos) {
-            true    => Color::normal_color(color),
-            false   => Color::inverse_color(color)
+        if Color::is_drawable_pixel(input, pos) {
+            Color::normal_color(color)
+        } else {
+            Color::inverse_color(color)
         }
     }
 
@@ -65,9 +66,10 @@ impl Color {
         //      - black for pixel to draw
         //
         //foreground color is the color you want to have in the foreground
-        match Color::is_drawable_pixel(input, pos) {
-            true => Color::normal_color(foreground_color),
-            false => Color::inverse_color(foreground_color)
+        if Color::is_drawable_pixel(input, pos) {
+            Color::normal_color(foreground_color)
+        } else {
+            Color::inverse_color(foreground_color)
         }
     }
 }

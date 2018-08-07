@@ -1,7 +1,7 @@
-//! A simple Driver for the Waveshare 2.9" E-Ink Display via SPI
+//! A simple Driver for the Waveshare 1.54" E-Ink Display via SPI
 //! 
 //!
-//! # Examples from the 4.2" Display. It should work the same for the 2.9" one.
+//! # Examples from the 4.2" Display. It should work the same for the 1.54" one.
 //!
 //! ```ignore
 //! let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay).unwrap();
@@ -19,8 +19,9 @@
 //! epd4in2.sleep();
 //! ```
 
-const WIDTH: u16 = 128;
-const HEIGHT: u16 = 296;
+const WIDTH: u16 = 200;
+const HEIGHT: u16 = 200;
+//const DPI: u16 = 184;
 const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 use hal::{
@@ -30,7 +31,6 @@ use hal::{
     },
     digital::*
 };
-
 
 use type_a::{
     LUT_FULL_UPDATE,
@@ -50,9 +50,9 @@ use interface::connection_interface::ConnectionInterface;
 
 
 
-/// EPD2in9 driver
+/// EPD1in54 driver
 ///
-pub struct EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay> {
+pub struct EPD1in54<SPI, CS, BUSY, DataCommand, RST, Delay> {
     /// SPI
     interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>,
     /// EPD (width, height)
@@ -61,7 +61,7 @@ pub struct EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay> {
     background_color: Color, 
 }
 
-impl<SPI, CS, BUSY, DataCommand, RST, Delay, E> EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay>
+impl<SPI, CS, BUSY, DataCommand, RST, Delay, E> EPD1in54<SPI, CS, BUSY, DataCommand, RST, Delay>
 where 
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
@@ -75,7 +75,7 @@ where
 
 
 impl<SPI, CS, BUSY, DataCommand, RST, Delay, E> WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, E> 
-    for EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay>
+    for EPD1in54<SPI, CS, BUSY, DataCommand, RST, Delay>
 where 
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
@@ -97,11 +97,8 @@ where
     fn new(
         interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>
     ) -> Result<Self, E> {
-        //let epd = EPD::new(WIDTH, HEIGHT);
-        //let background_color = Color::White;
 
-        let mut epd = EPD2in9 {interface, background_color: DEFAULT_BACKGROUND_COLOR};
-
+        let mut epd = EPD1in54 {interface, background_color: DEFAULT_BACKGROUND_COLOR};
 
         epd.init()?;
 
@@ -230,7 +227,7 @@ where
 
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
+impl<SPI, CS, BUSY, DC, RST, D, E> EPD1in54<SPI, CS, BUSY, DC, RST, D>
 where 
     SPI: Write<u8, Error = E>,
     CS: OutputPin,

@@ -51,14 +51,32 @@ use hal::{
 };
 
 pub mod drawing;
-pub mod epd4in2;
+
+mod interface;
+pub use interface::{
+    WaveshareInterface,
+    connection_interface::ConnectionInterface};
+
+#[cfg(feature="epd4in2")]
+mod epd4in2;
+#[cfg(feature="epd4in2")]
+pub use epd4in2::EPD4in2;
+
+#[cfg(feature="epd1in54")]
+mod epd1in54;
+#[cfg(feature="epd1in54")]
+pub use epd1in54::EPD1in54;
 
 
+#[cfg(feature="epd2in9")]
+mod epd2in9;
+///2in9 eink
+#[cfg(feature="epd2in9")]
+///2in9 eink
+pub use epd2in9::EPD2in9;
 
-pub mod epd2in9;
-
-pub mod interface;
-
+#[cfg(any(feature="epd1in54", feature="epd2in9"))]
+pub mod type_a;
 
 
 //TODO: test spi mode

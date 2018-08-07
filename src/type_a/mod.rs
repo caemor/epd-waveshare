@@ -1,5 +1,4 @@
-pub(crate) const WIDTH: u16 = 128;
-pub(crate) const HEIGHT: u16 = 296;
+pub(crate) mod command;
 
 // Original Waveforms from Waveshare
 pub(crate) const LUT_FULL_UPDATE: [u8; 30] =[

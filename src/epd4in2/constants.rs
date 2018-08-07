@@ -1,5 +1,5 @@
-pub(crate) const WIDTH: usize = 400;
-pub(crate) const HEIGHT: usize = 300;
+pub(crate) const WIDTH: u16 = 400;
+pub(crate) const HEIGHT: u16 = 300;
 
 pub(crate) const LUT_VCOM0: [u8; 44] = [
 0x00, 0x17, 0x00, 0x00, 0x00, 0x02,        

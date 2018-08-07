@@ -10,7 +10,7 @@ use interface::Command;
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
-pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST, D> {
+pub struct ConnectionInterface<SPI, CS, BUSY, DC, RST, D> {
     /// SPI
     spi: SPI,
     /// CS for SPI
@@ -26,16 +26,16 @@ pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST, D> {
 }
 
 
-impl<SPI, CS, BUSY, DC, RST, D, E> ConnectionInterface<SPI, CS, BUSY, DC, RST, D>
+impl<SPI, CS, BUSY, DataCommand, RST, Delay, ErrorSpeziale> ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>
 where 
-    SPI: Write<u8, Error = E>,
+    SPI: Write<u8, Error = ErrorSpeziale>,
     CS: OutputPin,
     BUSY: InputPin,
-    DC: OutputPin,
+    DataCommand: OutputPin,
     RST: OutputPin,
-    D: DelayUs<u16> + DelayMs<u16>,
+    Delay: DelayUs<u16> + DelayMs<u16>,
 {
-    pub(crate) fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Self {
+    pub fn new(spi: SPI, cs: CS, busy: BUSY, dc: DataCommand, rst: RST, delay: Delay) -> Self {
         ConnectionInterface {spi, cs, busy, dc, rst, delay }
     }
     
@@ -44,7 +44,7 @@ where
     /// Enables direct interaction with the device with the help of [send_data()](ConnectionInterface::send_data())
     /// Should rarely be needed!
     /// //TODO: make public? 
-    pub(crate) fn send_command<T: Command>(&mut self, command: T) -> Result<(), E> {
+    pub(crate) fn send_command<T: Command>(&mut self, command: T) -> Result<(), ErrorSpeziale> {
         // low for commands
         self.dc.set_low(); 
 
@@ -60,7 +60,7 @@ where
     /// 
     /// Should rarely be needed!
     /// //TODO: make public? 
-    pub(crate) fn send_data(&mut self, val: u8) -> Result<(), E> {
+    pub(crate) fn send_data(&mut self, val: u8) -> Result<(), ErrorSpeziale> {
         // high for data
         self.dc.set_high();
 
@@ -76,7 +76,7 @@ where
     /// 
     /// Should rarely be needed!
     /// //TODO: make public? 
-    pub(crate) fn send_data_x_times(&mut self, val: u8, repetitions: u16) -> Result<(), E> {
+    pub(crate) fn send_data_x_times(&mut self, val: u8, repetitions: u16) -> Result<(), ErrorSpeziale> {
         // high for data
         self.dc.set_high();
 
@@ -95,7 +95,7 @@ where
     /// 
     /// Should rarely be needed!
     /// //TODO: make public? 
-    pub(crate) fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), E> {
+    pub(crate) fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), ErrorSpeziale> {
         // high for data
         self.dc.set_high();
 
@@ -106,9 +106,9 @@ where
     }
 
     // spi write helper/abstraction function
-    pub(crate) fn with_cs<F>(&mut self, f: F) -> Result<(), E>
+    pub(crate) fn with_cs<F>(&mut self, f: F) -> Result<(), ErrorSpeziale>
     where 
-        F: FnOnce(&mut Self) -> Result<(), E>,
+        F: FnOnce(&mut Self) -> Result<(), ErrorSpeziale>,
     {
         // activate spi with cs low
         self.cs.set_low();
@@ -129,8 +129,8 @@ where
     /// 
     /// is_busy_low
     /// 
-    ///  - TRUE for epd4in2, epd1in54, epd2in13, epd2in7, epd5in83, epd7in5
-    ///  - FALSE for epd2in9
+    ///  - TRUE for epd4in2, epd2in13, epd2in7, epd5in83, epd7in5
+    ///  - FALSE for epd2in9, epd1in54 (for all Display Type A ones?)
     /// 
     /// Most likely there was a mistake with the 2in9 busy connection
     pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {

@@ -10,7 +10,7 @@ use interface;
 #[allow(dead_code)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
-pub enum Command {
+pub(crate) enum Command {
     /// Set Resolution, LUT selection, BWR pixels, gate scan direction, source shift direction, booster switch, soft reset
 	PANEL_SETTING = 0x00,
 	/// selecting internal and external power

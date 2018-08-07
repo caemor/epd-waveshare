@@ -49,7 +49,6 @@
 use hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
-    spi::{Mode, Phase, Polarity},
 };
 
 use interface::{connection_interface::ConnectionInterface, WaveshareInterface};
@@ -61,19 +60,13 @@ use self::constants::*;
 use drawing::color::Color;
 
 pub mod command;
-pub use self::command::Command;
+use self::command::Command;
 
-//TODO: test spi mode
-/// SPI mode -
-/// For more infos see [Requirements: SPI](index.html#spi)
-pub const SPI_MODE: Mode = Mode {
-    phase: Phase::CaptureOnFirstTransition,
-    polarity: Polarity::IdleLow,
-};
 
 /// EPD4in2 driver
 ///
-pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
+pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D>
+  {
     /// Connection Interface
     interface: ConnectionInterface<SPI, CS, BUSY, DC, RST, D>,
     /// Width
@@ -84,15 +77,17 @@ pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
     color: Color,
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, E> WaveshareInterface<SPI, CS, BUSY, DC, RST, D, E>
-    for EPD4in2<SPI, CS, BUSY, DC, RST, D>
-where
-    SPI: Write<u8, Error = E>,
+
+
+impl<SPI, CS, BUSY, DataCommand, RST, Delay, SpiError> WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, SpiError>
+    for EPD4in2<SPI, CS, BUSY, DataCommand, RST, Delay>
+where 
+    SPI: Write<u8, Error = SpiError>,
     CS: OutputPin,
     BUSY: InputPin,
-    DC: OutputPin,
+    DataCommand: OutputPin,
     RST: OutputPin,
-    D: DelayUs<u16> + DelayMs<u16>,
+    Delay: DelayUs<u16> + DelayMs<u16>,
 {
     fn get_width(&self) -> u16 {
         self.width
@@ -117,11 +112,11 @@ where
     ///
     /// epd4in2.sleep();
     /// ```
-    fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: D) -> Result<Self, E> {
+    fn new(interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>) -> Result<Self, SpiError> {
         let width = WIDTH as u16;
         let height = HEIGHT as u16;
 
-        let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
+        
         let color = Color::White;
         let mut epd = EPD4in2 {
             interface,
@@ -135,7 +130,7 @@ where
         Ok(epd)
     }
 
-    fn init(&mut self) -> Result<(), E> {
+    fn init(&mut self) -> Result<(), SpiError> {
         // reset the device
         self.reset();
 
@@ -182,7 +177,7 @@ where
         Ok(())
     }
 
-    fn sleep(&mut self) -> Result<(), E> {
+    fn sleep(&mut self) -> Result<(), SpiError> {
         self.send_command(Command::VCOM_AND_DATA_INTERVAL_SETTING)?;
         self.send_data(0x17)?; //border floating
         self.send_command(Command::VCM_DC_SETTING)?; // VCOM to 0V
@@ -211,7 +206,7 @@ where
         self.interface.delay_ms(delay)
     }
 
-    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E> {
+    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), SpiError> {
         let color_value = self.color.get_byte_value();
 
         self.send_resolution()?;
@@ -247,7 +242,8 @@ where
         y: u16,
         width: u16,
         height: u16,
-    ) -> Result<(), E> {
+    ) -> Result<(), SpiError> {
+
         if buffer.len() as u16 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
@@ -283,13 +279,13 @@ where
         self.send_command(Command::PARTIAL_OUT)
     }
 
-    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>{
+    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), SpiError>{
         self.update_frame(buffer)?;
         self.display_frame()
     }
 
 
-    fn display_frame(&mut self) -> Result<(), E> {
+    fn display_frame(&mut self) -> Result<(), SpiError> {
         self.send_command(Command::DISPLAY_REFRESH)?;
 
         self.wait_until_idle();
@@ -299,7 +295,7 @@ where
     // TODO: add this abstraction function
     // fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>;
 
-    fn clear_frame(&mut self) -> Result<(), E> {
+    fn clear_frame(&mut self) -> Result<(), SpiError> {
         self.send_resolution()?;
 
         let size = self.width / 8 * self.height;
@@ -327,24 +323,24 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, E> EPD4in2<SPI, CS, BUSY, DC, RST, D>
+impl<SPI, CS, BUSY, DC, RST, D, SpiError> EPD4in2<SPI, CS, BUSY, DC, RST, D>
 where
-    SPI: Write<u8, Error = E>,
+    SPI: Write<u8, Error = SpiError>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
     D: DelayUs<u16> + DelayMs<u16>,
 {
-    fn send_command(&mut self, command: Command) -> Result<(), E> {
+    fn send_command(&mut self, command: Command) -> Result<(), SpiError> {
         self.interface.send_command(command)
     }
 
-    fn send_data(&mut self, val: u8) -> Result<(), E> {
+    fn send_data(&mut self, val: u8) -> Result<(), SpiError> {
         self.interface.send_data(val)
     }
 
-    fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), E> {
+    fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), SpiError> {
         self.interface.send_multiple_data(data)
     }
 
@@ -352,7 +348,7 @@ where
         self.interface.wait_until_idle(true)
     }
 
-    fn send_resolution(&mut self) -> Result<(), E> {
+    fn send_resolution(&mut self) -> Result<(), SpiError> {
         let w = self.get_width();
         let h = self.get_height();
 
@@ -365,7 +361,7 @@ where
 
     /// Fill the look-up table for the EPD
     //TODO: make public?
-    fn set_lut(&mut self) -> Result<(), E> {
+    fn set_lut(&mut self) -> Result<(), SpiError> {
         self.set_lut_helper(&LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
     }
 
@@ -374,7 +370,7 @@ where
     /// Is automatically done by [EPD4in2::display_frame_quick()](EPD4in2::display_frame_quick()) 
     /// //TODO: make public?
     #[cfg(feature = "epd4in2_fast_update")]
-    fn set_lut_quick(&mut self) -> Result<(), E> {
+    fn set_lut_quick(&mut self) -> Result<(), SpiError> {
         self.set_lut_helper(
             &LUT_VCOM0_QUICK,
             &LUT_WW_QUICK,
@@ -391,7 +387,7 @@ where
         lut_bw: &[u8],
         lut_wb: &[u8],
         lut_bb: &[u8],
-    ) -> Result<(), E> {
+    ) -> Result<(), SpiError> {
         // LUT VCOM
         self.send_command(Command::LUT_FOR_VCOM)?;
         self.send_multiple_data(lut_vcom)?;
