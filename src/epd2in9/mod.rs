@@ -1,5 +1,5 @@
 //! A simple Driver for the Waveshare 2.9" E-Ink Display via SPI
-//! 
+//!
 //!
 //! # Examples from the 4.2" Display. It should work the same for the 2.9" one.
 //!
@@ -7,15 +7,15 @@
 //! let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay).unwrap();
 //!
 //! let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
-//! 
+//!
 //! // draw something into the buffer
-//! 
+//!
 //! epd4in2.display_and_transfer_buffer(buffer, None);
-//! 
+//!
 //! // wait and look at the image
-//! 
+//!
 //! epd4in2.clear_frame(None);
-//! 
+//!
 //! epd4in2.sleep();
 //! ```
 
@@ -24,31 +24,17 @@ const HEIGHT: u16 = 296;
 const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 use hal::{
-    blocking::{
-        spi::Write,
-        delay::*
-    },
-    digital::*
+    blocking::{delay::*, spi::Write},
+    digital::*,
 };
 
-
-use type_a::{
-    LUT_FULL_UPDATE,
-    LUT_PARTIAL_UPDATE,
-    command::Command
-};
+use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
 use drawing::color::Color;
-
-
-
 
 use interface::*;
 
 use interface::connection_interface::ConnectionInterface;
-
-
-
 
 /// EPD2in9 driver
 ///
@@ -58,33 +44,30 @@ pub struct EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay> {
     /// EPD (width, height)
     //epd: EPD,
     /// Color
-    background_color: Color, 
+    background_color: Color,
 }
 
 impl<SPI, CS, BUSY, DataCommand, RST, Delay, E> EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay>
-where 
-    SPI: Write<u8, Error = E>,
-    CS: OutputPin,
-    BUSY: InputPin,
-    DataCommand: OutputPin,
-    RST: OutputPin,
-    Delay: DelayUs<u16> + DelayMs<u16>
-{
-
-}
-
-
-impl<SPI, CS, BUSY, DataCommand, RST, Delay, E> WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, E> 
-    for EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay>
-where 
+where
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
     BUSY: InputPin,
     DataCommand: OutputPin,
     RST: OutputPin,
     Delay: DelayUs<u16> + DelayMs<u16>,
-{ 
-    
+{}
+
+impl<SPI, CS, BUSY, DataCommand, RST, Delay, E>
+    WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, E>
+    for EPD2in9<SPI, CS, BUSY, DataCommand, RST, Delay>
+where
+    SPI: Write<u8, Error = E>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DataCommand: OutputPin,
+    RST: OutputPin,
+    Delay: DelayUs<u16> + DelayMs<u16>,
+{
     fn get_width(&self) -> u16 {
         WIDTH
     }
@@ -93,26 +76,23 @@ where
         HEIGHT
     }
 
-
     fn new(
-        interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>
+        interface: ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>,
     ) -> Result<Self, E> {
         //let epd = EPD::new(WIDTH, HEIGHT);
         //let background_color = Color::White;
 
-        let mut epd = EPD2in9 {interface, background_color: DEFAULT_BACKGROUND_COLOR};
-
+        let mut epd = EPD2in9 {
+            interface,
+            background_color: DEFAULT_BACKGROUND_COLOR,
+        };
 
         epd.init()?;
 
         Ok(epd)
     }
 
-
-
     fn init(&mut self) -> Result<(), E> {
-        
-        
         self.reset();
 
         // 3 Databytes:
@@ -156,7 +136,6 @@ where
     }
 
     fn sleep(&mut self) -> Result<(), E> {
-
         self.interface.send_command(Command::DEEP_SLEEP_MODE)?;
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         //TODO: is 0x00 needed here?
@@ -166,7 +145,6 @@ where
         Ok(())
     }
 
-
     fn reset(&mut self) {
         self.interface.reset()
     }
@@ -175,9 +153,7 @@ where
         self.interface.delay_ms(delay)
     }
 
-    
-
-    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E>{
+    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E> {
         self.use_full_frame()?;
 
         self.interface.send_command(Command::WRITE_RAM)?;
@@ -185,7 +161,14 @@ where
     }
 
     //TODO: update description: last 3 bits will be ignored for width and x_pos
-    fn update_partial_frame(&mut self, buffer: &[u8], x: u16, y: u16, width: u16, height: u16) -> Result<(), E>{
+    fn update_partial_frame(
+        &mut self,
+        buffer: &[u8],
+        x: u16,
+        y: u16,
+        width: u16,
+        height: u16,
+    ) -> Result<(), E> {
         self.set_ram_area(x, y, x + width, y + height)?;
         self.set_ram_counter(x, y)?;
 
@@ -193,8 +176,7 @@ where
         self.interface.send_multiple_data(buffer)
     }
 
-    
-    fn display_frame(&mut self) -> Result<(), E>{
+    fn display_frame(&mut self) -> Result<(), E> {
         // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
         //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
         self.interface.send_command(Command::DISPLAY_UPDATE_CONTROL_2)?;
@@ -206,32 +188,29 @@ where
         self.interface.send_command(Command::TERMINATE_COMMANDS_AND_FRAME_WRITE)
     }
 
-    
-    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E>{
+    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E> {
         self.update_frame(buffer)?;
         self.display_frame()
     }
 
-    
-    fn clear_frame(&mut self) -> Result<(), E>{
+    fn clear_frame(&mut self) -> Result<(), E> {
         self.use_full_frame()?;
 
         // clear the ram with the background color
         let color = self.background_color.get_byte_value();
 
-        self.interface.send_command(Command::WRITE_RAM)?;        
+        self.interface.send_command(Command::WRITE_RAM)?;
         self.interface.send_data_x_times(color, WIDTH / 8 * HEIGHT)
     }
 
     /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())
-    fn set_background_color(&mut self, background_color: Color){
+    fn set_background_color(&mut self, background_color: Color) {
         self.background_color = background_color;
     }
-
 }
 
 impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
-where 
+where
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
     BUSY: InputPin,
@@ -242,21 +221,27 @@ where
     fn wait_until_idle(&mut self) {
         self.interface.wait_until_idle(false);
     }
-    
+
     pub(crate) fn use_full_frame(&mut self) -> Result<(), E> {
         // choose full frame/ram
         self.set_ram_area(0, 0, WIDTH - 1, HEIGHT - 1)?;
 
         // start from the beginning
-        self.set_ram_counter(0,0)
+        self.set_ram_counter(0, 0)
     }
-    
-    pub(crate) fn set_ram_area(&mut self, start_x: u16, start_y: u16, end_x: u16, end_y: u16) -> Result<(), E> {
+
+    pub(crate) fn set_ram_area(
+        &mut self,
+        start_x: u16,
+        start_y: u16,
+        end_x: u16,
+        end_y: u16,
+    ) -> Result<(), E> {
         assert!(start_x < end_x);
         assert!(start_y < end_y);
 
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
-        // aren't relevant        
+        // aren't relevant
         self.interface.send_command(Command::SET_RAM_X_ADDRESS_START_END_POSITION)?;
         self.interface.send_data((start_x >> 3) as u8)?;
         self.interface.send_data((end_x >> 3) as u8)?;
@@ -284,12 +269,12 @@ where
         Ok(())
     }
 
-    /// Uses the slower full update 
+    /// Uses the slower full update
     pub fn set_lut(&mut self) -> Result<(), E> {
         self.set_lut_helper(&LUT_FULL_UPDATE)
     }
 
-    /// Uses the quick partial refresh 
+    /// Uses the quick partial refresh
     pub fn set_lut_quick(&mut self) -> Result<(), E> {
         self.set_lut_helper(&LUT_PARTIAL_UPDATE)
     }
@@ -299,11 +284,9 @@ where
     //    self.set_lut_helper(buffer)
     //}
 
-
     fn set_lut_helper(&mut self, buffer: &[u8]) -> Result<(), E> {
         assert!(buffer.len() == 30);
         self.interface.send_command(Command::WRITE_LUT_REGISTER)?;
         self.interface.send_multiple_data(buffer)
     }
-
 }

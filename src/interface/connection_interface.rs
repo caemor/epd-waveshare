@@ -1,9 +1,6 @@
 use hal::{
-    blocking::{
-        spi::Write,
-        delay::*
-    },
-    digital::*
+    blocking::{delay::*, spi::Write},
+    digital::*,
 };
 
 use interface::Command;
@@ -25,9 +22,9 @@ pub struct ConnectionInterface<SPI, CS, BUSY, DC, RST, D> {
     delay: D,
 }
 
-
-impl<SPI, CS, BUSY, DataCommand, RST, Delay, ErrorSpeziale> ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>
-where 
+impl<SPI, CS, BUSY, DataCommand, RST, Delay, ErrorSpeziale>
+    ConnectionInterface<SPI, CS, BUSY, DataCommand, RST, Delay>
+where
     SPI: Write<u8, Error = ErrorSpeziale>,
     CS: OutputPin,
     BUSY: InputPin,
@@ -36,47 +33,54 @@ where
     Delay: DelayUs<u16> + DelayMs<u16>,
 {
     pub fn new(spi: SPI, cs: CS, busy: BUSY, dc: DataCommand, rst: RST, delay: Delay) -> Self {
-        ConnectionInterface {spi, cs, busy, dc, rst, delay }
+        ConnectionInterface {
+            spi,
+            cs,
+            busy,
+            dc,
+            rst,
+            delay,
+        }
     }
-    
-    /// Basic function for sending [Commands](Command). 
-    /// 
+
+    /// Basic function for sending [Commands](Command).
+    ///
     /// Enables direct interaction with the device with the help of [send_data()](ConnectionInterface::send_data())
     /// Should rarely be needed!
-    /// //TODO: make public? 
+    /// //TODO: make public?
     pub(crate) fn send_command<T: Command>(&mut self, command: T) -> Result<(), ErrorSpeziale> {
         // low for commands
-        self.dc.set_low(); 
+        self.dc.set_low();
 
         // Transfer the command over spi
-        self.with_cs(|epd| {
-            epd.spi.write(&[command.address()])
-        })
+        self.with_cs(|epd| epd.spi.write(&[command.address()]))
     }
 
     /// Basic function for sending a single u8 of data over spi
-    /// 
+    ///
     /// Enables direct interaction with the device with the help of [Esend_command()](ConnectionInterface::send_command())
-    /// 
+    ///
     /// Should rarely be needed!
-    /// //TODO: make public? 
+    /// //TODO: make public?
     pub(crate) fn send_data(&mut self, val: u8) -> Result<(), ErrorSpeziale> {
         // high for data
         self.dc.set_high();
 
         // Transfer data (u8) over spi
-        self.with_cs(|epd| {
-            epd.spi.write(&[val])
-        })
+        self.with_cs(|epd| epd.spi.write(&[val]))
     }
 
     /// Basic function for sending a single u8 of data over spi
-    /// 
+    ///
     /// Enables direct interaction with the device with the help of [Esend_command()](ConnectionInterface::send_command())
-    /// 
+    ///
     /// Should rarely be needed!
-    /// //TODO: make public? 
-    pub(crate) fn send_data_x_times(&mut self, val: u8, repetitions: u16) -> Result<(), ErrorSpeziale> {
+    /// //TODO: make public?
+    pub(crate) fn send_data_x_times(
+        &mut self,
+        val: u8,
+        repetitions: u16,
+    ) -> Result<(), ErrorSpeziale> {
         // high for data
         self.dc.set_high();
 
@@ -85,29 +89,27 @@ where
             for _ in 0..repetitions {
                 epd.spi.write(&[val])?;
             }
-            Ok(())           
+            Ok(())
         })
     }
 
     /// Basic function for sending an array of u8-values of data over spi
-    /// 
+    ///
     /// Enables direct interaction with the device with the help of [send_command()](EPD4in2::send_command())
-    /// 
+    ///
     /// Should rarely be needed!
-    /// //TODO: make public? 
+    /// //TODO: make public?
     pub(crate) fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), ErrorSpeziale> {
         // high for data
         self.dc.set_high();
 
         // Transfer data (u8-array) over spi
-        self.with_cs(|epd| {
-            epd.spi.write(data)
-        })
+        self.with_cs(|epd| epd.spi.write(data))
     }
 
     // spi write helper/abstraction function
     pub(crate) fn with_cs<F>(&mut self, f: F) -> Result<(), ErrorSpeziale>
-    where 
+    where
         F: FnOnce(&mut Self) -> Result<(), ErrorSpeziale>,
     {
         // activate spi with cs low
@@ -120,18 +122,17 @@ where
         result
     }
 
-
     /// Waits until device isn't busy anymore (busy == HIGH)
-    /// 
+    ///
     /// This is normally handled by the more complicated commands themselves,
     /// but in the case you send data and commands directly you might need to check
     /// if the device is still busy
-    /// 
+    ///
     /// is_busy_low
-    /// 
+    ///
     ///  - TRUE for epd4in2, epd2in13, epd2in7, epd5in83, epd7in5
     ///  - FALSE for epd2in9, epd1in54 (for all Display Type A ones?)
-    /// 
+    ///
     /// Most likely there was a mistake with the 2in9 busy connection
     pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
         self.delay_ms(1);
@@ -142,18 +143,17 @@ where
         }
     }
 
-
     /// Abstraction of setting the delay for simpler calls
-    /// 
+    ///
     /// maximum delay ~65 seconds (u16:max in ms)
     pub(crate) fn delay_ms(&mut self, delay: u16) {
         self.delay.delay_ms(delay);
     }
 
     /// Resets the device.
-    /// 
+    ///
     /// Often used to awake the module from deep sleep. See [EPD4in2::sleep()](EPD4in2::sleep())
-    /// 
+    ///
     /// TODO: Takes at least 400ms of delay alone, can it be shortened?
     pub(crate) fn reset(&mut self) {
         self.rst.set_low();
@@ -166,5 +166,4 @@ where
         //TODO: same as 3 lines above
         self.delay_ms(200);
     }
-
 }

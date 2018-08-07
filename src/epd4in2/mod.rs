@@ -62,11 +62,9 @@ use drawing::color::Color;
 pub mod command;
 use self::command::Command;
 
-
 /// EPD4in2 driver
 ///
-pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D>
-  {
+pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
     /// Connection Interface
     interface: ConnectionInterface<SPI, CS, BUSY, DC, RST, D>,
     /// Width
@@ -77,11 +75,10 @@ pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D>
     color: Color,
 }
 
-
-
-impl<SPI, CS, BUSY, DataCommand, RST, Delay, SpiError> WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, SpiError>
+impl<SPI, CS, BUSY, DataCommand, RST, Delay, SpiError>
+    WaveshareInterface<SPI, CS, BUSY, DataCommand, RST, Delay, SpiError>
     for EPD4in2<SPI, CS, BUSY, DataCommand, RST, Delay>
-where 
+where
     SPI: Write<u8, Error = SpiError>,
     CS: OutputPin,
     BUSY: InputPin,
@@ -116,7 +113,6 @@ where
         let width = WIDTH as u16;
         let height = HEIGHT as u16;
 
-        
         let color = Color::White;
         let mut epd = EPD4in2 {
             interface,
@@ -227,7 +223,7 @@ where
 
         self.send_command(Command::DATA_START_TRANSMISSION_2)?;
         //self.send_multiple_data(buffer)?;
-        
+
         for &elem in buffer.iter() {
             self.send_data(elem)?;
         }
@@ -243,7 +239,6 @@ where
         width: u16,
         height: u16,
     ) -> Result<(), SpiError> {
-
         if buffer.len() as u16 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
@@ -279,11 +274,10 @@ where
         self.send_command(Command::PARTIAL_OUT)
     }
 
-    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), SpiError>{
+    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), SpiError> {
         self.update_frame(buffer)?;
         self.display_frame()
     }
-
 
     fn display_frame(&mut self) -> Result<(), SpiError> {
         self.send_command(Command::DISPLAY_REFRESH)?;
@@ -366,8 +360,8 @@ where
     }
 
     /// Fill the look-up table for a quick display (partial refresh)
-    /// 
-    /// Is automatically done by [EPD4in2::display_frame_quick()](EPD4in2::display_frame_quick()) 
+    ///
+    /// Is automatically done by [EPD4in2::display_frame_quick()](EPD4in2::display_frame_quick())
     /// //TODO: make public?
     #[cfg(feature = "epd4in2_fast_update")]
     fn set_lut_quick(&mut self) -> Result<(), SpiError> {

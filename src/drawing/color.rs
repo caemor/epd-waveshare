@@ -1,7 +1,7 @@
 /// Only for the B/W Displays atm
 pub enum Color {
     Black,
-    White
+    White,
 }
 
 impl Color {
@@ -9,7 +9,7 @@ impl Color {
     pub fn get_bit_value(&self) -> u8 {
         match self {
             Color::White => 1u8,
-            Color::Black => 0u8,            
+            Color::Black => 0u8,
         }
     }
 
@@ -21,9 +21,8 @@ impl Color {
         }
     }
 
-
     /// Get the color encoding of a specific bit in a byte
-    /// 
+    ///
     /// input is the byte where one bit is gonna be selected
     /// pos is counted from the left (highest value) from 0 to 7
     /// remember: 1 is white, 0 is black
@@ -61,7 +60,7 @@ impl Color {
 
     //TODO: does basically the same as get_color, so remove one of them?
     pub(crate) fn convert_color(input: u8, pos: u8, foreground_color: &Color) -> Color {
-        //match color: 
+        //match color:
         //      - white for "nothing to draw"/background drawing
         //      - black for pixel to draw
         //
