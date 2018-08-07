@@ -100,7 +100,7 @@ script:
   - cargo test
   - cargo test --all-features --release
   - cargo doc --all-features --release
-  - cd examples/embedded_linux && cargo build && cd ../../
+  - cd examples/embedded_linux_epd4in2 && cargo build && cd ../../
   #- cd ../f3_stm32f30x && cargo build
 
 after_success:
