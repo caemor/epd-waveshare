@@ -6,11 +6,10 @@ extern crate eink_waveshare_rs;
 
 
 use eink_waveshare_rs::{
-    epd4in2::{EPD4in2, self}, 
+    EPD4in2, 
     drawing::{Graphics, color::Color}, 
-    interface::{
-        WaveshareInterface,
-        connection_interface::ConnectionInterface},
+    WaveshareInterface,
+    ConnectionInterface
 };
 
 use lin_hal::spidev::{self, SpidevOptions};
@@ -106,7 +105,7 @@ fn main() {
     //TODO: wait for Digital::InputPin
     //fixed currently with the HackInputPin, see further above
     let connection_interface = ConnectionInterface::new(spi, cs, busy_in, dc, rst, delay);
-    let mut epd4in2 = EPD4in2::new(connection_interface, epd4in2::new()).expect("eink inialize error");
+    let mut epd4in2 = EPD4in2::new(connection_interface).expect("eink inialize error");
 
     //let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
     let mut buffer = [0u8; 15000];

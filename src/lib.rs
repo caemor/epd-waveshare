@@ -53,7 +53,9 @@ use hal::{
 pub mod drawing;
 
 mod interface;
-pub use interface::{WaveshareInterface};
+pub use interface::{
+    WaveshareInterface,
+    connection_interface::ConnectionInterface};
 
 #[cfg(feature="epd4in2")]
 mod epd4in2;
