@@ -50,7 +50,7 @@ use interface::connection_interface::ConnectionInterface;
 
 
 
-/// EPD2in9 driver
+/// EPD1in54 driver
 ///
 pub struct EPD1in54<SPI, CS, BUSY, DataCommand, RST, Delay> {
     /// SPI
