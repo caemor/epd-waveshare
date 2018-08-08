@@ -68,7 +68,7 @@ pub(crate) enum Command {
 
     SET_RAM_Y_ADDRESS_COUNTER = 0x4F,
 
-    TERMINATE_COMMANDS_AND_FRAME_WRITE = 0xFF,
+    NOP = 0xFF,
 }
 
 impl interface::Command for Command {
@@ -89,6 +89,6 @@ mod tests {
 
         assert_eq!(Command::SET_RAM_X_ADDRESS_COUNTER.address(), 0x4E);
 
-        assert_eq!(Command::TERMINATE_COMMANDS_AND_FRAME_WRITE.address(), 0xFF);
+        assert_eq!(Command::NOP.address(), 0xFF);
     }
 }
