@@ -50,7 +50,7 @@ use hal::spi::{Mode, Phase, Polarity};
 pub mod drawing;
 
 mod interface;
-pub use interface::{connection_interface::ConnectionInterface, WaveshareInterface};
+pub use interface::{WaveshareInterface};
 
 #[cfg(feature = "epd4in2")]
 mod epd4in2;
