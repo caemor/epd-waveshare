@@ -102,11 +102,11 @@ where
 
 }
 
-impl<SPI, CS, BUSY, DC, RST, Delay, E>
-    WaveshareInterface<SPI, CS, BUSY, DC, RST, Delay, E>
+impl<SPI, CS, BUSY, DC, RST, Delay, ERR>
+    WaveshareInterface<SPI, CS, BUSY, DC, RST, Delay, ERR>
     for EPD2in9<SPI, CS, BUSY, DC, RST, Delay>
 where
-    SPI: Write<u8, Error = E>,
+    SPI: Write<u8, Error = ERR>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
@@ -123,10 +123,7 @@ where
 
     fn new(
         spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: Delay,
-    ) -> Result<Self, E> {
-        //let epd = EPD::new(WIDTH, HEIGHT);
-        //let background_color = Color::White;
-
+    ) -> Result<Self, ERR> {
         let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
 
         let mut epd = EPD2in9 {
@@ -141,17 +138,16 @@ where
 
     
 
-    fn sleep(&mut self) -> Result<(), E> {
-        self.interface.command(Command::DEEP_SLEEP_MODE)?;
+    fn sleep(&mut self) -> Result<(), ERR> {
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
-        //TODO: is 0x00 needed here?
-        self.interface.data(0x00)?;
+        //TODO: is 0x00 needed here? (see also epd1in54)
+        self.interface.command_with_data(Command::DEEP_SLEEP_MODE, &[0x00])?;
 
         self.wait_until_idle();
         Ok(())
     }
 
-    fn wake_up(&mut self) -> Result<(), E> {
+    fn wake_up(&mut self) -> Result<(), ERR> {
         self.init()
     }
 
@@ -159,11 +155,10 @@ where
         self.interface.delay_ms(delay)
     }
 
-    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E> {
+    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), ERR> {
         self.use_full_frame()?;
 
-        self.interface.command(Command::WRITE_RAM)?;
-        self.interface.multiple_data(buffer)
+        self.interface.command_with_data(Command::WRITE_RAM, buffer)
     }
 
     //TODO: update description: last 3 bits will be ignored for width and x_pos
@@ -174,19 +169,17 @@ where
         y: u16,
         width: u16,
         height: u16,
-    ) -> Result<(), E> {
+    ) -> Result<(), ERR> {
         self.set_ram_area(x, y, x + width, y + height)?;
         self.set_ram_counter(x, y)?;
 
-        self.interface.command(Command::WRITE_RAM)?;
-        self.interface.multiple_data(buffer)
+        self.interface.command_with_data(Command::WRITE_RAM, buffer)
     }
 
-    fn display_frame(&mut self) -> Result<(), E> {
+    fn display_frame(&mut self) -> Result<(), ERR> {
         // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
         //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
-        self.interface.command(Command::DISPLAY_UPDATE_CONTROL_2)?;
-        self.interface.data(0xC4)?;
+        self.interface.command_with_data(Command::DISPLAY_UPDATE_CONTROL_2, &[0xC4])?;
 
         self.interface.command(Command::MASTER_ACTIVATION)?;
         // MASTER Activation should not be interupted to avoid currption of panel images
@@ -194,7 +187,7 @@ where
         self.interface.command(Command::NOP)
     }
 
-    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), E> {
+    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), ERR> {
         self.update_frame(buffer)?;
         self.display_frame()
     }
@@ -206,12 +199,12 @@ where
         y: u16,
         width: u16,
         height: u16,
-    ) -> Result<(), E> {
+    ) -> Result<(), ERR> {
         self.update_partial_frame(buffer, x, y, width, height)?;
         self.display_frame()
     }
 
-    fn clear_frame(&mut self) -> Result<(), E> {
+    fn clear_frame(&mut self) -> Result<(), ERR> {
         self.use_full_frame()?;
 
         // clear the ram with the background color
@@ -279,8 +272,7 @@ where
     pub(crate) fn set_ram_counter(&mut self, x: u16, y: u16) -> Result<(), E> {
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
-        self.interface.command(Command::SET_RAM_X_ADDRESS_COUNTER)?;
-        self.interface.data((x >> 3) as u8)?;
+        self.interface.command_with_data(Command::SET_RAM_X_ADDRESS_COUNTER, &[(x >> 3) as u8])?;
 
         // 2 Databytes: A[7:0] & 0..A[8]
         self.interface.command(Command::SET_RAM_Y_ADDRESS_COUNTER)?;
@@ -308,7 +300,6 @@ where
 
     fn set_lut_helper(&mut self, buffer: &[u8]) -> Result<(), E> {
         assert!(buffer.len() == 30);
-        self.interface.command(Command::WRITE_LUT_REGISTER)?;
-        self.interface.multiple_data(buffer)
+        self.interface.command_with_data(Command::WRITE_LUT_REGISTER, buffer)
     }
 }

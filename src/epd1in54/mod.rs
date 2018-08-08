@@ -81,21 +81,17 @@ where
         self.interface.data(0x9D)?;
 
         // One Databyte with value 0xA8 for 7V VCOM
-        self.interface.command(Command::WRITE_VCOM_REGISTER)?;
-        self.interface.data(0xA8)?;
+        self.interface.command_with_data(Command::WRITE_VCOM_REGISTER, &[0xA8])?;
 
         // One Databyte with default value 0x1A for 4 dummy lines per gate
-        self.interface.command(Command::SET_DUMMY_LINE_PERIOD)?;
-        self.interface.data(0x1A)?;
+        self.interface.command_with_data(Command::SET_DUMMY_LINE_PERIOD, &[0x1A])?;
 
         // One Databyte with default value 0x08 for 2us per line
-        self.interface.command(Command::SET_GATE_LINE_WIDTH)?;
-        self.interface.data(0x08)?;
+        self.interface.command_with_data(Command::SET_GATE_LINE_WIDTH, &[0x08])?;
 
         // One Databyte with default value 0x03
         //  -> address: x increment, y increment, address counter is updated in x direction
-        self.interface.command(Command::DATA_ENTRY_MODE_SETTING)?;
-        self.interface.data(0x03)?;
+        self.interface.command_with_data(Command::DATA_ENTRY_MODE_SETTING, &[0x03])?;
 
         self.set_lut()
     }
@@ -142,10 +138,9 @@ where
     
 
     fn sleep(&mut self) -> Result<(), E> {
-        self.interface.command(Command::DEEP_SLEEP_MODE)?;
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
-        //TODO: is 0x00 needed here?
-        self.interface.data(0x00)?;
+        //TODO: is 0x00 needed here or would 0x01 be even more efficient?
+        self.interface.command_with_data(Command::DEEP_SLEEP_MODE, &[0x00])?;
 
         self.wait_until_idle();
         Ok(())
@@ -157,7 +152,6 @@ where
 
     fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E> {
         self.use_full_frame()?;
-
         self.interface.command_with_data(Command::WRITE_RAM, buffer)
     }
 
@@ -173,8 +167,7 @@ where
         self.set_ram_area(x, y, x + width, y + height)?;
         self.set_ram_counter(x, y)?;
 
-        self.interface.command(Command::WRITE_RAM)?;
-        self.interface.multiple_data(buffer)
+        self.interface.command_with_data(Command::WRITE_RAM, buffer)
     }
 
     fn display_frame(&mut self) -> Result<(), E> {
@@ -262,8 +255,10 @@ where
         // 2 Databytes: A[7:0] & 0..A[8]
         self.interface.command_with_data(
             Command::SET_RAM_Y_ADDRESS_COUNTER, 
-            &[y as u8, (y >> 8) as u8]
-        )?;
+            &[
+                y as u8, 
+                (y >> 8) as u8
+        ])?;
 
         self.wait_until_idle();
         Ok(())

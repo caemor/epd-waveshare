@@ -160,10 +160,9 @@ where
     /// epd4in2.sleep();
     /// ```
     fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: Delay) -> Result<Self, ERR> {
-
         let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
-
         let color = Color::White;
+
         let mut epd = EPD4in2 {
             interface,
             color,
@@ -178,9 +177,9 @@ where
         self.init()
     }
 
+    //TODO: is such a long delay really needed inbetween?
     fn sleep(&mut self) -> Result<(), ERR> {
-        self.command(Command::VCOM_AND_DATA_INTERVAL_SETTING)?;
-        self.send_data(0x17)?; //border floating
+        self.interface.command_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
         self.command(Command::VCM_DC_SETTING)?; // VCOM to 0V
         self.command(Command::PANEL_SETTING)?;
         self.delay_ms(100);
@@ -203,25 +202,17 @@ where
 
         self.interface.command_with_data(Command::VCM_DC_SETTING, &[0x12])?;
 
-        self.command(Command::VCOM_AND_DATA_INTERVAL_SETTING)?;
         //TODO: this was a send_command instead of a send_data. check if it's alright and doing what it should do (setting the default values)
         //self.send_command_u8(0x97)?; //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.send_data(0x97)?;
+        self.interface.command_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+
 
         self.command(Command::DATA_START_TRANSMISSION_1)?;
-        for _ in 0..(buffer.len()) {
-            self.send_data(color_value)?;
-        }
+        self.interface.data_x_times(color_value, buffer.len() as u16)?;
+
         self.delay_ms(2);
 
-        self.command(Command::DATA_START_TRANSMISSION_2)?;
-        //self.send_multiple_data(buffer)?;
-
-        for &elem in buffer.iter() {
-            self.send_data(elem)?;
-        }
-
-        Ok(())
+        self.interface.command_with_data(Command::DATA_START_TRANSMISSION_2, buffer)
     }
 
     fn update_partial_frame(
@@ -283,19 +274,12 @@ where
         let color_value = self.color.get_byte_value();
 
         self.command(Command::DATA_START_TRANSMISSION_1)?;
-        self.delay_ms(2);
-        for _ in 0..size {
-            self.send_data(color_value)?;
-        }
+        self.interface.data_x_times(color_value, size)?;
 
         self.delay_ms(2);
 
         self.command(Command::DATA_START_TRANSMISSION_2)?;
-        self.delay_ms(2);
-        for _ in 0..size {
-            self.send_data(color_value)?;
-        }
-        Ok(())
+        self.interface.data_x_times(color_value, size)
     }
 
     /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())
