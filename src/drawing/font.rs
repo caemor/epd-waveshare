@@ -11,20 +11,33 @@ pub struct Font<'a> {
     first_char: u8,
     last_char: u8,
     bitmap: &'a [u8],
-    widthmap: &'a [u8]
+    widthmap: &'a [u8],
 }
 
 impl<'a> Font<'a> {
     /// Panics if either Bitmap or Widthmap of the Font are to small for the amount and size of chars
-    pub fn new(width: u8, height: u8, first_char: u8, last_char: u8, bitmap: &'a [u8], widthmap: &'a [u8]) -> Font<'a> {
+    pub fn new(
+        width: u8,
+        height: u8,
+        first_char: u8,
+        last_char: u8,
+        bitmap: &'a [u8],
+        widthmap: &'a [u8],
+    ) -> Font<'a> {
         //Assertion so it shouldn't be able to panic later
         let length_of_char = width as usize / 8 * height as usize;
         let amount_of_chars = last_char as usize - first_char as usize + 1;
         assert!(bitmap.len() >= amount_of_chars * length_of_char);
         assert!(widthmap.len() >= amount_of_chars);
 
-        Font {width, height, first_char, last_char, bitmap, widthmap }
-
+        Font {
+            width,
+            height,
+            first_char,
+            last_char,
+            bitmap,
+            widthmap,
+        }
     }
 
     fn get_length_of_char(&self) -> usize {
@@ -40,7 +53,7 @@ impl<'a> Font<'a> {
         let start_pos = self.get_char_pos(input) * self.get_length_of_char();
         let end_pos = start_pos + self.get_length_of_char();
 
-        &self.bitmap[start_pos .. end_pos]        
+        &self.bitmap[start_pos..end_pos]
     }
 
     /// Can panic, when get_char_pos > widthmap.len(), should be caught in Font::new already
@@ -48,7 +61,6 @@ impl<'a> Font<'a> {
         self.widthmap[self.get_char_pos(input)]
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -64,9 +76,10 @@ mod tests {
             0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00, // '!'
             0x00, 0x07, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, // '"'
             0x14, 0x7F, 0x14, 0x7F, 0x14, 0x00, 0x00, 0x00, // '#'
-            0x14, 0x7F, 0x14, 0x7F, 0x14, 0x00, 0x00, 0x00]; // '$'
+            0x14, 0x7F, 0x14, 0x7F, 0x14, 0x00, 0x00, 0x00, // '$'
+        ];
 
-        let widthmap = [8,8,8,8];
+        let widthmap = [8, 8, 8, 8];
 
         let font = Font::new(8, 8, '!' as u8, '$' as u8, &bitmap, &widthmap);
 
@@ -80,9 +93,6 @@ mod tests {
         assert_eq!(font.get_char_width('$'), widthmap[3]);
     }
 
-
-
-
     #[test]
     fn bitmap_8x8_test() {
         let and = [0x36, 0x49, 0x55, 0x22, 0x50, 0x00, 0x00, 0x00];
@@ -90,7 +100,7 @@ mod tests {
         let first_value = [0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00];
         let last_value = [0x00, 0x41, 0x36, 0x08, 0x00, 0x00, 0x00, 0x00];
 
-		assert_eq!(bitmap_8x8('&'), and);
+        assert_eq!(bitmap_8x8('&'), and);
 
         assert_eq!(bitmap_8x8('ß'), zero);
         assert_eq!(bitmap_8x8('°'), zero);
@@ -98,12 +108,9 @@ mod tests {
         assert_eq!(bitmap_8x8('!'), first_value);
         assert_eq!(bitmap_8x8('}'), last_value);
 
-        assert_eq!(bitmap_8x8('0')[1], 0x3E);     
+        assert_eq!(bitmap_8x8('0')[1], 0x3E);
     }
 }
-
-
-
 
 //bad font as the order is not the one we want to use
 //goes from bottom left -> up -> right
