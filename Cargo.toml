@@ -1,6 +1,6 @@
 [package]
 name = "eink_waveshare_rs"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare"
 documentation = "https://docs.rs/eink-waveshare-rs"
