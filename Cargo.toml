@@ -3,7 +3,7 @@ name = "eink_waveshare_rs"
 version = "0.1.0"
 authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare"
-documentation = "https://docs.rs/serenity"
+documentation = "https://docs.rs/eink-waveshare-rs"
 categories = ["embedded", "hardware-support", "no-std"]
 keywords = ["ePaper", "Display"]
 
