@@ -1,8 +1,13 @@
 [package]
 name = "eink_waveshare_rs"
 version = "0.1.0"
-authors = ["Christoph Groß <christoph.gross@student.uni-tuebingen.de>"]
+authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
+description = "An embedded-hal based driver for ePaper displays from Waveshare"
+documentation = "https://docs.rs/serenity"
+categories = ["embedded", "hardware-support", "no-std"]
+keywords = ["ePaper", "Display"]
 
+license = "ISC"
 
 [features]
 default = ["epd1in54", "epd2in9", "epd4in2"]
