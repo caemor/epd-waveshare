@@ -1,13 +1,21 @@
 [package]
-name = "eink_waveshare_rs"
-version = "0.1.1"
 authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
+categories = ["embedded", "hardware-support", "no-std"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare"
 documentation = "https://docs.rs/eink-waveshare-rs"
-categories = ["embedded", "hardware-support", "no-std"]
+homepage = "https://github.com/Caemor/eink-waveshare-rs"
 keywords = ["ePaper", "Display"]
-
 license = "ISC"
+name = "eink_waveshare_rs"
+readme = "README.md"
+repository = "https://github.com/Caemor/eink-waveshare-rs.git"
+version = "0.1.2"
+
+[badges]
+# Travis CI: `repository` in format "<user>/<project>" is required.
+# `branch` is optional; default is `master`
+travis-ci = { repository = "Caemor/eink-waveshare-rs" }
+
 
 [features]
 default = ["epd1in54", "epd2in9", "epd4in2"]
