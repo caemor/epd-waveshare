@@ -6,7 +6,7 @@ extern crate eink_waveshare_rs;
 
 
 use eink_waveshare_rs::{
-    EPD4in2, 
+    EPD1in54, 
     drawing::{Graphics, color::Color}, 
     WaveshareInterface,
 };
@@ -61,7 +61,7 @@ impl<'a> InputPin for HackInputPin<'a> {
 fn main() {
 
     // Configure SPI
-    // Settings are taken from 
+    // SPI settings are from eink-waveshare-rs documenation
     let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
     let options = SpidevOptions::new()
         .bits_per_word(8)
@@ -104,10 +104,10 @@ fn main() {
 
     //TODO: wait for Digital::InputPin
     //fixed currently with the HackInputPin, see further above
-    let mut epd4in2 = EPD4in2::new(spi, cs, busy_in, dc, rst, delay).expect("eink inialize error");
+    let mut epd = EPD1in54::new(spi, cs, busy_in, dc, rst, delay).expect("eink inialize error");
 
-    //let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
-    let mut buffer = [0u8; 15000];
+    let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
+    //let mut buffer = [0u8; 15000];
 
     // draw something
     let mut graphics = Graphics::new(400, 300, &mut buffer);

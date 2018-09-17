@@ -11,7 +11,7 @@
 //! - MISO is not connected/available
 //! - SPI_MODE_0 is used (CPHL = 0, CPOL = 0)
 //! - 8 bits per word, MSB first
-//! - Max. Speed tested was 8Mhz but more should be possible
+//! - Max. Speed tested by myself was 8Mhz but more should be possible (Ben Krasnow used 18Mhz with his implemenation)
 //!
 //! ### Other....
 //!
@@ -70,7 +70,7 @@ mod epd2in9;
 pub use epd2in9::EPD2in9;
 
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
-pub mod type_a;
+pub(crate) mod type_a;
 
 //TODO: test spi mode
 /// SPI mode -
