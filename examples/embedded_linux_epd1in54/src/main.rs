@@ -64,6 +64,10 @@ impl<'a> InputPin for HackInputPin<'a> {
 
 fn main() {
 
+    run().unwrap();
+}
+
+fn run() -> Result<(), std::io::Error> {
     // Configure SPI
     // SPI settings are from eink-waveshare-rs documenation
     let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
@@ -106,66 +110,43 @@ fn main() {
     // Configure Delay
     let delay = Delay {};
 
+
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    
+    let mut epd = EPD1in54::new(spi, cs_pin, busy_in, dc, rst, delay)?;
 
-    let mut epd = EPD1in54::new(spi, cs_pin, busy_in, dc, rst, delay).expect("eink inialize error");
+    // Clear the full screen
+    epd.clear_frame();
+    epd.display_frame();
 
-    let mut buffer =  [0u8, epd.get_width() as u8 / 8 * epd.get_height() as u8];
-    //let mut buffer = [0u8; 15000];
+    // Speeddemo
+    let small_buffer =  [Color::Black.get_byte_value(), 16 as u8 / 8 * 16 as u8];
+    let number_of_runs = 100;
+    for i in 0..number_of_runs {
+        let offset = i * 8 % 150;
+        epd.update_partial_frame(&small_buffer, 25 + offset, 25 + offset, 16, 16)?;
+        epd.display_frame()?;
+    }
 
-    // draw something
-    let mut graphics = Graphics::new(200, 200, &mut buffer);
-    graphics.clear(&Color::White);
-    graphics.draw_line(0,0,200,200, &Color::Black); 
+    // Clear the full screen
+    epd.clear_frame();
+    epd.display_frame();
 
-    graphics.draw_filled_rectangle(200,200, 230, 230, &Color::Black); 
-    graphics.draw_line(202,202,218,228, &Color::White);
+    // Draw some squares
+    let mut small_buffer =  [Color::Black.get_byte_value(), 160 as u8 / 8 * 160 as u8];
+    epd.update_partial_frame(&small_buffer, 20, 20, 160, 160)?;
 
-    graphics.draw_circle(200, 150, 130, &Color::Black);
+    small_buffer =  [Color::White.get_byte_value(), 80 as u8 / 8 * 80 as u8];
+    epd.update_partial_frame(&small_buffer, 60, 60, 80, 80)?;
 
-    graphics.draw_pixel(390, 290, &Color::Black);
+    small_buffer =  [Color::Black.get_byte_value(), 8];
+    epd.update_partial_frame(&small_buffer, 96, 96, 8, 8)?;
 
-    graphics.draw_horizontal_line(0, 150, 400, &Color::Black);
+    // Display updated frame
+    epd.display_frame()?;
 
-    graphics.draw_vertical_line(200, 50, 200, &Color::Black);
+    // Set the EPD to sleep
+    epd.sleep()?;
 
-    epd.update_and_display_frame(graphics.get_buffer()).expect("display and transfer error");
- 
-    epd.delay_ms(3000);
-
-    epd.clear_frame().expect("clear frame error");
-
-    //Test fast updating a bit more
-    let mut small_buffer = [0x00; 128];
-    let mut circle_graphics = Graphics::new(32,32, &mut small_buffer);
-    circle_graphics.draw_circle(16,16, 10, &Color::Black);
-
-    epd.update_partial_frame(circle_graphics.get_buffer(), 16,16, 32, 32).expect("Partial Window Error");
-    epd.display_frame().expect("Display Frame Error");
-
-    epd.update_partial_frame(circle_graphics.get_buffer(), 128,64, 32, 32).expect("Partial Window Error");
-    epd.display_frame().expect("Display Frame Error");
-
-    epd.update_partial_frame(circle_graphics.get_buffer(), 320,24, 32, 32).expect("Partial Window Error");
-    epd.display_frame().expect("Display Frame Error");
-
-    epd.update_partial_frame(circle_graphics.get_buffer(), 160,240, 32, 32).expect("Partial Window Error");
-    epd.display_frame().expect("Display Frame Error");
-
-    epd.delay_ms(3000);
-
-
-
-
-    //pub fn draw_string_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, color: &Color) {
-    graphics.draw_string_8x8(16, 16, "hello", &Color::Black);
-    graphics.draw_char_8x8(250, 250, '#', &Color::Black);
-    graphics.draw_char_8x8(300, 16, '7', &Color::Black);
-    epd.update_and_display_frame(graphics.get_buffer()).expect("display and transfer error");
-
-    epd.delay_ms(3000);
-
-    epd.sleep().expect("sleeping error");
+    Ok(())
 }
