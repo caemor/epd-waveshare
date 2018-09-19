@@ -81,7 +81,7 @@ Support for bigger sized/independent Fonts is in work.
 
 ## Examples
 
-There is an example for Raspberry Pi in the example folder.
+There are multiple examples in the examples folder. For more infos see the seperate Readme [there](/examples/Readme.md):
 
 
 
