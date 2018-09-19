@@ -57,7 +57,7 @@ use interface::{connection_interface::ConnectionInterface, WaveshareInterface, I
 mod constants;
 use self::constants::*;
 
-use drawing::color::Color;
+use color::Color;
 
 pub mod command;
 use self::command::Command;

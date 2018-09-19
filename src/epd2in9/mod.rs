@@ -30,7 +30,7 @@ use hal::{
 
 use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
-use drawing::color::Color;
+use color::Color;
 
 use interface::*;
 

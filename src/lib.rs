@@ -52,6 +52,8 @@ pub mod drawing;
 mod interface;
 pub use interface::{WaveshareInterface};
 
+pub mod color;
+
 #[cfg(feature = "epd4in2")]
 mod epd4in2;
 #[cfg(feature = "epd4in2")]

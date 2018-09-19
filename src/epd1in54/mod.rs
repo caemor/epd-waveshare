@@ -31,9 +31,9 @@ use hal::{
 
 use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
-use drawing::color::Color;
+use color::Color;
 
-use interface::*;
+use interface::{WaveshareInterface};
 
 use interface::connection_interface::ConnectionInterface;
 

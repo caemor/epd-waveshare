@@ -4,7 +4,7 @@ use hal::{
     digital::*,
 };
 
-use drawing::color::Color;
+use color::Color;
 
 /// Interface for the physical connection between display and the controlling device
 pub(crate) mod connection_interface;
