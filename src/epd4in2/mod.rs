@@ -331,8 +331,8 @@ where
     }
 
     fn send_resolution(&mut self) -> Result<(), ERR> {
-        let w = self.get_width();
-        let h = self.get_height();
+        let w = self.width();
+        let h = self.height();
 
         self.command(Command::RESOLUTION_SETTING)?;
         self.send_data((w >> 8) as u8)?;
