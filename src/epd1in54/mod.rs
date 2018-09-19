@@ -108,11 +108,11 @@ where
     RST: OutputPin,
     Delay: DelayUs<u16> + DelayMs<u16>,
 {
-    fn get_width(&self) -> u16 {
+    fn width(&self) -> u16 {
         WIDTH
     }
 
-    fn get_height(&self) -> u16 {
+    fn height(&self) -> u16 {
         HEIGHT
     }
 

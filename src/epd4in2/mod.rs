@@ -291,11 +291,11 @@ where
         &self.color
     }
 
-    fn get_width(&self) -> u16 {
+    fn width(&self) -> u16 {
         WIDTH
     }
 
-    fn get_height(&self) -> u16 {
+    fn height(&self) -> u16 {
         HEIGHT
     }
 

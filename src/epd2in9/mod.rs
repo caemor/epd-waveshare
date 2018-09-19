@@ -113,11 +113,11 @@ where
     RST: OutputPin,
     Delay: DelayUs<u16> + DelayMs<u16>,
 {
-    fn get_width(&self) -> u16 {
+    fn width(&self) -> u16 {
         WIDTH
     }
 
-    fn get_height(&self) -> u16 {
+    fn height(&self) -> u16 {
         HEIGHT
     }
 
@@ -185,23 +185,6 @@ where
         // MASTER Activation should not be interupted to avoid currption of panel images
         // therefore a terminate command is send
         self.interface.command(Command::NOP)
-    }
-
-    fn update_and_display_frame(&mut self, buffer: &[u8]) -> Result<(), ERR> {
-        self.update_frame(buffer)?;
-        self.display_frame()
-    }
-
-    fn update_and_display_partial_frame(
-        &mut self,
-        buffer: &[u8],
-        x: u16,
-        y: u16,
-        width: u16,
-        height: u16,
-    ) -> Result<(), ERR> {
-        self.update_partial_frame(buffer, x, y, width, height)?;
-        self.display_frame()
     }
 
     fn clear_frame(&mut self) -> Result<(), ERR> {
