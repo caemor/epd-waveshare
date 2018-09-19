@@ -89,8 +89,8 @@ where
     /// Let the device enter deep-sleep mode to save power.
     ///
     /// The deep sleep mode returns to standby with a hardware reset.
-    /// But you can also use [reset()](WaveshareInterface::reset()) to awaken.
-    /// But as you need to power it up once more anyway you can also just directly use [init()](WaveshareInterface::init()) for resetting
+    /// But you can also use [wake_up()](WaveshareInterface::wake_up()) to awaken.
+    /// But as you need to power it up once more anyway you can also just directly use [new()](WaveshareInterface::new()) for resetting
     /// and initialising which already contains the reset
     fn sleep(&mut self) -> Result<(), ERR>;
 
@@ -134,9 +134,7 @@ where
     /// Displays the frame data from SRAM
     fn display_frame(&mut self) -> Result<(), ERR>;
 
-    /// Clears the frame from the buffer with the declared background color
+    /// Clears the frame buffer on the EPD with the declared background color
     /// The background color can be changed with [`set_background_color`]
-    ///
-    /// Uses the chosen background color
     fn clear_frame(&mut self) -> Result<(), ERR>;
 }
