@@ -18,8 +18,9 @@ travis-ci = { repository = "Caemor/eink-waveshare-rs" }
 
 
 [features]
-default = ["epd1in54", "epd2in9", "epd4in2"]
+default = ["epd1in54", "epd2in9", "epd4in2", "graphics"]
 
+graphics = []
 epd1in54 = []
 epd2in9 = []
 epd4in2 = []

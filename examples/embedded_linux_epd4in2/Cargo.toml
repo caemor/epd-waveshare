@@ -5,8 +5,9 @@ authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
 
 [dependencies]
 
-#eink_waveshare_rs = { git = "https://github.com/Caemor/eink-waveshare-rs"}
-eink_waveshare_rs = { path = "../../"}
+## The Only difference between this one and the one without default features sizewise seems to be a different .d-file Size (dependencies-file)
+#eink_waveshare_rs = { path = "../../"}
+eink_waveshare_rs = { path = "../../", default-features = false, features = ["epd4in2", "graphics"]}
 
 linux-embedded-hal = "0.2.0"
 
