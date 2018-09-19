@@ -126,7 +126,8 @@ fn main() {
 
     graphics.draw_vertical_line(200, 50, 200, &Color::Black);
 
-    epd4in2.update_and_display_frame(graphics.get_buffer()).expect("display and transfer error");
+    epd4in2.update_frame(graphics.get_buffer()).expect("display and transfer error");
+    epd4in2.display_frame().expect("Display Frame Error");
  
     epd4in2.delay_ms(3000);
 
@@ -158,7 +159,8 @@ fn main() {
     graphics.draw_string_8x8(16, 16, "hello", &Color::Black);
     graphics.draw_char_8x8(250, 250, '#', &Color::Black);
     graphics.draw_char_8x8(300, 16, '7', &Color::Black);
-    epd4in2.update_and_display_frame(graphics.get_buffer()).expect("display and transfer error");
+    epd4in2.update_frame(graphics.get_buffer()).expect("display and transfer error");
+    epd4in2.display_frame().expect("Display Frame Error");
 
     epd4in2.delay_ms(3000);
 
