@@ -1,5 +1,5 @@
 [package]
-name = "STM32F3DISCOVERY-EInk-Example"
+name = "stm32_f3_discovery_eink_example"
 version = "0.1.0"
 authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
 
