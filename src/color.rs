@@ -1,5 +1,5 @@
 /// Only for the B/W Displays atm
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
     Black,
     White,

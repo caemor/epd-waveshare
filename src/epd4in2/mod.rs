@@ -161,7 +161,7 @@ where
     /// ```
     fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: Delay) -> Result<Self, ERR> {
         let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
-        let color = Color::White;
+        let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = EPD4in2 {
             interface,
@@ -391,5 +391,18 @@ where
         self.send_multiple_data(lut_bb)?;
 
         Ok(())
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn epd_size() {
+        assert_eq!(WIDTH, 400);
+        assert_eq!(HEIGHT, 300);
+        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

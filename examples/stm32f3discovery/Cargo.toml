@@ -1,0 +1,22 @@
+[package]
+name = "STM32F3DISCOVERY-EInk-Example"
+version = "0.1.0"
+authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
+
+[dependencies]
+
+#eink_waveshare_rs = { git = "https://github.com/Caemor/eink-waveshare-rs"}
+#eink_waveshare_rs = { path = "../../"}
+eink_waveshare_rs = { path = "../../", default-features = false, features = ["epd1in54"]}
+
+#TODO: Update to the normal hal (either completly the f3 for the discovery or just stm3230x-hal) when PRs for InputPin are included
+stm32f30x-hal = { git = "https://github.com/droogmic/stm32f30x-hal", features = ["unproven"]}
+
+embedded-hal = { version = "0.2.1", features = ["unproven"] }
+
+aligned = "0.2.0"
+cortex-m = "0.5.7"
+cortex-m-rt = "0.6.3"
+cortex-m-semihosting = "0.3.1"
+madgwick = "0.1.1"
+panic-semihosting = "0.5.0"

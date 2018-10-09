@@ -286,3 +286,16 @@ where
         self.interface.command_with_data(Command::WRITE_LUT_REGISTER, buffer)
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn epd_size() {
+        assert_eq!(WIDTH, 128);
+        assert_eq!(HEIGHT, 296);
+        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
+    }
+}
