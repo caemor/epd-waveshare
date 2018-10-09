@@ -65,33 +65,30 @@ where
         // 0.. A[8]
         // 0.. B[2:0]
         // Default Values: A = Height of Screen (0x127), B = 0x00 (GD, SM and TB=0?)
-        self.interface.command(Command::DRIVER_OUTPUT_CONTROL)?;
-        self.interface.data(HEIGHT as u8)?;
-        self.interface.data((HEIGHT >> 8) as u8)?;
-        self.interface.data(0x00)?;
+        self.interface.cmd_with_data(
+            Command::DRIVER_OUTPUT_CONTROL, 
+            &[HEIGHT as u8, (HEIGHT >> 8) as u8, 0x00]
+        )?;
 
         // 3 Databytes: (and default values from datasheet and arduino)
         // 1 .. A[6:0]  = 0xCF | 0xD7
         // 1 .. B[6:0]  = 0xCE | 0xD6
         // 1 .. C[6:0]  = 0x8D | 0x9D
         //TODO: test
-        self.interface.command(Command::BOOSTER_SOFT_START_CONTROL)?;
-        self.interface.data(0xD7)?;
-        self.interface.data(0xD6)?;
-        self.interface.data(0x9D)?;
+        self.interface.cmd_with_data(Command::BOOSTER_SOFT_START_CONTROL, &[0xD7, 0xD6, 0x9D])?;
 
         // One Databyte with value 0xA8 for 7V VCOM
-        self.interface.command_with_data(Command::WRITE_VCOM_REGISTER, &[0xA8])?;
+        self.interface.cmd_with_data(Command::WRITE_VCOM_REGISTER, &[0xA8])?;
 
         // One Databyte with default value 0x1A for 4 dummy lines per gate
-        self.interface.command_with_data(Command::SET_DUMMY_LINE_PERIOD, &[0x1A])?;
+        self.interface.cmd_with_data(Command::SET_DUMMY_LINE_PERIOD, &[0x1A])?;
 
         // One Databyte with default value 0x08 for 2us per line
-        self.interface.command_with_data(Command::SET_GATE_LINE_WIDTH, &[0x08])?;
+        self.interface.cmd_with_data(Command::SET_GATE_LINE_WIDTH, &[0x08])?;
 
         // One Databyte with default value 0x03
         //  -> address: x increment, y increment, address counter is updated in x direction
-        self.interface.command_with_data(Command::DATA_ENTRY_MODE_SETTING, &[0x03])?;
+        self.interface.cmd_with_data(Command::DATA_ENTRY_MODE_SETTING, &[0x03])?;
 
         self.set_lut()
     }
@@ -140,7 +137,7 @@ where
     fn sleep(&mut self) -> Result<(), E> {
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         //TODO: is 0x00 needed here or would 0x01 be even more efficient?
-        self.interface.command_with_data(Command::DEEP_SLEEP_MODE, &[0x00])?;
+        self.interface.cmd_with_data(Command::DEEP_SLEEP_MODE, &[0x00])?;
 
         self.wait_until_idle();
         Ok(())
@@ -152,7 +149,7 @@ where
 
     fn update_frame(&mut self, buffer: &[u8]) -> Result<(), E> {
         self.use_full_frame()?;
-        self.interface.command_with_data(Command::WRITE_RAM, buffer)
+        self.interface.cmd_with_data(Command::WRITE_RAM, buffer)
     }
 
     //TODO: update description: last 3 bits will be ignored for width and x_pos
@@ -167,18 +164,18 @@ where
         self.set_ram_area(x, y, x + width, y + height)?;
         self.set_ram_counter(x, y)?;
 
-        self.interface.command_with_data(Command::WRITE_RAM, buffer)
+        self.interface.cmd_with_data(Command::WRITE_RAM, buffer)
     }
 
     fn display_frame(&mut self) -> Result<(), E> {
         // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
         //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
-        self.interface.command_with_data(Command::DISPLAY_UPDATE_CONTROL_2, &[0xC4])?;
+        self.interface.cmd_with_data(Command::DISPLAY_UPDATE_CONTROL_2, &[0xC4])?;
 
-        self.interface.command(Command::MASTER_ACTIVATION)?;
+        self.interface.cmd(Command::MASTER_ACTIVATION)?;
         // MASTER Activation should not be interupted to avoid currption of panel images
         // therefore a terminate command is send
-        self.interface.command(Command::NOP)
+        self.interface.cmd(Command::NOP)
     }
 
     fn clear_frame(&mut self) -> Result<(), E> {
@@ -187,7 +184,7 @@ where
         // clear the ram with the background color
         let color = self.background_color.get_byte_value();
 
-        self.interface.command(Command::WRITE_RAM)?;
+        self.interface.cmd(Command::WRITE_RAM)?;
         self.interface.data_x_times(color, WIDTH / 8 * HEIGHT)
     }
 
@@ -235,25 +232,25 @@ where
 
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
-        self.interface.command(Command::SET_RAM_X_ADDRESS_START_END_POSITION)?;
-        self.interface.data((start_x >> 3) as u8)?;
-        self.interface.data((end_x >> 3) as u8)?;
+        self.interface.cmd_with_data(
+            Command::SET_RAM_X_ADDRESS_START_END_POSITION,
+            &[(start_x >> 3) as u8, (end_x >> 3) as u8]
+        )?;
 
         // 2 Databytes: A[7:0] & 0..A[8] for each - start and end
-        self.interface.command(Command::SET_RAM_Y_ADDRESS_START_END_POSITION)?;
-        self.interface.data(start_y as u8)?;
-        self.interface.data((start_y >> 8) as u8)?;
-        self.interface.data(end_y as u8)?;
-        self.interface.data((end_y >> 8) as u8)
+        self.interface.cmd_with_data(
+            Command::SET_RAM_Y_ADDRESS_START_END_POSITION,
+            &[start_y as u8, (start_y >> 8) as u8, end_y as u8, (end_y >> 8) as u8]
+        )
     }
 
     pub(crate) fn set_ram_counter(&mut self, x: u16, y: u16) -> Result<(), E> {
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
-        self.interface.command_with_data(Command::SET_RAM_X_ADDRESS_COUNTER, &[(x >> 3) as u8])?;
+        self.interface.cmd_with_data(Command::SET_RAM_X_ADDRESS_COUNTER, &[(x >> 3) as u8])?;
 
         // 2 Databytes: A[7:0] & 0..A[8]
-        self.interface.command_with_data(
+        self.interface.cmd_with_data(
             Command::SET_RAM_Y_ADDRESS_COUNTER, 
             &[
                 y as u8, 
@@ -281,6 +278,6 @@ where
 
     fn set_lut_helper(&mut self, buffer: &[u8]) -> Result<(), E> {
         assert!(buffer.len() == 30);
-        self.interface.command_with_data(Command::WRITE_LUT_REGISTER, buffer)
+        self.interface.cmd_with_data(Command::WRITE_LUT_REGISTER, buffer)
     }
 }
