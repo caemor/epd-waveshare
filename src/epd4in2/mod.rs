@@ -90,43 +90,24 @@ where
         self.interface.reset();
 
         // set the power settings
-        self.command(Command::POWER_SETTING)?;
-        self.send_data(0x03)?; //VDS_EN, VDG_EN
-        self.send_data(0x00)?; //VCOM_HV, VGHL_LV[1], VGHL_LV[0]
-        self.send_data(0x2b)?; //VDH
-        self.send_data(0x2b)?; //VDL
-        self.send_data(0xff)?; //VDHR
+        self.interface.cmd_with_data(Command::POWER_SETTING, &[0x03, 0x00, 0x2b, 0x2b, 0xff])?;
 
         // start the booster
-        self.command(Command::BOOSTER_SOFT_START)?;
-        for _ in 0..3 {
-            self.send_data(0x17)?; //07 0f 17 1f 27 2F 37 2f
-        }
+        self.interface.cmd_with_data(Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;        
 
         // power on
         self.command(Command::POWER_ON)?;
         self.wait_until_idle();
 
         // set the panel settings
-        self.command(Command::PANEL_SETTING)?;
-        // 0x0F Red Mode, LUT from OTP
-        // 0x1F B/W Mode, LUT from OTP
-        // 0x2F Red Mode, LUT set by registers
-        // 0x3F B/W Mode, LUT set by registers
-        self.send_data(0x3F)?;
-
-        // the values used by waveshare before for the panel settings
-        // instead of our one liner:
-        // SendData(0xbf);    // KW-BF   KWR-AF  BWROTP 0f
-        // SendData(0x0b);
+        self.cmd_with_data(Command::PANEL_SETTING, &[0x3F])?;
 
         // Set Frequency, 200 Hz didn't work on my board
         // 150Hz and 171Hz wasn't tested yet
         // TODO: Test these other frequencies
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
-        self.command(Command::PLL_CONTROL)?;
-        self.send_data(0x3A)?;
-
+        self.cmd_with_data(Command::PLL_CONTROL, &[0x3A])?;
+        
         self.set_lut()?;
 
         Ok(())
@@ -179,20 +160,20 @@ where
 
     //TODO: is such a long delay really needed inbetween?
     fn sleep(&mut self) -> Result<(), ERR> {
-        self.interface.command_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
+        self.interface.cmd_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
         self.command(Command::VCM_DC_SETTING)?; // VCOM to 0V
         self.command(Command::PANEL_SETTING)?;
         self.delay_ms(100);
 
         self.command(Command::POWER_SETTING)?; //VG&VS to 0V fast
         for _ in 0..4 {
-            self.send_data(0x00)?;
+            self.send_data(&[0x00])?;
         }
         self.delay_ms(100);
 
         self.command(Command::POWER_OFF)?;
         self.wait_until_idle();
-        self.interface.command_with_data(Command::DEEP_SLEEP, &[0xA5])
+        self.interface.cmd_with_data(Command::DEEP_SLEEP, &[0xA5])
     }
 
     fn update_frame(&mut self, buffer: &[u8]) -> Result<(), ERR> {
@@ -200,11 +181,11 @@ where
 
         self.send_resolution()?;
 
-        self.interface.command_with_data(Command::VCM_DC_SETTING, &[0x12])?;
+        self.interface.cmd_with_data(Command::VCM_DC_SETTING, &[0x12])?;
 
         //TODO: this was a send_command instead of a send_data. check if it's alright and doing what it should do (setting the default values)
         //self.send_command_u8(0x97)?; //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.interface.command_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+        self.interface.cmd_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
 
 
         self.command(Command::DATA_START_TRANSMISSION_1)?;
@@ -212,7 +193,7 @@ where
 
         self.delay_ms(2);
 
-        self.interface.command_with_data(Command::DATA_START_TRANSMISSION_2, buffer)
+        self.interface.cmd_with_data(Command::DATA_START_TRANSMISSION_2, buffer)
     }
 
     fn update_partial_frame(
@@ -230,20 +211,20 @@ where
 
         self.command(Command::PARTIAL_IN)?;
         self.command(Command::PARTIAL_WINDOW)?;
-        self.send_data((x >> 8) as u8)?;
+        self.send_data(&[(x >> 8) as u8])?;
         let tmp = x & 0xf8;
-        self.send_data(tmp as u8)?; // x should be the multiple of 8, the last 3 bit will always be ignored
+        self.send_data(&[tmp as u8])?; // x should be the multiple of 8, the last 3 bit will always be ignored
         let tmp = tmp + width - 1;
-        self.send_data((tmp >> 8) as u8)?;
-        self.send_data((tmp | 0x07) as u8)?;
+        self.send_data(&[(tmp >> 8) as u8])?;
+        self.send_data(&[(tmp | 0x07) as u8])?;
 
-        self.send_data((y >> 8) as u8)?;
-        self.send_data(y as u8)?;
+        self.send_data(&[(y >> 8) as u8])?;
+        self.send_data(&[y as u8])?;
 
-        self.send_data(((y + height - 1) >> 8) as u8)?;
-        self.send_data((y + height - 1) as u8)?;
+        self.send_data(&[((y + height - 1) >> 8) as u8])?;
+        self.send_data(&[(y + height - 1) as u8])?;
 
-        self.send_data(0x01)?; // Gates scan both inside and outside of the partial window. (default)
+        self.send_data(&[0x01])?; // Gates scan both inside and outside of the partial window. (default)
 
         //TODO: handle dtm somehow
         let is_dtm1 = false;
@@ -253,7 +234,7 @@ where
             self.command(Command::DATA_START_TRANSMISSION_2)?
         }
 
-        self.send_multiple_data(buffer)?;
+        self.send_data(buffer)?;
 
         self.command(Command::PARTIAL_OUT)
     }
@@ -315,15 +296,15 @@ where
     D: DelayUs<u16> + DelayMs<u16>,
 {
     fn command(&mut self, command: Command) -> Result<(), ERR> {
-        self.interface.command(command)
+        self.interface.cmd(command)
     }
 
-    fn send_data(&mut self, val: u8) -> Result<(), ERR> {
-        self.interface.data(val)
+    fn send_data(&mut self, data: &[u8]) -> Result<(), ERR> {
+        self.interface.data(data)
     }
 
-    fn send_multiple_data(&mut self, data: &[u8]) -> Result<(), ERR> {
-        self.interface.multiple_data(data)
+    fn cmd_with_data(&mut self, command: Command, data: &[u8]) -> Result<(), ERR> {
+        self.interface.cmd_with_data(command, data)
     }
 
     fn wait_until_idle(&mut self) {
@@ -335,10 +316,10 @@ where
         let h = self.height();
 
         self.command(Command::RESOLUTION_SETTING)?;
-        self.send_data((w >> 8) as u8)?;
-        self.send_data(w as u8)?;
-        self.send_data((h >> 8) as u8)?;
-        self.send_data(h as u8)
+        self.send_data(&[(w >> 8) as u8])?;
+        self.send_data(&[w as u8])?;
+        self.send_data(&[(h >> 8) as u8])?;
+        self.send_data(&[h as u8])
     }
 
     /// Fill the look-up table for the EPD
@@ -372,23 +353,23 @@ where
     ) -> Result<(), ERR> {
         // LUT VCOM
         self.command(Command::LUT_FOR_VCOM)?;
-        self.send_multiple_data(lut_vcom)?;
+        self.send_data(lut_vcom)?;
 
         // LUT WHITE to WHITE
         self.command(Command::LUT_WHITE_TO_WHITE)?;
-        self.send_multiple_data(lut_ww)?;
+        self.send_data(lut_ww)?;
 
         // LUT BLACK to WHITE
         self.command(Command::LUT_BLACK_TO_WHITE)?;
-        self.send_multiple_data(lut_bw)?;
+        self.send_data(lut_bw)?;
 
         // LUT WHITE to BLACK
         self.command(Command::LUT_WHITE_TO_BLACK)?;
-        self.send_multiple_data(lut_wb)?;
+        self.send_data(lut_wb)?;
 
         // LUT BLACK to BLACK
         self.command(Command::LUT_BLACK_TO_BLACK)?;
-        self.send_multiple_data(lut_bb)?;
+        self.send_data(lut_bb)?;
 
         Ok(())
     }
