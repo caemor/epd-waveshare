@@ -9,7 +9,7 @@ use eink_waveshare_rs::{
     EPD4in2, 
     drawing::{Graphics},
     color::Color, 
-    WaveshareInterface,
+    WaveshareDisplay,
 };
 
 use lin_hal::spidev::{self, SpidevOptions};

@@ -6,8 +6,8 @@ use hal::{
 
 use color::Color;
 
-/// Interface for the physical connection between display and the controlling device
-pub(crate) mod connection_interface;
+
+
 
 
 /// All commands need to have this trait which gives the address of the command
@@ -48,7 +48,7 @@ where
 }
 
 
-pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST>
+pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

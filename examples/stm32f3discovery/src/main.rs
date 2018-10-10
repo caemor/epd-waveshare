@@ -30,7 +30,7 @@ use eink_waveshare_rs::{
     SPI_MODE,
     //drawing::{Graphics},
     color::Color,
-    WaveshareInterface,
+    WaveshareDisplay,
 };
 
 
