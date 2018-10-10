@@ -257,7 +257,7 @@ where
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.send_resolution(spi).expect("resolution error");
+        self.send_resolution(spi)?;
 
         //let size = WIDTH as usize / 8 * HEIGHT as usize;
         let color_value = self.color.get_byte_value();
@@ -267,7 +267,7 @@ where
             spi,
             Command::DATA_START_TRANSMISSION_1,
             &[color_value; WIDTH as usize / 8 * HEIGHT as usize]
-        ).expect("data trans 1 error");
+        )?;
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(2);
