@@ -48,7 +48,7 @@ where
     /// Enables direct interaction with the device with the help of [data()](ConnectionInterface::data())
     /// 
     /// //TODO: make public?
-    pub(crate) fn command<T: Command>(&mut self, command: T) -> Result<(), ERR> {
+    pub(crate) fn cmd<T: Command>(&mut self, command: T) -> Result<(), ERR> {
         // low for commands
         self.dc.set_low();
 
@@ -56,25 +56,25 @@ where
         self.with_cs(|epd| epd.spi.write(&[command.address()]))
     }
 
-    /// Basic function for sending a single u8 of data over spi
+    /// Basic function for sending an array of u8-values of data over spi
     ///
-    /// Enables direct interaction with the device with the help of [Ecommand()](ConnectionInterface::command())
+    /// Enables direct interaction with the device with the help of [command()](EPD4in2::command())
     /// 
     /// //TODO: make public?
-    pub(crate) fn data(&mut self, val: u8) -> Result<(), ERR> {
+    pub(crate) fn data(&mut self, data: &[u8]) -> Result<(), ERR> {
         // high for data
         self.dc.set_high();
 
-        // Transfer data (u8) over spi
-        self.with_cs(|epd| epd.spi.write(&[val]))
+        // Transfer data (u8-array) over spi
+        self.with_cs(|epd| epd.spi.write(data))
     }
 
     /// Basic function for sending [Commands](Command) and the data belonging to it.
     /// 
     /// //TODO: make public?
-    pub(crate) fn command_with_data<T: Command>(&mut self, command: T, data: &[u8]) -> Result<(), ERR> {
-       self.command(command)?;
-       self.multiple_data(data)
+    pub(crate) fn cmd_with_data<T: Command>(&mut self, command: T, data: &[u8]) -> Result<(), ERR> {
+       self.cmd(command)?;
+       self.data(data)
     }
 
     /// Basic function for sending the same byte of data (one u8) multiple times over spi
@@ -99,18 +99,7 @@ where
         })
     }
 
-    /// Basic function for sending an array of u8-values of data over spi
-    ///
-    /// Enables direct interaction with the device with the help of [command()](EPD4in2::command())
-    /// 
-    /// //TODO: make public?
-    pub(crate) fn multiple_data(&mut self, data: &[u8]) -> Result<(), ERR> {
-        // high for data
-        self.dc.set_high();
 
-        // Transfer data (u8-array) over spi
-        self.with_cs(|epd| epd.spi.write(data))
-    }
 
     // spi write helper/abstraction function
     fn with_cs<F>(&mut self, f: F) -> Result<(), ERR>
