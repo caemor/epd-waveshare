@@ -3,13 +3,15 @@ use hal::{
     digital::*,
 };
 
+use core::marker::PhantomData;
+
 use traits::Command;
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
 pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST> {
     /// SPI
-    spi: SPI,
+    _spi: PhantomData<SPI>,
     /// CS for SPI
     cs: CS,
     /// Low for busy, Wait until display is ready!
@@ -20,18 +22,18 @@ pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST> {
     rst: RST,
 }
 
-impl<SPI, CS, BUSY, DC, RST, ERR>
+impl<SPI, CS, BUSY, DC, RST>
     ConnectionInterface<SPI, CS, BUSY, DC, RST>
 where
-    SPI: Write<u8, Error = ERR>,
+    SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
 {
-    pub fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
+    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
         ConnectionInterface {
-            spi,
+            _spi: PhantomData::default(),
             cs,
             busy,
             dc,
@@ -44,12 +46,12 @@ where
     /// Enables direct interaction with the device with the help of [data()](ConnectionInterface::data())
     /// 
     /// //TODO: make public?
-    pub(crate) fn cmd<T: Command>(&mut self, command: T) -> Result<(), ERR> {
+    pub(crate) fn cmd<T: Command>(&mut self, spi: &mut SPI, command: T) -> Result<(), SPI::Error> {
         // low for commands
         self.dc.set_low();
 
         // Transfer the command over spi
-        self.with_cs(|epd| epd.spi.write(&[command.address()]))
+        self.write(spi, &[command.address()])
     }
 
     /// Basic function for sending an array of u8-values of data over spi
@@ -57,35 +59,33 @@ where
     /// Enables direct interaction with the device with the help of [command()](EPD4in2::command())
     /// 
     /// //TODO: make public?
-    pub(crate) fn data(&mut self, data: &[u8]) -> Result<(), ERR> {
+    pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
         // high for data
         self.dc.set_high();
 
         // Transfer data (u8-array) over spi
-        self.with_cs(|epd| epd.spi.write(data))
+        self.write(spi, data)
     }
 
     /// Basic function for sending [Commands](Command) and the data belonging to it.
     /// 
     /// //TODO: make public?
-    pub(crate) fn cmd_with_data<T: Command>(&mut self, command: T, data: &[u8]) -> Result<(), ERR> {
-       self.cmd(command)?;
-       self.data(data)
+    pub(crate) fn cmd_with_data<T: Command>(&mut self, spi: &mut SPI, command: T, data: &[u8]) -> Result<(), SPI::Error> {
+       self.cmd(spi, command)?;
+       self.data(spi, data)
     }
 
     // spi write helper/abstraction function
-    fn with_cs<F>(&mut self, f: F) -> Result<(), ERR>
-    where
-        F: FnOnce(&mut Self) -> Result<(), ERR>,
+    fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error>
     {
         // activate spi with cs low
         self.cs.set_low();
         // transfer spi data
-        let result = f(self);
+        spi.write(data)?;
         // deativate spi with cs high
         self.cs.set_high();
-        // return result
-        result
+
+        Ok(())
     }
 
     /// Waits until device isn't busy anymore (busy == HIGH)

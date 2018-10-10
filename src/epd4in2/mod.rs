@@ -74,50 +74,50 @@ pub struct EPD4in2<SPI, CS, BUSY, DC, RST> {
 
 
 
-impl<SPI, CS, BUSY, DC, RST, ERR>
-    InternalWiAdditions<SPI, CS, BUSY, DC, RST, ERR>
+impl<SPI, CS, BUSY, DC, RST>
+    InternalWiAdditions<SPI, CS, BUSY, DC, RST>
     for EPD4in2<SPI, CS, BUSY, DC, RST>
 where
-    SPI: Write<u8, Error = ERR>,
+    SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
 {
-    fn init<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR> {
+    fn init<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
         self.interface.reset(delay);
 
         // set the power settings
-        self.interface.cmd_with_data(Command::POWER_SETTING, &[0x03, 0x00, 0x2b, 0x2b, 0xff])?;
+        self.interface.cmd_with_data(spi, Command::POWER_SETTING, &[0x03, 0x00, 0x2b, 0x2b, 0xff])?;
 
         // start the booster
-        self.interface.cmd_with_data(Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;        
+        self.interface.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;        
 
         // power on
-        self.command(Command::POWER_ON)?;
+        self.command(spi, Command::POWER_ON)?;
         self.wait_until_idle();
 
         // set the panel settings
-        self.cmd_with_data(Command::PANEL_SETTING, &[0x3F])?;
+        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0x3F])?;
 
         // Set Frequency, 200 Hz didn't work on my board
         // 150Hz and 171Hz wasn't tested yet
         // TODO: Test these other frequencies
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
-        self.cmd_with_data(Command::PLL_CONTROL, &[0x3A])?;
+        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3A])?;
         
-        self.set_lut()?;
+        self.set_lut(spi)?;
 
         Ok(())
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, ERR>
-    WaveshareInterface<SPI, CS, BUSY, DC, RST, ERR>
+impl<SPI, CS, BUSY, DC, RST>
+    WaveshareInterface<SPI, CS, BUSY, DC, RST>
     for EPD4in2<SPI, CS, BUSY, DC, RST>
 where
-    SPI: Write<u8, Error = ERR>,
+    SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
@@ -138,8 +138,8 @@ where
     ///
     /// epd4in2.sleep();
     /// ```
-    fn new<DELAY: DelayMs<u8>>(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY) -> Result<Self, ERR> {
-        let interface = ConnectionInterface::new(spi, cs, busy, dc, rst);
+    fn new<DELAY: DelayMs<u8>>(spi: &mut SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY) -> Result<Self, SPI::Error> {
+        let interface = ConnectionInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = EPD4in2 {
@@ -147,120 +147,122 @@ where
             color,
         };
 
-        epd.init(delay)?;
+        epd.init(spi, delay)?;
 
         Ok(epd)
     }
 
-    fn wake_up<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR> {
-        self.init(delay)
+    fn wake_up<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.init(spi, delay)
     }
 
     //TODO: is such a long delay really needed inbetween?
-    fn sleep(&mut self) -> Result<(), ERR> {
-        self.interface.cmd_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
-        self.command(Command::VCM_DC_SETTING)?; // VCOM to 0V
-        self.command(Command::PANEL_SETTING)?;
+    fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.interface.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
+        self.command(spi, Command::VCM_DC_SETTING)?; // VCOM to 0V
+        self.command(spi, Command::PANEL_SETTING)?;
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(100);
 
-        self.command(Command::POWER_SETTING)?; //VG&VS to 0V fast
+        self.command(spi, Command::POWER_SETTING)?; //VG&VS to 0V fast
         for _ in 0..4 {
-            self.send_data(&[0x00])?;
+            self.send_data(spi, &[0x00])?;
         }
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(100);
 
-        self.command(Command::POWER_OFF)?;
+        self.command(spi, Command::POWER_OFF)?;
         self.wait_until_idle();
-        self.interface.cmd_with_data(Command::DEEP_SLEEP, &[0xA5])
+        self.interface.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])
     }
 
-    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), ERR> {
+    fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         let color_value = self.color.get_byte_value();
 
-        self.send_resolution()?;
+        self.send_resolution(spi)?;
 
-        self.interface.cmd_with_data(Command::VCM_DC_SETTING, &[0x12])?;
+        self.interface.cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
 
         //TODO: this was a send_command instead of a send_data. check if it's alright and doing what it should do (setting the default values)
         //self.send_command_u8(0x97)?; //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.interface.cmd_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+        self.interface.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
 
 
-        self.command(Command::DATA_START_TRANSMISSION_1)?;
+        self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
         for _ in 0..buffer.len() {
-            self.send_data(&[color_value])?;
+            self.send_data(spi, &[color_value])?;
         }
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(2);
 
-        self.interface.cmd_with_data(Command::DATA_START_TRANSMISSION_2, buffer)
+        self.interface.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)
     }
 
     fn update_partial_frame(
-        &mut self,
+        &mut self, 
+        spi: &mut SPI,        
         buffer: &[u8],
         x: u16,
         y: u16,
         width: u16,
         height: u16,
-    ) -> Result<(), ERR> {
+    ) -> Result<(), SPI::Error> {
         if buffer.len() as u16 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
         }
 
-        self.command(Command::PARTIAL_IN)?;
-        self.command(Command::PARTIAL_WINDOW)?;
-        self.send_data(&[(x >> 8) as u8])?;
+        self.command(spi, Command::PARTIAL_IN)?;
+        self.command(spi, Command::PARTIAL_WINDOW)?;
+        self.send_data(spi, &[(x >> 8) as u8])?;
         let tmp = x & 0xf8;
-        self.send_data(&[tmp as u8])?; // x should be the multiple of 8, the last 3 bit will always be ignored
+        self.send_data(spi, &[tmp as u8])?; // x should be the multiple of 8, the last 3 bit will always be ignored
         let tmp = tmp + width - 1;
-        self.send_data(&[(tmp >> 8) as u8])?;
-        self.send_data(&[(tmp | 0x07) as u8])?;
+        self.send_data(spi, &[(tmp >> 8) as u8])?;
+        self.send_data(spi, &[(tmp | 0x07) as u8])?;
 
-        self.send_data(&[(y >> 8) as u8])?;
-        self.send_data(&[y as u8])?;
+        self.send_data(spi, &[(y >> 8) as u8])?;
+        self.send_data(spi, &[y as u8])?;
 
-        self.send_data(&[((y + height - 1) >> 8) as u8])?;
-        self.send_data(&[(y + height - 1) as u8])?;
+        self.send_data(spi, &[((y + height - 1) >> 8) as u8])?;
+        self.send_data(spi, &[(y + height - 1) as u8])?;
 
-        self.send_data(&[0x01])?; // Gates scan both inside and outside of the partial window. (default)
+        self.send_data(spi, &[0x01])?; // Gates scan both inside and outside of the partial window. (default)
 
         //TODO: handle dtm somehow
         let is_dtm1 = false;
         if is_dtm1 {
-            self.command(Command::DATA_START_TRANSMISSION_1)?
+            self.command(spi, Command::DATA_START_TRANSMISSION_1)?
         } else {
-            self.command(Command::DATA_START_TRANSMISSION_2)?
+            self.command(spi, Command::DATA_START_TRANSMISSION_2)?
         }
 
-        self.send_data(buffer)?;
+        self.send_data(spi, buffer)?;
 
-        self.command(Command::PARTIAL_OUT)
+        self.command(spi, Command::PARTIAL_OUT)
     }
 
 
 
-    fn display_frame(&mut self) -> Result<(), ERR> {
-        self.command(Command::DISPLAY_REFRESH)?;
+    fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.command(spi, Command::DISPLAY_REFRESH)?;
 
         self.wait_until_idle();
         Ok(())
     }
 
-    fn clear_frame(&mut self) -> Result<(), ERR> {
-        self.send_resolution()?;
+    fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.send_resolution(spi)?;
 
         //let size = WIDTH as usize / 8 * HEIGHT as usize;
         let color_value = self.color.get_byte_value();
 
         //TODO: this is using a big buffer atm, is it better to just loop over sending a single byte?
         self.interface.cmd_with_data(
+            spi,
             Command::DATA_START_TRANSMISSION_1,
             &[color_value; WIDTH as usize / 8 * HEIGHT as usize]
         )?;
@@ -270,6 +272,7 @@ where
 
         //TODO: this is using a big buffer atm, is it better to just loop over sending a single byte?
         self.interface.cmd_with_data(
+            spi,
             Command::DATA_START_TRANSMISSION_2,
             &[color_value; WIDTH as usize / 8 * HEIGHT as usize]
         )
@@ -293,45 +296,45 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, ERR> EPD4in2<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> EPD4in2<SPI, CS, BUSY, DC, RST>
 where
-    SPI: Write<u8, Error = ERR>,
+    SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
 {
-    fn command(&mut self, command: Command) -> Result<(), ERR> {
-        self.interface.cmd(command)
+    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
+        self.interface.cmd(spi, command)
     }
 
-    fn send_data(&mut self, data: &[u8]) -> Result<(), ERR> {
-        self.interface.data(data)
+    fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
+        self.interface.data(spi, data)
     }
 
-    fn cmd_with_data(&mut self, command: Command, data: &[u8]) -> Result<(), ERR> {
-        self.interface.cmd_with_data(command, data)
+    fn cmd_with_data(&mut self, spi: &mut SPI, command: Command, data: &[u8]) -> Result<(), SPI::Error> {
+        self.interface.cmd_with_data(spi, command, data)
     }
 
     fn wait_until_idle(&mut self) {
         self.interface.wait_until_idle(true)
     }
 
-    fn send_resolution(&mut self) -> Result<(), ERR> {
+    fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
         let h = self.height();
 
-        self.command(Command::RESOLUTION_SETTING)?;
-        self.send_data(&[(w >> 8) as u8])?;
-        self.send_data(&[w as u8])?;
-        self.send_data(&[(h >> 8) as u8])?;
-        self.send_data(&[h as u8])
+        self.command(spi, Command::RESOLUTION_SETTING)?;
+        self.send_data(spi, &[(w >> 8) as u8])?;
+        self.send_data(spi, &[w as u8])?;
+        self.send_data(spi, &[(h >> 8) as u8])?;
+        self.send_data(spi, &[h as u8])
     }
 
     /// Fill the look-up table for the EPD
     //TODO: make public?
-    fn set_lut(&mut self) -> Result<(), ERR> {
-        self.set_lut_helper(&LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
+    fn set_lut(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.set_lut_helper(spi, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
     }
 
     /// Fill the look-up table for a quick display (partial refresh)
@@ -339,8 +342,9 @@ where
     /// Is automatically done by [EPD4in2::display_frame_quick()](EPD4in2::display_frame_quick())
     /// //TODO: make public?
     #[cfg(feature = "epd4in2_fast_update")]
-    fn set_lut_quick(&mut self) -> Result<(), ERR> {
+    fn set_lut_quick(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.set_lut_helper(
+            spi,
             &LUT_VCOM0_QUICK,
             &LUT_WW_QUICK,
             &LUT_BW_QUICK,
@@ -351,33 +355,47 @@ where
 
     fn set_lut_helper(
         &mut self,
+        spi: &mut SPI,
         lut_vcom: &[u8],
         lut_ww: &[u8],
         lut_bw: &[u8],
         lut_wb: &[u8],
         lut_bb: &[u8],
-    ) -> Result<(), ERR> {
+    ) -> Result<(), SPI::Error> {
         // LUT VCOM
-        self.command(Command::LUT_FOR_VCOM)?;
-        self.send_data(lut_vcom)?;
+        self.cmd_with_data(
+            spi, 
+            Command::LUT_FOR_VCOM,
+            lut_vcom
+        )?;
 
         // LUT WHITE to WHITE
-        self.command(Command::LUT_WHITE_TO_WHITE)?;
-        self.send_data(lut_ww)?;
+        self.cmd_with_data(
+            spi,
+            Command::LUT_WHITE_TO_WHITE, 
+            lut_ww
+        )?;
 
         // LUT BLACK to WHITE
-        self.command(Command::LUT_BLACK_TO_WHITE)?;
-        self.send_data(lut_bw)?;
+        self.cmd_with_data(
+            spi,
+            Command::LUT_BLACK_TO_WHITE,
+            lut_bw 
+        )?;
 
         // LUT WHITE to BLACK
-        self.command(Command::LUT_WHITE_TO_BLACK)?;
-        self.send_data(lut_wb)?;
+        self.cmd_with_data(
+            spi, 
+            Command::LUT_WHITE_TO_BLACK,
+            lut_wb, 
+        )?;
 
         // LUT BLACK to BLACK
-        self.command(Command::LUT_BLACK_TO_BLACK)?;
-        self.send_data(lut_bb)?;
-
-        Ok(())
+        self.cmd_with_data(
+            spi, 
+            Command::LUT_BLACK_TO_BLACK,
+            lut_bb,
+        )
     }
 }
 

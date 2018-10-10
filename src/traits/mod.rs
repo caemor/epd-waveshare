@@ -26,7 +26,7 @@ trait LUTSupport<ERR> {
 }
 
 
-pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, ERR>
+pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -44,11 +44,11 @@ where
     /// This function calls [reset()](WaveshareInterface::reset()),
     /// so you don't need to call reset your self when trying to wake your device up
     /// after setting it to sleep.
-    fn init<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR>;
+    fn init<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 }
 
 
-pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST, ERR>
+pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -62,8 +62,8 @@ where
     ///
     /// This already initialises the device. That means [init()](WaveshareInterface::init()) isn't needed directly afterwards
     fn new<DELAY: DelayMs<u8>>(
-        spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY,
-    ) -> Result<Self, ERR>
+        spi: &mut SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY,
+    ) -> Result<Self, SPI::Error>
     where
         Self: Sized;  
 
@@ -73,9 +73,9 @@ where
     /// But you can also use [wake_up()](WaveshareInterface::wake_up()) to awaken.
     /// But as you need to power it up once more anyway you can also just directly use [new()](WaveshareInterface::new()) for resetting
     /// and initialising which already contains the reset
-    fn sleep(&mut self) -> Result<(), ERR>;
+    fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
-    fn wake_up<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR>;   
+    fn wake_up<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;   
     
 
     /// Sets the backgroundcolor for various commands like [clear_frame()](WaveshareInterface::clear_frame())
@@ -91,24 +91,25 @@ where
     fn height(&self) -> u16;
 
     /// Transmit a full frame to the SRAM of the EPD
-    fn update_frame(&mut self, buffer: &[u8]) -> Result<(), ERR>;
+    fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
 
     /// Transmits partial data to the SRAM of the EPD
     ///
     /// BUFFER needs to be of size: w / 8 * h !
     fn update_partial_frame(
         &mut self,
+        spi: &mut SPI,
         buffer: &[u8],
         x: u16,
         y: u16,
         width: u16,
         height: u16,
-    ) -> Result<(), ERR>;
+    ) -> Result<(), SPI::Error>;
 
     /// Displays the frame data from SRAM
-    fn display_frame(&mut self) -> Result<(), ERR>;
+    fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Clears the frame buffer on the EPD with the declared background color
     /// The background color can be changed with [`set_background_color`]
-    fn clear_frame(&mut self) -> Result<(), ERR>;
+    fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 }
