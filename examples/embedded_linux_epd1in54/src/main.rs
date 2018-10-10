@@ -120,7 +120,7 @@ fn run() -> Result<(), std::io::Error> {
     epd.display_frame(&mut spi)?;
 
     // Speeddemo
-    let small_buffer =  [Color::Black.get_byte_value(), 16 as u8 / 8 * 16 as u8];
+    let small_buffer =  [Color::Black.get_byte_value(); 16 as u8 / 8 * 16 as u8];
     let number_of_runs = 100;
     for i in 0..number_of_runs {
         let offset = i * 8 % 150;
@@ -133,13 +133,13 @@ fn run() -> Result<(), std::io::Error> {
     epd.display_frame(&mut spi)?;
 
     // Draw some squares
-    let mut small_buffer = [Color::Black.get_byte_value(), 160 as u8 / 8 * 160 as u8];
+    let mut small_buffer = [Color::Black.get_byte_value(); 160 as u8 / 8 * 160 as u8];
     epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160)?;
 
-    small_buffer =  [Color::White.get_byte_value(), 80 as u8 / 8 * 80 as u8];
+    small_buffer =  [Color::White.get_byte_value(); 80 as u8 / 8 * 80 as u8];
     epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80)?;
 
-    small_buffer =  [Color::Black.get_byte_value(), 8];
+    small_buffer =  [Color::Black.get_byte_value(); 8];
     epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8)?;
 
     // Display updated frame
