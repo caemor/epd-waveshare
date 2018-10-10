@@ -50,10 +50,13 @@ use hal::spi::{Mode, Phase, Polarity};
 #[cfg(feature = "graphics")]
 pub mod drawing;
 
-mod interface;
-pub use interface::{WaveshareInterface};
+mod traits;
+pub use traits::{WaveshareDisplay};
 
 pub mod color;
+
+/// Interface for the physical connection between display and the controlling device
+mod interface;
 
 #[cfg(feature = "epd4in2")]
 mod epd4in2;

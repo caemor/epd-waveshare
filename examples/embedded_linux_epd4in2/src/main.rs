@@ -9,7 +9,7 @@ use eink_waveshare_rs::{
     EPD4in2, 
     drawing::{Graphics},
     color::Color, 
-    WaveshareInterface,
+    WaveshareDisplay,
 };
 
 use lin_hal::spidev::{self, SpidevOptions};
@@ -26,7 +26,10 @@ use lin_hal::Delay;
 // from https://github.com/rudihorn/max31865/blob/extra_examples/examples/rpi.rs
 // (slightly changed now as OutputPin doesn't provide is_high and is_low anymore)
 extern crate embedded_hal;
-use embedded_hal::digital::{InputPin};
+use embedded_hal::{
+    digital::{InputPin},
+}; 
+use embedded_hal::prelude::*;
 
 struct HackInputPin<'a> {
     pin: &'a Pin
@@ -59,7 +62,7 @@ impl<'a> InputPin for HackInputPin<'a> {
 *
 */
 
-fn main() {
+fn main() -> Result<(), std::io::Error> {
 
     // Configure SPI
     // Settings are taken from 
@@ -97,7 +100,7 @@ fn main() {
     rst.set_direction(Direction::Out).expect("rst Direction");
     rst.set_value(1).expect("rst Value set to 1");   
 
-    let delay = Delay {};
+    let mut delay = Delay {};
 
     
  
@@ -105,7 +108,7 @@ fn main() {
 
     //TODO: wait for Digital::InputPin
     //fixed currently with the HackInputPin, see further above
-    let mut epd4in2 = EPD4in2::new(spi, cs, busy_in, dc, rst, delay).expect("eink inialize error");
+    let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy_in, dc, rst, &mut delay).expect("eink inialize error");
 
     //let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
     let mut buffer = [0u8; 15000];
@@ -126,31 +129,31 @@ fn main() {
 
     graphics.draw_vertical_line(200, 50, 200, &Color::Black);
 
-    epd4in2.update_frame(graphics.get_buffer()).expect("display and transfer error");
-    epd4in2.display_frame().expect("Display Frame Error");
+    epd4in2.update_frame(&mut spi, graphics.get_buffer())?;
+    epd4in2.display_frame(&mut spi)?;
  
-    epd4in2.delay_ms(3000);
+    delay.delay_ms(3000u16);
 
-    epd4in2.clear_frame().expect("clear frame error");
+    epd4in2.clear_frame(&mut spi)?;
 
     //Test fast updating a bit more
     let mut small_buffer = [0x00; 128];
     let mut circle_graphics = Graphics::new(32,32, &mut small_buffer);
     circle_graphics.draw_circle(16,16, 10, &Color::Black);
 
-    epd4in2.update_partial_frame(circle_graphics.get_buffer(), 16,16, 32, 32).expect("Partial Window Error");
-    epd4in2.display_frame().expect("Display Frame Error");
+    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 16,16, 32, 32)?;
+    epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(circle_graphics.get_buffer(), 128,64, 32, 32).expect("Partial Window Error");
-    epd4in2.display_frame().expect("Display Frame Error");
+    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 128,64, 32, 32)?;
+    epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(circle_graphics.get_buffer(), 320,24, 32, 32).expect("Partial Window Error");
-    epd4in2.display_frame().expect("Display Frame Error");
+    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 320,24, 32, 32)?;
+    epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(circle_graphics.get_buffer(), 160,240, 32, 32).expect("Partial Window Error");
-    epd4in2.display_frame().expect("Display Frame Error");
+    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 160,240, 32, 32)?;
+    epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.delay_ms(3000);
+    delay.delay_ms(3000u16);
 
 
 
@@ -159,10 +162,10 @@ fn main() {
     graphics.draw_string_8x8(16, 16, "hello", &Color::Black);
     graphics.draw_char_8x8(250, 250, '#', &Color::Black);
     graphics.draw_char_8x8(300, 16, '7', &Color::Black);
-    epd4in2.update_frame(graphics.get_buffer()).expect("display and transfer error");
-    epd4in2.display_frame().expect("Display Frame Error");
+    epd4in2.update_frame(&mut spi, graphics.get_buffer())?;
+    epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.delay_ms(3000);
+    delay.delay_ms(3000u16);
 
-    epd4in2.sleep().expect("sleeping error");
+    epd4in2.sleep(&mut spi)
 }

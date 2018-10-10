@@ -1,5 +1,5 @@
 //! SPI Commands for the Waveshare 4.2" E-Ink Display
-use interface;
+use traits;
 /// EPD4IN2 commands
 ///
 /// Should rarely (never?) be needed directly.
@@ -12,8 +12,18 @@ use interface;
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
     /// Set Resolution, LUT selection, BWR pixels, gate scan direction, source shift direction, booster switch, soft reset
+    /// One Byte of Data:
+    ///     0x0F Red Mode, LUT from OTP
+    ///     0x1F B/W Mode, LUT from OTP
+    ///     0x2F Red Mode, LUT set by registers
+    ///     0x3F B/W Mode, LUT set by registers
     PANEL_SETTING = 0x00,
     /// selecting internal and external power
+    ///    self.send_data(0x03)?; //VDS_EN, VDG_EN
+    ///    self.send_data(0x00)?; //VCOM_HV, VGHL_LV[1], VGHL_LV[0]
+    ///    self.send_data(0x2b)?; //VDH
+    ///    self.send_data(0x2b)?; //VDL
+    ///    self.send_data(0xff)?; //VDHR
     POWER_SETTING = 0x01,
     /// After the Power Off command, the driver will power off following the Power Off Sequence. This command will turn off charge
     /// pump, T-con, source driver, gate driver, VCOM, and temperature sensor, but register data will be kept until VDD becomes OFF.
@@ -26,6 +36,7 @@ pub(crate) enum Command {
     /// This command enables the internal bandgap, which will be cleared by the next POF.
     POWER_ON_MEASURE = 0x05,
     /// Starting data transmission
+    ///     3-times: self.send_data(0x17)?; //07 0f 17 1f 27 2F 37 2f
     BOOSTER_SOFT_START = 0x06,
     /// After this command is transmitted, the chip would enter the deep-sleep mode to save power.
     ///
@@ -144,7 +155,7 @@ pub(crate) enum Command {
     POWER_SAVING = 0xE3,
 }
 
-impl interface::Command for Command {
+impl traits::Command for Command {
     /// Returns the address of the command
     fn address(self) -> u8 {
         self as u8
@@ -154,7 +165,7 @@ impl interface::Command for Command {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use interface::Command as CommandTrait;
+    use traits::Command as CommandTrait;
 
     #[test]
     fn command_addr() {
