@@ -285,14 +285,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, ERR> EPD4in2<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, ERR> EPD4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = ERR>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    D: DelayUs<u16> + DelayMs<u16>,
 {
     fn command(&mut self, command: Command) -> Result<(), ERR> {
         self.interface.cmd(command)

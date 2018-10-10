@@ -61,8 +61,8 @@ where
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
     /// This already initialises the device. That means [init()](WaveshareInterface::init()) isn't needed directly afterwards
-    fn new<DELAY: DelayUs<u8>>(
-        spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: DELAY,
+    fn new<DELAY: DelayMs<u8>>(
+        spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY,
     ) -> Result<Self, ERR>
     where
         Self: Sized;  
@@ -75,7 +75,7 @@ where
     /// and initialising which already contains the reset
     fn sleep(&mut self) -> Result<(), ERR>;
 
-    fn wake_up(&mut self) -> Result<(), ERR>;   
+    fn wake_up<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR>;   
     
 
     /// Sets the backgroundcolor for various commands like [clear_frame()](WaveshareInterface::clear_frame())

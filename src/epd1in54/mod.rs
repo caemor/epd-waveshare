@@ -94,7 +94,7 @@ where
 
 }
 
-impl<SPI, CS, BUSY, DC, RST, Delay, E> WaveshareInterface<SPI, CS, BUSY, DC, RST, E>
+impl<SPI, CS, BUSY, DC, RST, E> WaveshareInterface<SPI, CS, BUSY, DC, RST, E>
     for EPD1in54<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = E>,
@@ -102,7 +102,6 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    Delay: DelayUs<u16> + DelayMs<u16>,
 {
     fn width(&self) -> u16 {
         WIDTH
