@@ -51,7 +51,8 @@ use hal::{
     digital::*,
 };
 
-use traits::{connection_interface::ConnectionInterface, WaveshareInterface, InternalWiAdditions};
+use traits::{WaveshareDisplay, InternalWiAdditions};
+use interface::DisplayInterface;
 
 //The Lookup Tables for the Display
 mod constants;
@@ -66,7 +67,7 @@ use self::command::Command;
 ///
 pub struct EPD4in2<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
-    interface: ConnectionInterface<SPI, CS, BUSY, DC, RST>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
     color: Color,
 }
@@ -114,7 +115,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST>
-    WaveshareInterface<SPI, CS, BUSY, DC, RST>
+    WaveshareDisplay<SPI, CS, BUSY, DC, RST>
     for EPD4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -139,7 +140,7 @@ where
     /// epd4in2.sleep();
     /// ```
     fn new<DELAY: DelayMs<u8>>(spi: &mut SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY) -> Result<Self, SPI::Error> {
-        let interface = ConnectionInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = EPD4in2 {

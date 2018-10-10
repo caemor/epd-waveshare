@@ -34,13 +34,13 @@ use color::Color;
 
 use traits::*;
 
-use traits::connection_interface::ConnectionInterface;
+use interface::DisplayInterface;
 
 /// EPD2in9 driver
 ///
 pub struct EPD2in9<SPI, CS, BUSY, DC, RST> {
     /// SPI
-    interface: ConnectionInterface<SPI, CS, BUSY, DC, RST>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// EPD (width, height)
     //epd: EPD,
     /// Color
@@ -90,7 +90,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST>
-    WaveshareInterface<SPI, CS, BUSY, DC, RST>
+    WaveshareDisplay<SPI, CS, BUSY, DC, RST>
     for EPD2in9<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -110,7 +110,7 @@ where
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
-        let interface = ConnectionInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst);
 
         let mut epd = EPD2in9 {
             interface,

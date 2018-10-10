@@ -2,14 +2,12 @@ use hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
-
 use core::marker::PhantomData;
-
 use traits::Command;
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
-pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST> {
+pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST> {
     /// SPI
     _spi: PhantomData<SPI>,
     /// CS for SPI
@@ -23,7 +21,7 @@ pub(crate) struct ConnectionInterface<SPI, CS, BUSY, DC, RST> {
 }
 
 impl<SPI, CS, BUSY, DC, RST>
-    ConnectionInterface<SPI, CS, BUSY, DC, RST>
+    DisplayInterface<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -32,7 +30,7 @@ where
     RST: OutputPin,
 {
     pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
-        ConnectionInterface {
+        DisplayInterface {
             _spi: PhantomData::default(),
             cs,
             busy,
@@ -43,7 +41,7 @@ where
 
     /// Basic function for sending [Commands](Command).
     ///
-    /// Enables direct interaction with the device with the help of [data()](ConnectionInterface::data())
+    /// Enables direct interaction with the device with the help of [data()](DisplayInterface::data())
     /// 
     /// //TODO: make public?
     pub(crate) fn cmd<T: Command>(&mut self, spi: &mut SPI, command: T) -> Result<(), SPI::Error> {
@@ -70,6 +68,7 @@ where
     /// Basic function for sending [Commands](Command) and the data belonging to it.
     /// 
     /// //TODO: make public?
+    /// TODO: directly use ::write? cs wouldn't needed to be changed twice than
     pub(crate) fn cmd_with_data<T: Command>(&mut self, spi: &mut SPI, command: T, data: &[u8]) -> Result<(), SPI::Error> {
        self.cmd(spi, command)?;
        self.data(spi, data)

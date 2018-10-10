@@ -33,15 +33,15 @@ use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
 use color::Color;
 
-use traits::{WaveshareInterface};
+use traits::{WaveshareDisplay};
 
-use traits::connection_interface::ConnectionInterface;
+use interface::DisplayInterface;
 
 /// EPD1in54 driver
 ///
 pub struct EPD1in54<SPI, CS, BUSY, DC, RST> {
     /// SPI
-    interface: ConnectionInterface<SPI, CS, BUSY, DC, RST>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// EPD (width, height)
     //epd: EPD,
     /// Color
@@ -95,7 +95,7 @@ where
 
 }
 
-impl<SPI, CS, BUSY, DC, RST, E> WaveshareInterface<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, E> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
     for EPD1in54<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = E>,
@@ -115,7 +115,7 @@ where
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
-        let interface = ConnectionInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst);
         
         let mut epd = EPD1in54 {
             interface,
