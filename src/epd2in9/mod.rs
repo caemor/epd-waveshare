@@ -189,7 +189,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, E> EPD2in9<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
