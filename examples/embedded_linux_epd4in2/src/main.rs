@@ -61,8 +61,12 @@ impl<'a> InputPin for HackInputPin<'a> {
 * BE CAREFUL: this wasn't tested yet, and the pins are also not choosen correctly (just some random ones atm)
 *
 */
+fn main() {
+    run().map_err(|e| println!("{:?}", e.to_string()));
+}
 
-fn main() -> Result<(), std::io::Error> {
+
+fn run() -> Result<(), std::io::Error> {
 
     // Configure SPI
     // Settings are taken from 
