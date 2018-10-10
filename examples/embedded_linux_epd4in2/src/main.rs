@@ -133,6 +133,7 @@ fn run() -> Result<(), std::io::Error> {
 
     graphics.draw_vertical_line(200, 50, 200, &Color::Black);
 
+    epd4in2.clear_frame(&mut spi).expect("clear frame error");
     epd4in2.update_frame(&mut spi, graphics.get_buffer()).expect("update frame error");
     epd4in2.display_frame(&mut spi)?;
  
