@@ -50,8 +50,8 @@ use hal::spi::{Mode, Phase, Polarity};
 #[cfg(feature = "graphics")]
 pub mod drawing;
 
-mod interface;
-pub use interface::{WaveshareInterface};
+mod traits;
+pub use traits::{WaveshareInterface};
 
 pub mod color;
 

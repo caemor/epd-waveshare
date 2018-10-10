@@ -32,9 +32,9 @@ use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
 use color::Color;
 
-use interface::*;
+use traits::*;
 
-use interface::connection_interface::ConnectionInterface;
+use traits::connection_interface::ConnectionInterface;
 
 /// EPD2in9 driver
 ///

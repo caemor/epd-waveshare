@@ -51,7 +51,7 @@ use hal::{
     digital::*,
 };
 
-use interface::{connection_interface::ConnectionInterface, WaveshareInterface, InternalWiAdditions};
+use traits::{connection_interface::ConnectionInterface, WaveshareInterface, InternalWiAdditions};
 
 //The Lookup Tables for the Display
 mod constants;

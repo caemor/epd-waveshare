@@ -1,6 +1,6 @@
 //! SPI Commands for the Waveshare 2.9" and 1.54" E-Ink Display
 
-use interface;
+use traits;
 
 /// EPD1in54 and EPD2IN9 commands
 ///
@@ -71,7 +71,7 @@ pub(crate) enum Command {
     NOP = 0xFF,
 }
 
-impl interface::Command for Command {
+impl traits::Command for Command {
     /// Returns the address of the command
     fn address(self) -> u8 {
         self as u8
@@ -81,7 +81,7 @@ impl interface::Command for Command {
 #[cfg(test)]
 mod tests {
     use super::Command;
-    use interface::Command as CommandTrait;
+    use traits::Command as CommandTrait;
 
     #[test]
     fn command_addr() {

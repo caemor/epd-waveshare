@@ -3,7 +3,7 @@ use hal::{
     digital::*,
 };
 
-use interface::Command;
+use traits::Command;
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
