@@ -116,37 +116,37 @@ fn run() -> Result<(), std::io::Error> {
     let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 
     // Clear the full screen
-    epd.clear_frame(&mut spi)?;
-    epd.display_frame(&mut spi)?;
+    epd.clear_frame(&mut spi).expect("clear frame 1");
+    epd.display_frame(&mut spi).expect("disp 1");
 
     // Speeddemo
     let small_buffer =  [Color::Black.get_byte_value(); 32];//16x16
     let number_of_runs = 100;
     for i in 0..number_of_runs {
         let offset = i * 8 % 150;
-        epd.update_partial_frame(&mut spi, &small_buffer, 25 + offset, 25 + offset, 16, 16)?;
-        epd.display_frame(&mut spi)?;
+        epd.update_partial_frame(&mut spi, &small_buffer, 25 + offset, 25 + offset, 16, 16).expect("partial frame");
+        epd.display_frame(&mut spi).expect("disp 2");
     }
 
     // Clear the full screen
-    epd.clear_frame(&mut spi)?;
-    epd.display_frame(&mut spi)?;
+    epd.clear_frame(&mut spi).expect("clear frame 2");
+    epd.display_frame(&mut spi).expect("disp 3");
 
     // Draw some squares
-    let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
-    epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160)?;
+    //let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
+    //epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160)?;
 
-    let small_buffer =  [Color::White.get_byte_value(); 800]; //80x80
-    epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80)?;
+    //let small_buffer =  [Color::White.get_byte_value(); 800]; //80x80
+    //epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80)?;
 
     let small_buffer =  [Color::Black.get_byte_value(); 8]; //8x8
-    epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8)?;
+    epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8).expect("partial frame 2");
 
     // Display updated frame
-    epd.display_frame(&mut spi)?;
+    epd.display_frame(&mut spi).expect("disp 4");
 
     // Set the EPD to sleep
-    epd.sleep(&mut spi)?;
+    epd.sleep(&mut spi).expect("sleep");
 
     Ok(())
 }
