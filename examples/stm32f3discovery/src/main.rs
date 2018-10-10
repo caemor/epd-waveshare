@@ -119,7 +119,7 @@ fn main() -> ! {
     let miso = gpioa.pa6.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
     let mosi = gpioa.pa7.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
 
-    let spi = Spi::spi1(
+    let mut spi = Spi::spi1(
         p.SPI1,
         (sck, miso, mosi),
         SPI_MODE,
@@ -130,42 +130,42 @@ fn main() -> ! {
 
     // // Setup of the needed pins is finished here
     // // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(spi, cs, busy, dc, rst, &mut delay).unwrap();
+    let mut epd = EPD1in54::new(&mut spi, cs, busy, dc, rst, &mut delay).unwrap();
 
     
 
     // Clear the full screen
-    epd.clear_frame().unwrap();
-    epd.display_frame().unwrap();
+    epd.clear_frame(&mut spi).unwrap();
+    epd.display_frame(&mut spi).unwrap();
 
     // Speeddemo
     let small_buffer =  [Color::Black.get_byte_value(), 16 as u8 / 8 * 16 as u8];
     let number_of_runs = 100;
     for i in 0..number_of_runs {
         let offset = i * 8 % 150;
-        epd.update_partial_frame(&small_buffer, 25 + offset, 25 + offset, 16, 16).unwrap();
-        epd.display_frame().unwrap();
+        epd.update_partial_frame(&mut spi, &small_buffer, 25 + offset, 25 + offset, 16, 16).unwrap();
+        epd.display_frame(&mut spi).unwrap();
     }
 
     // Clear the full screen
-    epd.clear_frame().unwrap();
-    epd.display_frame().unwrap();
+    epd.clear_frame(&mut spi).unwrap();
+    epd.display_frame(&mut spi).unwrap();
 
     // Draw some squares
     let mut small_buffer =  [Color::Black.get_byte_value(), 160 as u8 / 8 * 160 as u8];
-    epd.update_partial_frame(&small_buffer, 20, 20, 160, 160).unwrap();
+    epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160).unwrap();
 
     small_buffer =  [Color::White.get_byte_value(), 80 as u8 / 8 * 80 as u8];
-    epd.update_partial_frame(&small_buffer, 60, 60, 80, 80).unwrap();
+    epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80).unwrap();
 
     small_buffer =  [Color::Black.get_byte_value(), 8];
-    epd.update_partial_frame(&small_buffer, 96, 96, 8, 8).unwrap();
+    epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8).unwrap();
 
     // Display updated frame
-    epd.display_frame().unwrap();
+    epd.display_frame(&mut spi).unwrap();
 
     // Set the EPD to sleep
-    epd.sleep().unwrap();
+    epd.sleep(&mut spi).unwrap();
 
     loop {}
 }
