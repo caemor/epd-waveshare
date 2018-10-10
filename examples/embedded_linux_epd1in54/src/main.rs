@@ -108,16 +108,16 @@ fn run() -> Result<(), std::io::Error> {
     rst.set_value(1).expect("rst Value set to 1");   
 
     // Configure Delay
-    let delay = Delay {};
+    let mut delay = Delay {};
 
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(spi, cs_pin, busy_in, dc, rst, delay)?;
+    let mut epd = EPD1in54::new(spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 
     // Clear the full screen
-    epd.clear_frame();
-    epd.display_frame();
+    epd.clear_frame()?;
+    epd.display_frame()?;
 
     // Speeddemo
     let small_buffer =  [Color::Black.get_byte_value(), 16 as u8 / 8 * 16 as u8];
@@ -129,8 +129,8 @@ fn run() -> Result<(), std::io::Error> {
     }
 
     // Clear the full screen
-    epd.clear_frame();
-    epd.display_frame();
+    epd.clear_frame()?;
+    epd.display_frame()?;
 
     // Draw some squares
     let mut small_buffer =  [Color::Black.get_byte_value(), 160 as u8 / 8 * 160 as u8];

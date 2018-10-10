@@ -109,7 +109,7 @@ fn main() -> ! {
     // rst.set_value(1).expect("rst Value set to 1");   
 
     // // Configure Delay
-    let delay = Delay::new(cp.SYST, clocks);
+    let mut delay = Delay::new(cp.SYST, clocks);
 
     // copied from the l3gd20 example
     // The `L3gd20` abstraction exposed by the `f3` crate requires a specific pin configuration to
@@ -130,7 +130,7 @@ fn main() -> ! {
 
     // // Setup of the needed pins is finished here
     // // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(spi, cs, busy, dc, rst, delay).unwrap();
+    let mut epd = EPD1in54::new(spi, cs, busy, dc, rst, &mut delay).unwrap();
 
     
 
