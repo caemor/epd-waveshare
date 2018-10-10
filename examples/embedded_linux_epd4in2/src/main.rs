@@ -62,7 +62,7 @@ impl<'a> InputPin for HackInputPin<'a> {
 *
 */
 fn main() {
-    run().map_err(|e| println!("{:?}", e.to_string()));
+    run().map_err(|e| println!("{}", e.to_string()));
 }
 
 

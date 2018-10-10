@@ -97,6 +97,7 @@ where
 
         // power on
         self.command(spi, Command::POWER_ON)?;
+        delay.delay_ms(5);
         self.wait_until_idle();
 
         // set the panel settings
@@ -192,7 +193,7 @@ where
 
 
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.send_data(spi, &[color_value; WIDTH as usize / 8 * HEIGHT as usize]);
+        self.send_data(spi, &[color_value; WIDTH as usize / 8 * HEIGHT as usize])?;
         //for _ in 0..buffer.len() {
         //    self.send_data(spi, &[color_value])?;
         //}
