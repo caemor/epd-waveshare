@@ -192,9 +192,10 @@ where
 
 
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
-        for _ in 0..buffer.len() {
-            self.send_data(spi, &[color_value])?;
-        }
+        self.send_data(spi, &[color_value; WIDTH as usize / 8 * HEIGHT as usize]);
+        //for _ in 0..buffer.len() {
+        //    self.send_data(spi, &[color_value])?;
+        //}
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(2);

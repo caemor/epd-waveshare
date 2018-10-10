@@ -112,7 +112,7 @@ fn run() -> Result<(), std::io::Error> {
 
     //TODO: wait for Digital::InputPin
     //fixed currently with the HackInputPin, see further above
-    let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy_in, dc, rst, &mut delay).expect("eink inialize error");
+    let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy_in, dc, rst, &mut delay).expect("eink initalize error");
 
     //let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
     let mut buffer = [0u8; 15000];
