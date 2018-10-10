@@ -26,14 +26,13 @@ trait LUTSupport<ERR> {
 }
 
 
-pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, Delay, ERR>
+pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, ERR>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    Delay: DelayUs<u16> + DelayMs<u16>,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -45,26 +44,25 @@ where
     /// This function calls [reset()](WaveshareInterface::reset()),
     /// so you don't need to call reset your self when trying to wake your device up
     /// after setting it to sleep.
-    fn init(&mut self) -> Result<(), ERR>;
+    fn init<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR>;
 }
 
 
-pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST, Delay, ERR>
+pub trait WaveshareInterface<SPI, CS, BUSY, DC, RST, ERR>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    Delay: DelayUs<u16> + DelayMs<u16>,
 {
     
 
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
     /// This already initialises the device. That means [init()](WaveshareInterface::init()) isn't needed directly afterwards
-    fn new(
-        spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: Delay,
+    fn new<DELAY: DelayUs<u8>>(
+        spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: DELAY,
     ) -> Result<Self, ERR>
     where
         Self: Sized;  
@@ -91,11 +89,6 @@ where
 
     /// Get the height of the display
     fn height(&self) -> u16;
-
-    /// Abstraction of setting the delay for simpler calls
-    ///
-    /// maximum delay ~65 seconds (u16:max in ms)
-    fn delay_ms(&mut self, delay: u16);
 
     /// Transmit a full frame to the SRAM of the EPD
     fn update_frame(&mut self, buffer: &[u8]) -> Result<(), ERR>;
