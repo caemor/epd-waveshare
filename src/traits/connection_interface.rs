@@ -73,30 +73,6 @@ where
        self.data(data)
     }
 
-    /// Basic function for sending the same byte of data (one u8) multiple times over spi
-    ///
-    /// Enables direct interaction with the device with the help of [command()](ConnectionInterface::command())
-    /// 
-    /// //TODO: make public?
-    pub(crate) fn data_x_times(
-        &mut self,
-        val: u8,
-        repetitions: u16,
-    ) -> Result<(), ERR> {
-        // high for data
-        self.dc.set_high();
-
-        // Transfer data (u8) over spi
-        self.with_cs(|epd| {
-            for _ in 0..repetitions {
-                epd.spi.write(&[val])?;
-            }
-            Ok(())
-        })
-    }
-
-
-
     // spi write helper/abstraction function
     fn with_cs<F>(&mut self, f: F) -> Result<(), ERR>
     where

@@ -191,7 +191,9 @@ where
 
 
         self.command(Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data_x_times(color_value, buffer.len() as u16)?;
+        for _ in 0..buffer.len() {
+            self.send_data(&[color_value])?;
+        }
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(2);
@@ -254,17 +256,23 @@ where
     fn clear_frame(&mut self) -> Result<(), ERR> {
         self.send_resolution()?;
 
-        let size = WIDTH / 8 * HEIGHT;
+        //let size = WIDTH as usize / 8 * HEIGHT as usize;
         let color_value = self.color.get_byte_value();
 
-        self.command(Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data_x_times(color_value, size)?;
+        //TODO: this is using a big buffer atm, is it better to just loop over sending a single byte?
+        self.interface.cmd_with_data(
+            Command::DATA_START_TRANSMISSION_1,
+            &[color_value; WIDTH as usize / 8 * HEIGHT as usize]
+        )?;
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(2);
 
-        self.command(Command::DATA_START_TRANSMISSION_2)?;
-        self.interface.data_x_times(color_value, size)
+        //TODO: this is using a big buffer atm, is it better to just loop over sending a single byte?
+        self.interface.cmd_with_data(
+            Command::DATA_START_TRANSMISSION_2,
+            &[color_value; WIDTH as usize / 8 * HEIGHT as usize]
+        )
     }
 
     /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())

@@ -178,8 +178,11 @@ where
         // clear the ram with the background color
         let color = self.background_color.get_byte_value();
 
-        self.interface.cmd(Command::WRITE_RAM)?;
-        self.interface.data_x_times(color, WIDTH / 8 * HEIGHT)
+        //TODO: this is using a big buffer atm, is it better to just loop over sending a single byte?
+        self.interface.cmd_with_data(
+            Command::WRITE_RAM,
+            &[color; WIDTH as usize / 8 * HEIGHT as usize]
+        )
     }
 
 
