@@ -33,9 +33,9 @@ use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
 use color::Color;
 
-use interface::{WaveshareInterface};
+use traits::{WaveshareInterface};
 
-use interface::connection_interface::ConnectionInterface;
+use traits::connection_interface::ConnectionInterface;
 
 /// EPD1in54 driver
 ///
