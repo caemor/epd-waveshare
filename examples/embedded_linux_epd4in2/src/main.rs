@@ -133,7 +133,7 @@ fn run() -> Result<(), std::io::Error> {
 
     graphics.draw_vertical_line(200, 50, 200, &Color::Black);
 
-    epd4in2.update_frame(&mut spi, graphics.get_buffer())?;
+    epd4in2.update_frame(&mut spi, graphics.get_buffer()).expect("update frame error");
     epd4in2.display_frame(&mut spi)?;
  
     delay.delay_ms(3000u16);
@@ -145,16 +145,16 @@ fn run() -> Result<(), std::io::Error> {
     let mut circle_graphics = Graphics::new(32,32, &mut small_buffer);
     circle_graphics.draw_circle(16,16, 10, &Color::Black);
 
-    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 16,16, 32, 32)?;
+    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 16,16, 32, 32).expect("update frame error");
     epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 128,64, 32, 32)?;
+    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 128,64, 32, 32).expect("update partial frame error");
     epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 320,24, 32, 32)?;
+    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 320,24, 32, 32).expect("update partial frame error");
     epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 160,240, 32, 32)?;
+    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 160,240, 32, 32).expect("update partial frame error");
     epd4in2.display_frame(&mut spi)?;
 
     delay.delay_ms(3000u16);
