@@ -73,7 +73,7 @@ fn main() -> ! {
     cs.set_high();
 
     // // Configure Busy Input Pin
-    let mut busy = gpioe
+    let busy = gpioe
         .pe4
         .into_floating_input(&mut gpioe.moder, &mut gpioe.pupdr);
    //     .pe4
@@ -132,46 +132,40 @@ fn main() -> ! {
     // // Now the "real" usage of the eink-waveshare-rs crate begins
     let mut epd = EPD1in54::new(spi, cs, busy, dc, rst, delay).unwrap();
 
-    //let mut l3gd20 = L3gd20::new(spi, nss).unwrap();
+    
 
-    //let _m = l3gd20.all().unwrap();
+    // Clear the full screen
+    epd.clear_frame().unwrap();
+    epd.display_frame().unwrap();
 
-    // when you reach this breakpoint you'll be able to inspect the variable `_m` which contains the
-    // gyroscope and the temperature sensor readings
-    //asm::bkpt();
+    // Speeddemo
+    let small_buffer =  [Color::Black.get_byte_value(), 16 as u8 / 8 * 16 as u8];
+    let number_of_runs = 100;
+    for i in 0..number_of_runs {
+        let offset = i * 8 % 150;
+        epd.update_partial_frame(&small_buffer, 25 + offset, 25 + offset, 16, 16).unwrap();
+        epd.display_frame().unwrap();
+    }
 
-        // // Clear the full screen
-    // epd.clear_frame();
-    // epd.display_frame();
+    // Clear the full screen
+    epd.clear_frame().unwrap();
+    epd.display_frame().unwrap();
 
-    // // Speeddemo
-    // let small_buffer =  [Color::Black.get_byte_value(), 16 as u8 / 8 * 16 as u8];
-    // let number_of_runs = 100;
-    // for i in 0..number_of_runs {
-    //     let offset = i * 8 % 150;
-    //     epd.update_partial_frame(&small_buffer, 25 + offset, 25 + offset, 16, 16)?;
-    //     epd.display_frame()?;
-    // }
+    // Draw some squares
+    let mut small_buffer =  [Color::Black.get_byte_value(), 160 as u8 / 8 * 160 as u8];
+    epd.update_partial_frame(&small_buffer, 20, 20, 160, 160).unwrap();
 
-    // // Clear the full screen
-    // epd.clear_frame();
-    // epd.display_frame();
+    small_buffer =  [Color::White.get_byte_value(), 80 as u8 / 8 * 80 as u8];
+    epd.update_partial_frame(&small_buffer, 60, 60, 80, 80).unwrap();
 
-    // // Draw some squares
-    // let mut small_buffer =  [Color::Black.get_byte_value(), 160 as u8 / 8 * 160 as u8];
-    // epd.update_partial_frame(&small_buffer, 20, 20, 160, 160)?;
+    small_buffer =  [Color::Black.get_byte_value(), 8];
+    epd.update_partial_frame(&small_buffer, 96, 96, 8, 8).unwrap();
 
-    // small_buffer =  [Color::White.get_byte_value(), 80 as u8 / 8 * 80 as u8];
-    // epd.update_partial_frame(&small_buffer, 60, 60, 80, 80)?;
+    // Display updated frame
+    epd.display_frame().unwrap();
 
-    // small_buffer =  [Color::Black.get_byte_value(), 8];
-    // epd.update_partial_frame(&small_buffer, 96, 96, 8, 8)?;
-
-    // // Display updated frame
-    // epd.display_frame()?;
-
-    // // Set the EPD to sleep
-    // epd.sleep()?;
+    // Set the EPD to sleep
+    epd.sleep().unwrap();
 
     loop {}
 }
