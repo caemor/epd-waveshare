@@ -64,9 +64,9 @@ use self::command::Command;
 
 /// EPD4in2 driver
 ///
-pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
+pub struct EPD4in2<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
-    interface: ConnectionInterface<SPI, CS, BUSY, DC, RST, D>,
+    interface: ConnectionInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
     color: Color,
 }
@@ -74,20 +74,19 @@ pub struct EPD4in2<SPI, CS, BUSY, DC, RST, D> {
 
 
 
-impl<SPI, CS, BUSY, DC, RST, Delay, ERR>
-    InternalWiAdditions<SPI, CS, BUSY, DC, RST, Delay, ERR>
-    for EPD4in2<SPI, CS, BUSY, DC, RST, Delay>
+impl<SPI, CS, BUSY, DC, RST, ERR>
+    InternalWiAdditions<SPI, CS, BUSY, DC, RST, ERR>
+    for EPD4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = ERR>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    Delay: DelayUs<u16> + DelayMs<u16>,
 {
-    fn init(&mut self) -> Result<(), ERR> {
+    fn init<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR> {
         // reset the device
-        self.interface.reset();
+        self.interface.reset(delay);
 
         // set the power settings
         self.interface.cmd_with_data(Command::POWER_SETTING, &[0x03, 0x00, 0x2b, 0x2b, 0xff])?;
@@ -114,16 +113,15 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, Delay, ERR>
-    WaveshareInterface<SPI, CS, BUSY, DC, RST, Delay, ERR>
-    for EPD4in2<SPI, CS, BUSY, DC, RST, Delay>
+impl<SPI, CS, BUSY, DC, RST, ERR>
+    WaveshareInterface<SPI, CS, BUSY, DC, RST, ERR>
+    for EPD4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = ERR>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    Delay: DelayUs<u16> + DelayMs<u16>,
 {
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
@@ -140,8 +138,8 @@ where
     ///
     /// epd4in2.sleep();
     /// ```
-    fn new(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: Delay) -> Result<Self, ERR> {
-        let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
+    fn new<DELAY: DelayMs<u8>>(spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY) -> Result<Self, ERR> {
+        let interface = ConnectionInterface::new(spi, cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = EPD4in2 {
@@ -149,13 +147,13 @@ where
             color,
         };
 
-        epd.init()?;
+        epd.init(delay)?;
 
         Ok(epd)
     }
 
-    fn wake_up(&mut self) -> Result<(), ERR> {
-        self.init()
+    fn wake_up<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR> {
+        self.init(delay)
     }
 
     //TODO: is such a long delay really needed inbetween?
@@ -163,13 +161,17 @@ where
         self.interface.cmd_with_data(Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
         self.command(Command::VCM_DC_SETTING)?; // VCOM to 0V
         self.command(Command::PANEL_SETTING)?;
-        self.delay_ms(100);
+
+        //TODO: Removal of delay. TEST!
+        //self.delay_ms(100);
 
         self.command(Command::POWER_SETTING)?; //VG&VS to 0V fast
         for _ in 0..4 {
             self.send_data(&[0x00])?;
         }
-        self.delay_ms(100);
+
+        //TODO: Removal of delay. TEST!
+        //self.delay_ms(100);
 
         self.command(Command::POWER_OFF)?;
         self.wait_until_idle();
@@ -191,7 +193,8 @@ where
         self.command(Command::DATA_START_TRANSMISSION_1)?;
         self.interface.data_x_times(color_value, buffer.len() as u16)?;
 
-        self.delay_ms(2);
+        //TODO: Removal of delay. TEST!
+        //self.delay_ms(2);
 
         self.interface.cmd_with_data(Command::DATA_START_TRANSMISSION_2, buffer)
     }
@@ -257,7 +260,8 @@ where
         self.command(Command::DATA_START_TRANSMISSION_1)?;
         self.interface.data_x_times(color_value, size)?;
 
-        self.delay_ms(2);
+        //TODO: Removal of delay. TEST!
+        //self.delay_ms(2);
 
         self.command(Command::DATA_START_TRANSMISSION_2)?;
         self.interface.data_x_times(color_value, size)
@@ -279,14 +283,9 @@ where
     fn height(&self) -> u16 {
         HEIGHT
     }
-
-
-    fn delay_ms(&mut self, delay: u16) {
-        self.interface.delay_ms(delay)
-    }
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, ERR> EPD4in2<SPI, CS, BUSY, DC, RST, D>
+impl<SPI, CS, BUSY, DC, RST, D, ERR> EPD4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = ERR>,
     CS: OutputPin,

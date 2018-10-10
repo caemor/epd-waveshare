@@ -38,26 +38,25 @@ use traits::connection_interface::ConnectionInterface;
 
 /// EPD2in9 driver
 ///
-pub struct EPD2in9<SPI, CS, BUSY, DC, RST, Delay> {
+pub struct EPD2in9<SPI, CS, BUSY, DC, RST> {
     /// SPI
-    interface: ConnectionInterface<SPI, CS, BUSY, DC, RST, Delay>,
+    interface: ConnectionInterface<SPI, CS, BUSY, DC, RST>,
     /// EPD (width, height)
     //epd: EPD,
     /// Color
     background_color: Color,
 }
 
-impl<SPI, CS, BUSY, DC, RST, Delay, E> EPD2in9<SPI, CS, BUSY, DC, RST, Delay>
+impl<SPI, CS, BUSY, DC, RST, E> EPD2in9<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    Delay: DelayUs<u16> + DelayMs<u16>,
 {
-    fn init(&mut self) -> Result<(), E> {
-        self.interface.reset();
+    fn init<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), E> {
+        self.interface.reset(delay);
 
         // 3 Databytes:
         // A[7:0]
@@ -90,16 +89,15 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, Delay, ERR>
-    WaveshareInterface<SPI, CS, BUSY, DC, RST, Delay, ERR>
-    for EPD2in9<SPI, CS, BUSY, DC, RST, Delay>
+impl<SPI, CS, BUSY, DC, RST, ERR>
+    WaveshareInterface<SPI, CS, BUSY, DC, RST, ERR>
+    for EPD2in9<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = ERR>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    Delay: DelayUs<u16> + DelayMs<u16>,
 {
     fn width(&self) -> u16 {
         WIDTH
@@ -109,17 +107,17 @@ where
         HEIGHT
     }
 
-    fn new(
-        spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: Delay,
+    fn new<DELAY: DelayMs<u8>>(
+        spi: SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY,
     ) -> Result<Self, ERR> {
-        let interface = ConnectionInterface::new(spi, cs, busy, dc, rst, delay);
+        let interface = ConnectionInterface::new(spi, cs, busy, dc, rst);
 
         let mut epd = EPD2in9 {
             interface,
             background_color: DEFAULT_BACKGROUND_COLOR,
         };
 
-        epd.init()?;
+        epd.init(delay)?;
 
         Ok(epd)
     }
@@ -135,12 +133,8 @@ where
         Ok(())
     }
 
-    fn wake_up(&mut self) -> Result<(), ERR> {
-        self.init()
-    }
-
-    fn delay_ms(&mut self, delay: u16) {
-        self.interface.delay_ms(delay)
+    fn wake_up<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) -> Result<(), ERR> {
+        self.init(delay)
     }
 
     fn update_frame(&mut self, buffer: &[u8]) -> Result<(), ERR> {
@@ -195,14 +189,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST, D>
+impl<SPI, CS, BUSY, DC, RST, D, E> EPD2in9<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    D: DelayUs<u16> + DelayMs<u16>,
 {
     fn wait_until_idle(&mut self) {
         self.interface.wait_until_idle(false);
