@@ -121,7 +121,7 @@ fn run() -> Result<(), std::io::Error> {
 
     // Speeddemo
     let small_buffer =  [Color::Black.get_byte_value(); 32];//16x16
-    let number_of_runs = 100;
+    let number_of_runs = 1;
     for i in 0..number_of_runs {
         let offset = i * 8 % 150;
         epd.update_partial_frame(&mut spi, &small_buffer, 25 + offset, 25 + offset, 16, 16).expect("partial frame");
@@ -133,11 +133,11 @@ fn run() -> Result<(), std::io::Error> {
     epd.display_frame(&mut spi).expect("disp 3");
 
     // Draw some squares
-    //let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
-    //epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160)?;
+    let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
+    epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160)?;
 
-    //let small_buffer =  [Color::White.get_byte_value(); 800]; //80x80
-    //epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80)?;
+    let small_buffer =  [Color::White.get_byte_value(); 800]; //80x80
+    epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80)?;
 
     let small_buffer =  [Color::Black.get_byte_value(); 8]; //8x8
     epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8).expect("partial frame 2");
