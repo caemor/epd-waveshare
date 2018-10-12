@@ -103,6 +103,7 @@ where
 
         // transfer spi data
         // Be careful!! Linux has a default limit of 4096 bytes per spi transfer
+        // see https://raspberrypi.stackexchange.com/questions/65595/spi-transfer-fails-with-buffer-size-greater-than-4096
         if cfg!(target_os = "linux") {
             for data_chunk in data.chunks(4096) {
                 spi.write(data_chunk)?;
