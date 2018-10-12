@@ -100,8 +100,17 @@ where
     {
         // activate spi with cs low
         self.cs.set_low();
+
         // transfer spi data
-        spi.write(data)?;
+        // Be careful!! Linux has a default limit of 4096 bytes per spi transfer
+        if cfg!(target_os = "linux") {
+            for data_chunk in data.chunks(4096) {
+                spi.write(data_chunk)?;
+            }
+        } else {
+            spi.write(data)?;
+        }
+        
         // deativate spi with cs high
         self.cs.set_high();
 
