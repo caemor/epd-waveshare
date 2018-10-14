@@ -23,18 +23,18 @@ const WIDTH: u16 = 128;
 const HEIGHT: u16 = 296;
 const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
-use hal::{
+use crate::hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
 
-use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
+use crate::type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
-use color::Color;
+use crate::color::Color;
 
-use traits::*;
+use crate::traits::*;
 
-use interface::DisplayInterface;
+use crate::interface::DisplayInterface;
 
 /// EPD2in9 driver
 ///

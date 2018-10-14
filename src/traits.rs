@@ -1,10 +1,10 @@
 use core::marker::Sized;
-use hal::{
+use crate::hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
 
-use color::Color;
+use crate::color::Color;
 
 
 

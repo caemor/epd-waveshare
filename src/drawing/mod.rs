@@ -1,7 +1,7 @@
 pub mod font;
 use self::font::Font;
 
-use color::Color;
+use crate::color::Color;
 
 #[derive(Clone, Copy)]
 pub enum Displayorientation {

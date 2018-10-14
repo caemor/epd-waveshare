@@ -45,13 +45,13 @@
 
 extern crate embedded_hal as hal;
 
-use hal::spi::{Mode, Phase, Polarity};
+use crate::hal::spi::{Mode, Phase, Polarity};
 
 #[cfg(feature = "graphics")]
 pub mod drawing;
 
 mod traits;
-pub use traits::{WaveshareDisplay};
+pub use crate::traits::{WaveshareDisplay};
 
 pub mod color;
 
@@ -61,19 +61,19 @@ mod interface;
 #[cfg(feature = "epd4in2")]
 mod epd4in2;
 #[cfg(feature = "epd4in2")]
-pub use epd4in2::EPD4in2;
+pub use crate::epd4in2::EPD4in2;
 
 #[cfg(feature = "epd1in54")]
 mod epd1in54;
 #[cfg(feature = "epd1in54")]
-pub use epd1in54::EPD1in54;
+pub use crate::epd1in54::EPD1in54;
 
 #[cfg(feature = "epd2in9")]
 mod epd2in9;
 ///2in9 eink
 #[cfg(feature = "epd2in9")]
 ///2in9 eink
-pub use epd2in9::EPD2in9;
+pub use crate::epd2in9::EPD2in9;
 
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
 pub(crate) mod type_a;

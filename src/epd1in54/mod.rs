@@ -24,18 +24,18 @@ const HEIGHT: u16 = 200;
 //const DPI: u16 = 184;
 const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
-use hal::{
+use crate::hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
 
-use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
+use crate::type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
-use color::Color;
+use crate::color::Color;
 
-use traits::{WaveshareDisplay};
+use crate::traits::{WaveshareDisplay};
 
-use interface::DisplayInterface;
+use crate::interface::DisplayInterface;
 
 /// EPD1in54 driver
 ///

@@ -46,19 +46,19 @@
 //!
 //! BE CAREFUL! The screen can get ghosting/burn-ins through the Partial Fast Update Drawing.
 
-use hal::{
+use crate::hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
 
-use traits::{WaveshareDisplay, InternalWiAdditions};
-use interface::DisplayInterface;
+use crate::traits::{WaveshareDisplay, InternalWiAdditions};
+use crate::interface::DisplayInterface;
 
 //The Lookup Tables for the Display
 mod constants;
 use self::constants::*;
 
-use color::Color;
+use crate::color::Color;
 
 pub mod command;
 use self::command::Command;
