@@ -44,7 +44,6 @@
 //TODO: Make more assertions about buffersizes?
 
 use embedded_hal as hal;
-
 use crate::hal::spi::{Mode, Phase, Polarity};
 
 #[cfg(feature = "graphics")]
