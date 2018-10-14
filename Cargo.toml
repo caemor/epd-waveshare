@@ -9,7 +9,8 @@ license = "ISC"
 name = "eink_waveshare_rs"
 readme = "README.md"
 repository = "https://github.com/Caemor/eink-waveshare-rs.git"
-version = "0.1.2"
+version = "0.2.0"
+edition = "2018"
 
 [badges]
 # Travis CI: `repository` in format "<user>/<project>" is required.
