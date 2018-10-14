@@ -29,6 +29,8 @@ epd4in2_fast_update = []
 
 [dependencies]
 
+embedded-graphics = "0.4.1"
+
 
 [dependencies.embedded-hal]
 features = ["unproven"]
