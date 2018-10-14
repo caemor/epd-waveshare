@@ -78,7 +78,7 @@ pub use epd2in9::EPD2in9;
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
 pub(crate) mod type_a;
 
-use embedded_graphics;
+use embedded-graphics;
 
 //TODO: test spi mode
 /// SPI mode -
