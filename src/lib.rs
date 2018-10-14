@@ -43,7 +43,7 @@
 
 //TODO: Make more assertions about buffersizes?
 
-extern crate embedded_hal as hal;
+use embedded_hal as hal;
 
 use crate::hal::spi::{Mode, Phase, Polarity};
 

@@ -134,13 +134,13 @@ impl<'a> Graphics<'a> {
     }
 
     ///TODO: test!
-    pub fn draw_char(&mut self, x0: u16, y0: u16, input: char, font: &Font, color: &Color) {
+    pub fn draw_char(&mut self, x0: u16, y0: u16, input: char, font: &Font<'_>, color: &Color) {
         self.draw_char_helper(x0, y0, input, font, color);
     }
 
     ///TODO: test!
     /// no autobreak line yet
-    pub fn draw_string(&mut self, x0: u16, y0: u16, input: &str, font: &Font, color: &Color) {
+    pub fn draw_string(&mut self, x0: u16, y0: u16, input: &str, font: &Font<'_>, color: &Color) {
         let mut counter = 0;
         for input_char in input.chars() {
             self.draw_char(x0 + counter, y0, input_char, font, color);
@@ -150,7 +150,7 @@ impl<'a> Graphics<'a> {
 
     //TODO: add support for font_height = 0
     //TODO: add support for char offset in y direction to reduce font file size
-    fn draw_char_helper(&mut self, x0: u16, y0: u16, input: char, font: &Font, color: &Color) {
+    fn draw_char_helper(&mut self, x0: u16, y0: u16, input: char, font: &Font<'_>, color: &Color) {
         //width: u8, height: u8, charbuffer: &[u8]
         //TODO: font.get_char(input) -> FontChar {width, height, [u8]}
         //TODO: font.get_char_offset(input) -> u16
