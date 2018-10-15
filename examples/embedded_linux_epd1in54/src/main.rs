@@ -7,7 +7,7 @@ extern crate eink_waveshare_rs;
 
 use eink_waveshare_rs::{
     EPD1in54, 
-    //drawing::{Graphics},
+    //drawing_old::{Graphics},
     color::Color,
     WaveshareDisplay,
 };

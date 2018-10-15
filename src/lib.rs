@@ -50,7 +50,9 @@ use hal::spi::{Mode, Phase, Polarity};
 #[cfg(feature = "graphics")]
 pub mod drawing;
 
-pub(crate) mod drawing_old;
+//TODO: remove old drawing support
+#[cfg(feature = "graphics")]
+pub mod drawing_old;
 
 mod traits;
 pub use traits::{WaveshareDisplay};
