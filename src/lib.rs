@@ -50,6 +50,8 @@ use hal::spi::{Mode, Phase, Polarity};
 #[cfg(feature = "graphics")]
 pub mod drawing;
 
+pub(crate) mod drawing_old;
+
 mod traits;
 pub use traits::{WaveshareDisplay};
 
@@ -79,7 +81,6 @@ pub use epd2in9::EPD2in9;
 pub(crate) mod type_a;
 
 extern crate embedded_graphics;
-use embedded_graphics;
 
 //TODO: test spi mode
 /// SPI mode -

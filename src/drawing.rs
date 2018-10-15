@@ -1,4 +1,5 @@
 use color::Color;
+use embedded_graphics::prelude::*;
 
 /// Displayrotation 
 #[derive(Clone, Copy)]
@@ -12,9 +13,9 @@ pub enum DisplayRotation {
     /// Rotate 270 degrees clockwise
     Rotate270,
 }
-impl Default for Displayorientation {
+impl Default for DisplayRotation {
     fn default() -> Self {
-        Displayorientation::Rotate0
+        DisplayRotation::Rotate0
     }
 }
 
@@ -39,15 +40,15 @@ pub trait Buffer {
 
 pub struct DisplayEink42BlackWhite {
     buffer: [u8; 400 * 300 / 8],
-    rotation: Displayorientation, //TODO: check embedded_graphics for orientation
+    rotation: DisplayRotation, //TODO: check embedded_graphics for orientation
 }
 impl Default for DisplayEink42BlackWhite {
     fn default() -> Self {
-        use epd4in2::constants::*;
+        use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
         DisplayEink42BlackWhite {
             buffer: [
-                DEFAULT_BACKGROUND_COLOR.get_full_byte(),
-                WIDTH * HEIGHT / 8                
+                DEFAULT_BACKGROUND_COLOR.get_byte_value();
+                WIDTH as usize * HEIGHT as usize / 8                
             ],
             rotation: DisplayRotation::default()
         }
@@ -63,14 +64,15 @@ impl Drawing<u8> for DisplayEink42BlackWhite {
     where
         T: Iterator<Item = Pixel<u8>>
     {
+        use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
         for Pixel(UnsignedCoord(x,y), color) in item_pixels {
             let (idx, bit) = match self.rotation {
-                Displayorientation::Rotate0 | Displayorientation::Rotate180 => (
-                    (x as usize / 8 + (self.width as usize / 8) * y as usize),
+                DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => (
+                    (x as usize / 8 + (WIDTH as usize / 8) * y as usize),
                     0x80 >> (x % 8),
                 ),
-                Displayorientation::Rotate90 | Displayorientation::Rotate270 => (
-                    y as usize / 8 * self.width as usize + x as usize,
+                DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => (
+                    y as usize / 8 * WIDTH as usize + x as usize,
                     0x80 >> (y % 8),
                 ),
             };
@@ -79,7 +81,7 @@ impl Drawing<u8> for DisplayEink42BlackWhite {
                 return;
             }
 
-            match color {
+            match Color::from(color) {
                 Color::Black => {
                     self.buffer[idx] &= !bit;
                 }

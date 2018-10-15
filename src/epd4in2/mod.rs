@@ -55,7 +55,7 @@ use traits::{WaveshareDisplay, InternalWiAdditions};
 use interface::DisplayInterface;
 
 //The Lookup Tables for the Display
-mod constants;
+pub(crate) mod constants; //TODO: Limit to crate::drawing
 use self::constants::*;
 
 use color::Color;
