@@ -11,6 +11,7 @@ eink_waveshare_rs = { path = "../../", default-features = false, features = ["ep
 
 linux-embedded-hal = "0.2.0"
 
-embedded-graphics = "0.4.1"
+#embedded-graphics = "0.4.1"
+embedded-graphics = {git = "https://github.com/Caemor/embedded-graphics", branch = "patch-1"}
 
 embedded-hal = { version = "0.2.1", features = ["unproven"] }
