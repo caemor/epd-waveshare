@@ -18,6 +18,7 @@ use embedded_graphics::coord::Coord;
 use embedded_graphics::fonts::Font6x8;
 use embedded_graphics::prelude::*;
 use embedded_graphics::primitives::{Circle, Line};
+use embedded_graphics::Drawing;
 
 use lin_hal::spidev::{self, SpidevOptions};
 use lin_hal::{Pin, Spidev};
