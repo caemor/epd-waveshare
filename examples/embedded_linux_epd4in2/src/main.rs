@@ -8,7 +8,7 @@ extern crate eink_waveshare_rs;
 use eink_waveshare_rs::{
     EPD4in2, 
     drawing_old::{Graphics},
-    drawing::{DisplayEink42BlackWhite, Display},
+    drawing::{DisplayEink42BlackWhite, Display, DisplayRotation},
     color::Color, 
     WaveshareDisplay,
 };
@@ -186,6 +186,51 @@ fn run() -> Result<(), std::io::Error> {
     delay.delay_ms(3000u16);
 
     println!("Now test new graphics:");
+
+    println!("Now test new graphics with rotate90:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.set_rotation(DisplayRotation::Rotate90);
+    display.draw(
+            Font6x8::render_str("Rotate 90!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+    epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd4in2.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(2000u16);
+
+    println!("Now test new graphics with rotate180:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.set_rotation(DisplayRotation::Rotate180);
+    display.draw(
+            Font6x8::render_str("Rotate 180!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+    epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd4in2.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(2000u16);
+
+    println!("Now test new graphics with rotate270:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.set_rotation(DisplayRotation::Rotate270);
+    display.draw(
+            Font6x8::render_str("Rotate 270!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+    epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd4in2.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(2000u16);
+
+
+    println!("Now test new graphics with default rotation and some special stuff:");
     let mut display = DisplayEink42BlackWhite::default();
     display.draw(
         Circle::new(Coord::new(64, 64), 64)
@@ -214,8 +259,7 @@ fn run() -> Result<(), std::io::Error> {
             .into_iter(),
     );
 
-    //display.clear();
-    //display.set_rotation(Rotation)
+    
 
     let mut i = 0;
     loop {
@@ -230,7 +274,7 @@ fn run() -> Result<(), std::io::Error> {
                 .into_iter(),
         );        
 
-        epd4in2.update_frame(&mut spi, &display.get_buffer()).unwrap();
+        epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
         epd4in2.display_frame(&mut spi).expect("display frame new graphics");
         if i > 20 {
             
