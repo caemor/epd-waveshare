@@ -8,7 +8,7 @@ extern crate eink_waveshare_rs;
 use eink_waveshare_rs::{
     EPD4in2, 
     drawing_old::{Graphics},
-    drawing::{DisplayEink42BlackWhite, Buffer},
+    drawing::{DisplayEink42BlackWhite, Display},
     color::Color, 
     WaveshareDisplay,
 };
@@ -184,34 +184,51 @@ fn run() -> Result<(), std::io::Error> {
     println!("Finished draw string test");
 
     delay.delay_ms(3000u16);
+
     println!("Now test new graphics:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.draw(
+        Circle::new(Coord::new(64, 64), 64)
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
+    display.draw(
+        Line::new(Coord::new(64, 64), Coord::new(0, 64))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
+    display.draw(
+        Line::new(Coord::new(64, 64), Coord::new(80, 80))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
+    display.draw(
+        Font6x8::render_str("It's working!")
+            // Using Style here
+            .with_style(Style {
+                fill_color: Some(Color::Black),
+                stroke_color: Some(Color::White),
+                stroke_width: 0u8, // Has no effect on fonts
+            })
+            .translate(Coord::new(175, 250))
+            .into_iter(),
+    );
+
+    //display.clear();
+    //display.set_rotation(Rotation)
 
     let mut i = 0;
     loop {
-        println!("Loop {}", i);
         i += 1;
-        let mut display = DisplayEink42BlackWhite::default();
-        display.draw(
-            Circle::new(Coord::new(64, 64), 64)
-                .with_stroke(Some(Color::Black))
-                .into_iter(),
-        );
-        display.draw(
-            Line::new(Coord::new(64, 64), Coord::new(0, 64))
-                .with_stroke(Some(Color::Black))
-                .into_iter(),
-        );
-        display.draw(
-            Line::new(Coord::new(64, 64), Coord::new(80, 80))
-                .with_stroke(Some(Color::Black))
-                .into_iter(),
-        );
+        println!("Moving Hello World. Loop {} from 20", i);
+
         display.draw(
             Font6x8::render_str("Hello World!")
                 .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
                 .translate(Coord::new(5 + i*10, 50))
                 .into_iter(),
-        );
+        );        
 
         epd4in2.update_frame(&mut spi, &display.get_buffer()).unwrap();
         epd4in2.display_frame(&mut spi).expect("display frame new graphics");
@@ -221,6 +238,8 @@ fn run() -> Result<(), std::io::Error> {
         }
         delay.delay_ms(1_000u16);
     }
+
+
     println!("Finished tests - going to sleep");
     epd4in2.sleep(&mut spi)
 }   
