@@ -8,6 +8,7 @@ extern crate eink_waveshare_rs;
 use eink_waveshare_rs::{
     EPD4in2, 
     drawing_old::{Graphics},
+    drawing::DisplayEink42BlackWhite,
     color::Color, 
     WaveshareDisplay,
 };
@@ -136,6 +137,8 @@ fn run() -> Result<(), std::io::Error> {
     epd4in2.clear_frame(&mut spi).expect("clear frame error");
     epd4in2.update_frame(&mut spi, graphics.get_buffer()).expect("update frame error");
     epd4in2.display_frame(&mut spi)?;
+
+    println!("Finished basic old graphics test");
  
     delay.delay_ms(3000u16);
 
@@ -158,6 +161,8 @@ fn run() -> Result<(), std::io::Error> {
     epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 160,240, 32, 32).expect("update partial frame error");
     epd4in2.display_frame(&mut spi)?;
 
+    println!("Finished partial update test");
+
     delay.delay_ms(3000u16);
 
 
@@ -170,7 +175,44 @@ fn run() -> Result<(), std::io::Error> {
     epd4in2.update_frame(&mut spi, graphics.get_buffer())?;
     epd4in2.display_frame(&mut spi)?;
 
-    delay.delay_ms(3000u16);
+    println!("Finished draw string test");
 
-    epd4in2.sleep(&mut spi)
-}
+    delay.delay_ms(3000u16);
+    println!("Now test new graphics:");
+
+    let mut i = 0;
+    loop {
+        println!("Loop {}", i);
+        i += 1;
+        let mut display = DisplayEink42BlackWhite::default();
+        display.draw(
+            Circle::new(Coord::new(64, 64), 64)
+                .with_stroke(Some(1u8.into()))
+                .into_iter(),
+        );
+        display.draw(
+            Line::new(Coord::new(64, 64), Coord::new(0, 64))
+                .with_stroke(Some(1u8.into()))
+                .into_iter(),
+        );
+        display.draw(
+            Line::new(Coord::new(64, 64), Coord::new(80, 80))
+                .with_stroke(Some(1u8.into()))
+                .into_iter(),
+        );
+        display.draw(
+            Font6x8::render_str("Hello World!")
+                .with_stroke(Some(1u8.into()))
+                .translate(Coord::new(5 + i, 50))
+                .into_iter(),
+        );
+
+        epd4in2.update_frame(&mut spi, &display.get_buffer()).unwrap();
+        epd4in2.display_frame(&mut spi);
+        if i > 296 {
+            epd4in2.sleep(&mut spi)?;
+            return;
+        }
+        delay.delay_ms(1_000u16);
+    }
+}   
