@@ -8,10 +8,16 @@ extern crate eink_waveshare_rs;
 use eink_waveshare_rs::{
     EPD4in2, 
     drawing_old::{Graphics},
-    drawing::DisplayEink42BlackWhite,
+    drawing::{DisplayEink42BlackWhite, Buffer},
     color::Color, 
     WaveshareDisplay,
 };
+
+extern crate embedded_graphics;
+use embedded_graphics::coord::Coord;
+use embedded_graphics::fonts::Font6x8;
+use embedded_graphics::prelude::*;
+use embedded_graphics::primitives::{Circle, Line};
 
 use lin_hal::spidev::{self, SpidevOptions};
 use lin_hal::{Pin, Spidev};
@@ -63,7 +69,7 @@ impl<'a> InputPin for HackInputPin<'a> {
 *
 */
 fn main() {
-    run().map_err(|e| println!("{}", e.to_string()));
+    run().map_err(|e| println!("{}", e.to_string())).unwrap();
 }
 
 
@@ -208,11 +214,13 @@ fn run() -> Result<(), std::io::Error> {
         );
 
         epd4in2.update_frame(&mut spi, &display.get_buffer()).unwrap();
-        epd4in2.display_frame(&mut spi);
+        epd4in2.display_frame(&mut spi).expect("display frame new graphics");
         if i > 296 {
-            epd4in2.sleep(&mut spi)?;
-            return;
+            
+            break;
         }
         delay.delay_ms(1_000u16);
     }
+    println!("Finished tests - going to sleep");
+    epd4in2.sleep(&mut spi)
 }   
