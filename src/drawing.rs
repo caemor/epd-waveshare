@@ -20,7 +20,7 @@ impl Default for DisplayRotation {
 }
 
 pub trait Display {
-    fn get_buffer(&self) -> &[u8];
+    fn buffer(&self) -> &[u8];
     fn set_rotation(&mut self, rotation: DisplayRotation);
     fn rotation(&self) -> DisplayRotation;
 }
@@ -45,7 +45,7 @@ impl Default for DisplayEink42BlackWhite {
 }
 
 impl Display for DisplayEink42BlackWhite {
-    fn get_buffer(&self) -> &[u8] {
+    fn buffer(&self) -> &[u8] {
         &self.buffer
     }
     fn set_rotation(&mut self, rotation: DisplayRotation) {
@@ -91,3 +91,121 @@ impl Drawing<Color> for DisplayEink42BlackWhite {
 }
 
 //TODO: write tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use epd4in2;
+    use embedded_graphics::coord::Coord;
+    use embedded_graphics::fonts::Font6x8;
+    use embedded_graphics::prelude::*;
+    use embedded_graphics::primitives::{Circle, Line};
+
+    #[test]
+    fn from_u8() {
+        assert_eq!(Color::Black, Color::from(0u8));
+        assert_eq!(Color::White, Color::from(1u8));
+    }
+
+    // test all values aside from 0 and 1 which all should panic
+    #[test]
+    fn from_u8_panic() {
+        for val in 2..=u8::max_value() {
+            let result = std::panic::catch_unwind(|| Color::from(val));
+            assert!(result.is_err());
+        }        
+    }
+
+    // test buffer length
+    #[test]
+    fn graphics_4in2_size() {
+        let display = DisplayEink42BlackWhite::default();
+        assert_eq!(display.buffer().len(), 15000);
+    }
+    
+    // test default background color on all bytes
+    #[test]
+    fn graphics_4in2_default() {
+        let display = DisplayEink42BlackWhite::default();
+        use epd4in2;
+        for &byte in display.buffer() {
+            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+        }
+    }
+
+    #[test]
+    fn graphics_4in2_rotation_0() {
+        let mut display = DisplayEink42BlackWhite::default();
+        display.draw(
+            Line::new(Coord::new(0, 0), Coord::new(7, 0))
+                .with_stroke(Some(Color::Black))
+                .into_iter(),
+        );
+        
+        let buffer = display.buffer();
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+        }
+    }
+
+    #[test]
+    fn graphics_4in2_rotation_90() {
+        let mut display = DisplayEink42BlackWhite::default();
+        display.set_rotation(DisplayRotation::Rotate90);
+        display.draw(
+            Line::new(Coord::new(0, 392), Coord::new(0, 399))
+                .with_stroke(Some(Color::Black))
+                .into_iter(),
+        );
+        
+        let buffer = display.buffer();
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+        }
+    }
+
+    #[test]
+    fn graphics_4in2_rotation_180() {
+        let mut display = DisplayEink42BlackWhite::default();
+        display.set_rotation(DisplayRotation::Rotate180);
+        display.draw(
+            Line::new(Coord::new(392, 299), Coord::new(399, 299))
+                .with_stroke(Some(Color::Black))
+                .into_iter(),
+        );
+        
+        let buffer = display.buffer();
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+        }
+        
+    }
+
+    #[test]
+    fn graphics_4in2_rotation_270() {
+                let mut display = DisplayEink42BlackWhite::default();
+        display.set_rotation(DisplayRotation::Rotate270);
+        display.draw(
+            Line::new(Coord::new(299, 0), Coord::new(299, 0))
+                .with_stroke(Some(Color::Black))
+                .into_iter(),
+        );
+        
+        let buffer = display.buffer();
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+        }
+        
+    }
+}
