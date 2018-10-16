@@ -193,22 +193,22 @@ fn run() -> Result<(), std::io::Error> {
         let mut display = DisplayEink42BlackWhite::default();
         display.draw(
             Circle::new(Coord::new(64, 64), 64)
-                .with_stroke(Color::Black)
+                .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
         display.draw(
             Line::new(Coord::new(64, 64), Coord::new(0, 64))
-                .with_stroke(Color::Black)
+                .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
         display.draw(
             Line::new(Coord::new(64, 64), Coord::new(80, 80))
-                .with_stroke(Color::Black)
+                .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
         display.draw(
             Font6x8::render_str("Hello World!")
-                .with_stroke(Color::Black)
+                .with_stroke(Some(Color::Black))
                 .translate(Coord::new(5 + i*10, 50))
                 .into_iter(),
         );

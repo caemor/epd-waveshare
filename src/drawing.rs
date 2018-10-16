@@ -93,6 +93,40 @@ impl Drawing<u8> for DisplayEink42BlackWhite {
     }
 }
 
+impl Drawing<Color> for DisplayEink42BlackWhite {
+    fn draw<T>(&mut self, item_pixels: T)
+    where
+        T: Iterator<Item = Pixel<Color>>
+    {
+        use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
+        for Pixel(UnsignedCoord(x,y), color) in item_pixels {
+            let (idx, bit) = match self.rotation {
+                DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => (
+                    (x as usize / 8 + (WIDTH as usize / 8) * y as usize),
+                    0x80 >> (x % 8),
+                ),
+                DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => (
+                    y as usize / 8 * WIDTH as usize + x as usize,
+                    0x80 >> (y % 8),
+                ),
+            };
+
+            if idx >= self.buffer.len() {
+                return;
+            }
+
+            match color {
+                Color::Black => {
+                    self.buffer[idx] &= !bit;
+                }
+                Color::White => {
+                    self.buffer[idx] |= bit;
+                }
+            }            
+        }
+    }
+}
+
 // impl Drawing<u8> for DisplayRibbonLeft {
 //     fn draw<T>(&mut self, item_pixels: T)
 //     where
