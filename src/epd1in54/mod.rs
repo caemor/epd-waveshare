@@ -29,7 +29,10 @@ use hal::{
     digital::*,
 };
 
-use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
+use type_a::{
+    command::Command, 
+    constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE}
+};
 
 use color::Color;
 
