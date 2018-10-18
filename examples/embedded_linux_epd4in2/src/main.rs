@@ -333,7 +333,7 @@ fn run() -> Result<(), std::io::Error> {
     
 
     let mut i = 0;
-    let mut limit = 2
+    let mut limit = 2;
     loop {
         i += 1;
         println!("Moving Hello World. Loop {} from {}", i, limit);
