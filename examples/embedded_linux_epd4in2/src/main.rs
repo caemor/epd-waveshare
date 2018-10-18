@@ -304,8 +304,8 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("It's working-BoW!")
             // Using Style here
             .with_style(Style {
-                fill_color: Some(Color::Black),
-                stroke_color: Some(Color::White),
+                fill_color: Some(Color::White),
+                stroke_color: Some(Color::Black),
                 stroke_width: 0u8, // Has no effect on fonts
             })
             .translate(Coord::new(50, 200))
