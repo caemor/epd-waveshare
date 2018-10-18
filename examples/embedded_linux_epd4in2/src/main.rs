@@ -205,6 +205,14 @@ fn run() -> Result<(), std::io::Error> {
                 .translate(Coord::new(50, 70))
                 .into_iter(),
     );
+
+    display.draw(
+        Line::new(Coord::new(5, 5), Coord::new(15, 15))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
+
+
     epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
     epd4in2.display_frame(&mut spi).expect("display frame new graphics");
     delay.delay_ms(2000u16);
@@ -216,6 +224,11 @@ fn run() -> Result<(), std::io::Error> {
             Font6x8::render_str("Rotate 90!")
                 .translate(Coord::new(5, 50))
                 .into_iter(),
+    );
+    display.draw(
+        Line::new(Coord::new(5, 5), Coord::new(15, 15))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
     );
     epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
     epd4in2.display_frame(&mut spi).expect("display frame new graphics");
@@ -229,6 +242,11 @@ fn run() -> Result<(), std::io::Error> {
                 .translate(Coord::new(5, 50))
                 .into_iter(),
     );
+    display.draw(
+        Line::new(Coord::new(5, 5), Coord::new(15, 15))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
     epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
     epd4in2.display_frame(&mut spi).expect("display frame new graphics");
     delay.delay_ms(2000u16);
@@ -240,6 +258,11 @@ fn run() -> Result<(), std::io::Error> {
             Font6x8::render_str("Rotate 270!")
                 .translate(Coord::new(5, 50))
                 .into_iter(),
+    );
+    display.draw(
+        Line::new(Coord::new(5, 5), Coord::new(15, 15))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
     );
     epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
     epd4in2.display_frame(&mut spi).expect("display frame new graphics");
