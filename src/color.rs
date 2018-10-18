@@ -12,23 +12,23 @@ impl Color {
     /// Get the color encoding of the color for one bit
     pub fn get_bit_value(&self) -> u8 {
         match self {
-            Color::White => 1u8,
-            Color::Black => 0u8,
+            Color::White => 0u8,
+            Color::Black => 1u8,
         }
     }
 
     /// Gets a full byte of black or white pixels
     pub fn get_byte_value(&self) -> u8 {
         match self {
-            Color::White => 0xff,
-            Color::Black => 0x00,
+            Color::White => 0x00,
+            Color::Black => 0xff,
         }
     }
 
     fn from_u8(val: u8) -> Self {
         match val {
-            0 => Color::Black,
-            1 => Color::White,
+            1 => Color::Black,
+            0 => Color::White,
             e => panic!("DisplayColor only parses 0 and 1 (Black and White) and not `{}`", e),
         }
     }
