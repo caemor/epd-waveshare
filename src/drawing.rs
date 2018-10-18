@@ -98,12 +98,10 @@ impl Drawing<Color> for DisplayEink42BlackWhite {
 
             match color {
                 Color::Black => {
-                    //self.buffer[idx] &= !bit;
-                    self.buffer[idx] |= bit;
+                    self.buffer[idx] &= !bit;
                 }
                 Color::White => {
-                    //self.buffer[idx] |= bit;
-                    self.buffer[idx] &= !bit;
+                    self.buffer[idx] |= bit;
                 }
             }            
         }

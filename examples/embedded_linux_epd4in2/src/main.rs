@@ -351,7 +351,7 @@ fn run() -> Result<(), std::io::Error> {
 
         epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
         epd4in2.display_frame(&mut spi).expect("display frame new graphics");
-        if i >= 20 {
+        if i >= limit {
             
             break;
         }
