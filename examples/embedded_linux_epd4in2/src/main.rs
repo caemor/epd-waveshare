@@ -222,6 +222,8 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate90);
     display.draw(
             Font6x8::render_str("Rotate 90!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
                 .translate(Coord::new(5, 50))
                 .into_iter(),
     );
