@@ -8,9 +8,17 @@ extern crate eink_waveshare_rs;
 use eink_waveshare_rs::{
     EPD4in2, 
     drawing_old::{Graphics},
+    drawing::{DisplayEink42BlackWhite, Display, DisplayRotation},
     color::Color, 
     WaveshareDisplay,
 };
+
+extern crate embedded_graphics;
+use embedded_graphics::coord::Coord;
+use embedded_graphics::fonts::Font6x8;
+use embedded_graphics::prelude::*;
+use embedded_graphics::primitives::{Circle, Line};
+use embedded_graphics::Drawing;
 
 use lin_hal::spidev::{self, SpidevOptions};
 use lin_hal::{Pin, Spidev};
@@ -62,7 +70,7 @@ impl<'a> InputPin for HackInputPin<'a> {
 *
 */
 fn main() {
-    run().map_err(|e| println!("{}", e.to_string()));
+    run().map_err(|e| println!("{}", e.to_string())).unwrap();
 }
 
 
@@ -136,6 +144,8 @@ fn run() -> Result<(), std::io::Error> {
     epd4in2.clear_frame(&mut spi).expect("clear frame error");
     epd4in2.update_frame(&mut spi, graphics.get_buffer()).expect("update frame error");
     epd4in2.display_frame(&mut spi)?;
+
+    println!("Finished basic old graphics test");
  
     delay.delay_ms(3000u16);
 
@@ -158,6 +168,8 @@ fn run() -> Result<(), std::io::Error> {
     epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 160,240, 32, 32).expect("update partial frame error");
     epd4in2.display_frame(&mut spi)?;
 
+    println!("Finished partial update test");
+
     delay.delay_ms(3000u16);
 
 
@@ -170,7 +182,112 @@ fn run() -> Result<(), std::io::Error> {
     epd4in2.update_frame(&mut spi, graphics.get_buffer())?;
     epd4in2.display_frame(&mut spi)?;
 
+    println!("Finished draw string test");
+
     delay.delay_ms(3000u16);
 
+    println!("Now test new graphics:");
+
+    println!("Now test new graphics with rotate90:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.set_rotation(DisplayRotation::Rotate90);
+    display.draw(
+            Font6x8::render_str("Rotate 90!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+    epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd4in2.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(2000u16);
+
+    println!("Now test new graphics with rotate180:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.set_rotation(DisplayRotation::Rotate180);
+    display.draw(
+            Font6x8::render_str("Rotate 180!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+    epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd4in2.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(2000u16);
+
+    println!("Now test new graphics with rotate270:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.set_rotation(DisplayRotation::Rotate270);
+    display.draw(
+            Font6x8::render_str("Rotate 270!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+    epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd4in2.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(2000u16);
+
+
+    println!("Now test new graphics with default rotation and some special stuff:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.draw(
+        Circle::new(Coord::new(64, 64), 64)
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
+    display.draw(
+        Line::new(Coord::new(64, 64), Coord::new(0, 64))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
+    display.draw(
+        Line::new(Coord::new(64, 64), Coord::new(80, 80))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
+    display.draw(
+        Font6x8::render_str("It's working!")
+            // Using Style here
+            .with_style(Style {
+                fill_color: Some(Color::Black),
+                stroke_color: Some(Color::White),
+                stroke_width: 0u8, // Has no effect on fonts
+            })
+            .translate(Coord::new(175, 250))
+            .into_iter(),
+    );
+
+    
+
+    let mut i = 0;
+    loop {
+        i += 1;
+        println!("Moving Hello World. Loop {} from 20", i);
+
+        display.draw(
+            Font6x8::render_str("Hello World!")
+                .with_style(Style {
+                    fill_color: Some(Color::White),
+                    stroke_color: Some(Color::Black),
+                    stroke_width: 0u8, // Has no effect on fonts
+                })
+                .translate(Coord::new(5 + i*10, 50))
+                .into_iter(),
+        );        
+
+        epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+        epd4in2.display_frame(&mut spi).expect("display frame new graphics");
+        if i > 20 {
+            
+            break;
+        }
+        delay.delay_ms(1_000u16);
+    }
+
+
+    println!("Finished tests - going to sleep");
     epd4in2.sleep(&mut spi)
-}
+}   
