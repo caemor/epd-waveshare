@@ -61,7 +61,7 @@ impl Drawing<Color> for DisplayEink42BlackWhite {
     where
         T: Iterator<Item = Pixel<Color>>
     {
-        use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
+        use epd4in2::constants::WIDTH;
         for Pixel(UnsignedCoord(x,y), color) in item_pixels {
             let (idx, bit) = match self.rotation {
                 DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => (
@@ -96,9 +96,7 @@ mod tests {
     use super::*;
     use epd4in2;
     use embedded_graphics::coord::Coord;
-    use embedded_graphics::fonts::Font6x8;
-    use embedded_graphics::prelude::*;
-    use embedded_graphics::primitives::{Circle, Line};
+    use embedded_graphics::primitives::Line;
 
     #[test]
     fn from_u8() {
