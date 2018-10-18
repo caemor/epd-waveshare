@@ -333,9 +333,10 @@ fn run() -> Result<(), std::io::Error> {
     
 
     let mut i = 0;
+    let mut limit = 2
     loop {
         i += 1;
-        println!("Moving Hello World. Loop {} from 20", i);
+        println!("Moving Hello World. Loop {} from {}", i, limit);
 
         display.draw(
             Font6x8::render_str("Hello World!")
@@ -350,7 +351,7 @@ fn run() -> Result<(), std::io::Error> {
 
         epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
         epd4in2.display_frame(&mut spi).expect("display frame new graphics");
-        if i > 20 {
+        if i >= 20 {
             
             break;
         }
