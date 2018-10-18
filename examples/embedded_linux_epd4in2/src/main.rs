@@ -305,14 +305,14 @@ fn run() -> Result<(), std::io::Error> {
             // Using Style here
             .with_style(Style {
                 fill_color: Some(Color::Black),
-                stroke_color: Some(Color::Black),
+                stroke_color: Some(Color::White),
                 stroke_width: 0u8, // Has no effect on fonts
             })
             .translate(Coord::new(50, 200))
             .into_iter(),
     );
 
-        display.draw(
+    display.draw(
         Font12x16::render_str("It's working-BoW!")
             // Using Style here
             .with_style(Style {
@@ -321,6 +321,12 @@ fn run() -> Result<(), std::io::Error> {
                 stroke_width: 0u8, // Has no effect on fonts
             })
             .translate(Coord::new(50, 22))
+            .into_iter(),
+    );
+
+    display.draw(
+        Line::new(Coord::new(60, 28), Coord::new(120, 28))
+            .with_stroke(Some(Color::White))
             .into_iter(),
     );
 
