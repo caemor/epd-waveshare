@@ -56,27 +56,45 @@ impl Display for DisplayEink42BlackWhite {
     }
 }
 
+//TODO: add more tests for the rotation maybe? or test it at least once in real!
 impl Drawing<Color> for DisplayEink42BlackWhite {
     fn draw<T>(&mut self, item_pixels: T)
     where
         T: Iterator<Item = Pixel<Color>>
     {
-        use epd4in2::constants::WIDTH;
+        use epd4in2::constants::{WIDTH, HEIGHT};
         for Pixel(UnsignedCoord(x,y), color) in item_pixels {
+            match self.rotation {
+                DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
+                    if x >= WIDTH as u32 || y >= HEIGHT as u32 {
+                        return;
+                    }
+                },
+                DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => {
+                    if y >= WIDTH as u32 || x >= HEIGHT as u32 {
+                        return;
+                    } 
+                }
+            }
+
             let (idx, bit) = match self.rotation {
-                DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => (
-                    (x as usize / 8 + (WIDTH as usize / 8) * y as usize),
+                DisplayRotation::Rotate0 => (
+                    x as usize / 8 + (WIDTH as usize / 8) * y as usize,
                     0x80 >> (x % 8),
                 ),
-                DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => (
-                    y as usize / 8 * WIDTH as usize + x as usize,
+                DisplayRotation::Rotate90 => (
+                    (WIDTH as usize - 1 - y as usize) / 8 + (WIDTH as usize / 8) * x as usize,
+                    0x01 << (y % 8),
+                ),
+                DisplayRotation::Rotate180 => (
+                    ((WIDTH as usize / 8) * HEIGHT as usize - 1) - (x as usize / 8 + (WIDTH as usize / 8) * y as usize),
+                    0x01 << (x % 8),
+                ),
+                DisplayRotation::Rotate270 => (
+                    y as usize / 8 + (HEIGHT as usize - 1 - x as usize) * (WIDTH as usize / 8),
                     0x80 >> (y % 8),
                 ),
             };
-
-            if idx >= self.buffer.len() {
-                return;
-            }
 
             match color {
                 Color::Black => {
@@ -180,6 +198,9 @@ mod tests {
         
         let buffer = display.buffer();
 
+        extern crate std;
+        std::println!("{:?}", buffer);
+
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
@@ -193,12 +214,15 @@ mod tests {
                 let mut display = DisplayEink42BlackWhite::default();
         display.set_rotation(DisplayRotation::Rotate270);
         display.draw(
-            Line::new(Coord::new(299, 0), Coord::new(299, 0))
+            Line::new(Coord::new(299, 0), Coord::new(299, 7))
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
         
         let buffer = display.buffer();
+
+        extern crate std;
+        std::println!("{:?}", buffer);
 
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
