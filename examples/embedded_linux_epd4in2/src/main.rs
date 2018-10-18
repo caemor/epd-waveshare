@@ -15,7 +15,7 @@ use eink_waveshare_rs::{
 
 extern crate embedded_graphics;
 use embedded_graphics::coord::Coord;
-use embedded_graphics::fonts::Font6x8;
+use embedded_graphics::fonts::{Font6x8, Font12x16};
 use embedded_graphics::prelude::*;
 use embedded_graphics::primitives::{Circle, Line};
 use embedded_graphics::Drawing;
@@ -289,7 +289,7 @@ fn run() -> Result<(), std::io::Error> {
             .into_iter(),
     );
     display.draw(
-        Font6x8::render_str("It's working!")
+        Font6x8::render_str("It's working-WoB!")
             // Using Style here
             .with_style(Style {
                 fill_color: Some(Color::Black),
@@ -297,6 +297,18 @@ fn run() -> Result<(), std::io::Error> {
                 stroke_width: 0u8, // Has no effect on fonts
             })
             .translate(Coord::new(175, 250))
+            .into_iter(),
+    );
+
+    display.draw(
+        Font6x8::render_str("It's working-BoW!")
+            // Using Style here
+            .with_style(Style {
+                fill_color: Some(Color::White),
+                stroke_color: Some(Color::Black),
+                stroke_width: 0u8, // Has no effect on fonts
+            })
+            .translate(Coord::new(50, 50))
             .into_iter(),
     );
 
