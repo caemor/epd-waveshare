@@ -188,6 +188,27 @@ fn run() -> Result<(), std::io::Error> {
 
     println!("Now test new graphics:");
 
+    println!("Now test new graphics with rotate0:");
+    let mut display = DisplayEink42BlackWhite::default();
+    display.set_rotation(DisplayRotation::Rotate0);
+    display.draw(
+            Font6x8::render_str("Rotate 0!")
+                .with_fill(Some(Color::White))
+                .with_stroke(Some(Color::Black))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+    display.draw(
+            Font6x8::render_str("Rotate 0 - inverse!")
+                .with_fill(Some(Color::Black))
+                .with_stroke(Some(Color::White))
+                .translate(Coord::new(50, 70))
+                .into_iter(),
+    );
+    epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd4in2.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(2000u16);
+
     println!("Now test new graphics with rotate90:");
     let mut display = DisplayEink42BlackWhite::default();
     display.set_rotation(DisplayRotation::Rotate90);
