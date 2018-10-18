@@ -122,69 +122,69 @@ fn run() -> Result<(), std::io::Error> {
     //fixed currently with the HackInputPin, see further above
     let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy_in, dc, rst, &mut delay).expect("eink initalize error");
 
-    //let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
-    let mut buffer = [0u8; 15000];
+    // //let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
+    // let mut buffer = [0u8; 15000];
 
-    // draw something
-    let mut graphics = Graphics::new(400, 300, &mut buffer);
-    graphics.clear(&Color::White);
-    graphics.draw_line(0,0,400,300, &Color::Black); 
+    // // draw something
+    // let mut graphics = Graphics::new(400, 300, &mut buffer);
+    // graphics.clear(&Color::White);
+    // graphics.draw_line(0,0,400,300, &Color::Black); 
 
-    graphics.draw_filled_rectangle(200,200, 230, 230, &Color::Black); 
-    graphics.draw_line(202,202,218,228, &Color::White);
+    // graphics.draw_filled_rectangle(200,200, 230, 230, &Color::Black); 
+    // graphics.draw_line(202,202,218,228, &Color::White);
 
-    graphics.draw_circle(200, 150, 130, &Color::Black);
+    // graphics.draw_circle(200, 150, 130, &Color::Black);
 
-    graphics.draw_pixel(390, 290, &Color::Black);
+    // graphics.draw_pixel(390, 290, &Color::Black);
 
-    graphics.draw_horizontal_line(0, 150, 400, &Color::Black);
+    // graphics.draw_horizontal_line(0, 150, 400, &Color::Black);
 
-    graphics.draw_vertical_line(200, 50, 200, &Color::Black);
+    // graphics.draw_vertical_line(200, 50, 200, &Color::Black);
 
-    epd4in2.clear_frame(&mut spi).expect("clear frame error");
-    epd4in2.update_frame(&mut spi, graphics.get_buffer()).expect("update frame error");
-    epd4in2.display_frame(&mut spi)?;
+    // epd4in2.clear_frame(&mut spi).expect("clear frame error");
+    // epd4in2.update_frame(&mut spi, graphics.get_buffer()).expect("update frame error");
+    // epd4in2.display_frame(&mut spi)?;
 
-    println!("Finished basic old graphics test");
+    // println!("Finished basic old graphics test");
  
-    delay.delay_ms(3000u16);
+    // delay.delay_ms(3000u16);
 
-    epd4in2.clear_frame(&mut spi)?;
+    // epd4in2.clear_frame(&mut spi)?;
 
-    //Test fast updating a bit more
-    let mut small_buffer = [0x00; 128];
-    let mut circle_graphics = Graphics::new(32,32, &mut small_buffer);
-    circle_graphics.draw_circle(16,16, 10, &Color::Black);
+    // //Test fast updating a bit more
+    // let mut small_buffer = [0x00; 128];
+    // let mut circle_graphics = Graphics::new(32,32, &mut small_buffer);
+    // circle_graphics.draw_circle(16,16, 10, &Color::Black);
 
-    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 16,16, 32, 32).expect("update frame error");
-    epd4in2.display_frame(&mut spi)?;
+    // epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 16,16, 32, 32).expect("update frame error");
+    // epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 128,64, 32, 32).expect("update partial frame error");
-    epd4in2.display_frame(&mut spi)?;
+    // epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 128,64, 32, 32).expect("update partial frame error");
+    // epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 320,24, 32, 32).expect("update partial frame error");
-    epd4in2.display_frame(&mut spi)?;
+    // epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 320,24, 32, 32).expect("update partial frame error");
+    // epd4in2.display_frame(&mut spi)?;
 
-    epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 160,240, 32, 32).expect("update partial frame error");
-    epd4in2.display_frame(&mut spi)?;
+    // epd4in2.update_partial_frame(&mut spi, circle_graphics.get_buffer(), 160,240, 32, 32).expect("update partial frame error");
+    // epd4in2.display_frame(&mut spi)?;
 
-    println!("Finished partial update test");
+    // println!("Finished partial update test");
 
-    delay.delay_ms(3000u16);
-
-
+    // delay.delay_ms(3000u16);
 
 
-    //pub fn draw_string_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, color: &Color) {
-    graphics.draw_string_8x8(16, 16, "hello", &Color::Black);
-    graphics.draw_char_8x8(250, 250, '#', &Color::Black);
-    graphics.draw_char_8x8(300, 16, '7', &Color::Black);
-    epd4in2.update_frame(&mut spi, graphics.get_buffer())?;
-    epd4in2.display_frame(&mut spi)?;
 
-    println!("Finished draw string test");
 
-    delay.delay_ms(3000u16);
+    // //pub fn draw_string_8x8(&self, buffer: &mut[u8], x0: u16, y0: u16, input: &str, color: &Color) {
+    // graphics.draw_string_8x8(16, 16, "hello", &Color::Black);
+    // graphics.draw_char_8x8(250, 250, '#', &Color::Black);
+    // graphics.draw_char_8x8(300, 16, '7', &Color::Black);
+    // epd4in2.update_frame(&mut spi, graphics.get_buffer())?;
+    // epd4in2.display_frame(&mut spi)?;
+
+    // println!("Finished draw string test");
+
+    //delay.delay_ms(3000u16);
 
     println!("Now test new graphics:");
 
@@ -193,8 +193,6 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate90);
     display.draw(
             Font6x8::render_str("Rotate 90!")
-                .with_stroke(Some(Color::Black))
-                .with_fill(Some(Color::White))
                 .translate(Coord::new(5, 50))
                 .into_iter(),
     );
@@ -207,8 +205,6 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate180);
     display.draw(
             Font6x8::render_str("Rotate 180!")
-                .with_stroke(Some(Color::Black))
-                .with_fill(Some(Color::White))
                 .translate(Coord::new(5, 50))
                 .into_iter(),
     );
@@ -221,8 +217,6 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     display.draw(
             Font6x8::render_str("Rotate 270!")
-                .with_stroke(Some(Color::Black))
-                .with_fill(Some(Color::White))
                 .translate(Coord::new(5, 50))
                 .into_iter(),
     );
