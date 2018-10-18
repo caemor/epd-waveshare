@@ -110,6 +110,7 @@ mod tests {
     #[test]
     fn from_u8_panic() {
         for val in 2..=u8::max_value() {
+            extern crate std;
             let result = std::panic::catch_unwind(|| Color::from(val));
             assert!(result.is_err());
         }        
