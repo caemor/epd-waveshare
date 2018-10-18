@@ -304,11 +304,23 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("It's working-BoW!")
             // Using Style here
             .with_style(Style {
+                fill_color: Some(Color::Black),
+                stroke_color: Some(Color::Black),
+                stroke_width: 0u8, // Has no effect on fonts
+            })
+            .translate(Coord::new(50, 200))
+            .into_iter(),
+    );
+
+        display.draw(
+        Font12x16::render_str("It's working-BoW!")
+            // Using Style here
+            .with_style(Style {
                 fill_color: Some(Color::White),
                 stroke_color: Some(Color::Black),
                 stroke_width: 0u8, // Has no effect on fonts
             })
-            .translate(Coord::new(50, 50))
+            .translate(Coord::new(50, 22))
             .into_iter(),
     );
 
