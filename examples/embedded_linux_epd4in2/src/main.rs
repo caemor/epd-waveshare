@@ -330,6 +330,12 @@ fn run() -> Result<(), std::io::Error> {
             .into_iter(),
     );
 
+    display.draw(
+        Line::new(Coord::new(90, 14), Coord::new(90, 42))
+            .with_stroke(Some(Color::Black))
+            .into_iter(),
+    );
+
     
 
     let mut i = 0;
