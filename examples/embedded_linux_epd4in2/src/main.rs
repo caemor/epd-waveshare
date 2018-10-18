@@ -193,15 +193,15 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
             Font6x8::render_str("Rotate 0!")
-                .with_fill(Some(Color::White))
                 .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))                
                 .translate(Coord::new(5, 50))
                 .into_iter(),
     );
     display.draw(
             Font6x8::render_str("Rotate 0 - inverse!")
-                .with_fill(Some(Color::Black))
                 .with_stroke(Some(Color::White))
+                .with_fill(Some(Color::Black))
                 .translate(Coord::new(50, 70))
                 .into_iter(),
     );
@@ -241,6 +241,8 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate180);
     display.draw(
             Font6x8::render_str("Rotate 180!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
                 .translate(Coord::new(5, 50))
                 .into_iter(),
     );
@@ -258,6 +260,8 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     display.draw(
             Font6x8::render_str("Rotate 270!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
                 .translate(Coord::new(5, 50))
                 .into_iter(),
     );
