@@ -6,8 +6,10 @@ extern crate eink_waveshare_rs;
 
 
 use eink_waveshare_rs::{
-    EPD1in54, 
-    Buffer1in54,
+    epd1in54::{
+        EPD1in54, 
+        Buffer1in54,
+    },
     graphics::{Display, DisplayRotation},
     color::Color,
     WaveshareDisplay,

@@ -19,9 +19,9 @@
 //! epd4in2.sleep();
 //! ```
 
-const WIDTH: u32 = 128;
-const HEIGHT: u32 = 296;
-const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+pub const WIDTH: u32 = 128;
+pub const HEIGHT: u32 = 296;
+pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 use hal::{
     blocking::{delay::*, spi::Write},

@@ -6,8 +6,10 @@ extern crate eink_waveshare_rs;
 
 
 use eink_waveshare_rs::{
-    EPD4in2,
-    Buffer4in2,
+    epd4in2::{
+        EPD4in2,
+        Buffer4in2,
+    },
     graphics::{Display, DisplayRotation},
     color::Color, 
     WaveshareDisplay,
@@ -162,7 +164,7 @@ fn run() -> Result<(), std::io::Error> {
 
 
     println!("Now test new graphics with default rotation and some special stuff:");
-    let mut display = DisplayEink42BlackWhite::default();
+    display.clear_buffer(Color::White);
 
     // draw a analog clock
     display.draw(

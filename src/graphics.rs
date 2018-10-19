@@ -43,10 +43,16 @@ impl<'a> Display<'a> {
         &self.buffer
     }
 
+    pub fn clear_buffer(&mut self, background_color: Color) {
+        for elem in &mut self.buffer.iter_mut() {
+            *elem = background_color.get_byte_value();
+        }
+    }
+
     pub fn set_rotation(&mut self, rotation: DisplayRotation) {
         self.rotation = rotation;
     }
-    
+
     pub fn rotation(&self) -> DisplayRotation {
         self.rotation
     }
@@ -120,7 +126,27 @@ pub(crate) fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: Displa
 
 #[cfg(test)]
 mod tests {
-    use super::{DisplayRotation, outside_display, rotation};
+    use super::{DisplayRotation, outside_display, rotation, Display};
+    use color::Color;
+
+    #[test]
+    fn buffer_clear() {
+        use epd4in2::constants::{WIDTH, HEIGHT};
+
+        let mut buffer = [Color::Black.get_byte_value(); WIDTH as usize / 8 * HEIGHT as usize];
+        let mut display = Display::new(WIDTH, HEIGHT, &mut buffer);
+
+        for &byte in display.buffer.iter() {
+            assert_eq!(byte, Color::Black.get_byte_value());
+        }
+
+        display.clear_buffer(Color::White);
+
+        for &byte in display.buffer.iter() {
+            assert_eq!(byte, Color::White.get_byte_value());
+        }        
+    }
+
 
     #[test]
     fn rotation_overflow() {

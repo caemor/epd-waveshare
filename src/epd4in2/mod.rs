@@ -56,14 +56,15 @@ use interface::DisplayInterface;
 
 //The Lookup Tables for the Display
 pub(crate) mod constants; //TODO: Limit to crate::drawing
-use self::constants::*;
+pub use self::constants::*;
 
 use color::Color;
 
 pub(crate) mod command;
 use self::command::Command;
 
-pub mod graphics;
+mod graphics;
+pub use self::graphics::Buffer4in2;
 
 
 /// EPD4in2 driver

@@ -48,7 +48,7 @@ impl Color {
     }
 
     // Inverses the given color from Black to White or from White to Black
-    fn inverse_color(color: &Color) -> Color {
+    pub(crate) fn inverse_color(color: &Color) -> Color {
         match color {
             Color::White => Color::Black,
             Color::Black => Color::White,

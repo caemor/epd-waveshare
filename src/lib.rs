@@ -63,26 +63,13 @@ pub mod color;
 mod interface;
 
 #[cfg(feature = "epd4in2")]
-mod epd4in2;
-#[cfg(feature = "epd4in2")]
-pub use epd4in2::EPD4in2;
-#[cfg(feature = "epd4in2")]
-pub use epd4in2::graphics::Buffer4in2;
+pub mod epd4in2;
 
 #[cfg(feature = "epd1in54")]
-mod epd1in54;
-#[cfg(feature = "epd1in54")]
-pub use epd1in54::EPD1in54;
-#[cfg(feature = "epd1in54")]
-pub use epd1in54::graphics::Buffer1in54BlackWhite as Buffer1in54;
-
+pub mod epd1in54;
 
 #[cfg(feature = "epd2in9")]
-mod epd2in9;
-///2in9 eink
-#[cfg(feature = "epd2in9")]
-///2in9 eink
-pub use epd2in9::EPD2in9;
+pub mod epd2in9;
 
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
 pub(crate) mod type_a;

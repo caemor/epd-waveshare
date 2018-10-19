@@ -40,7 +40,8 @@ use traits::{WaveshareDisplay};
 
 use interface::DisplayInterface;
 
-pub mod graphics;
+mod graphics;
+pub use epd1in54::graphics::Buffer1in54BlackWhite as Buffer1in54;
 
 /// EPD1in54 driver
 ///
