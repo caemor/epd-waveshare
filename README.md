@@ -60,24 +60,15 @@ They are also called A and B, but you shouldn't get confused and mix it with the
 
 ## TODO's
 
-- [ ] add more examples (e.g. for f3)
 - [ ] improve the partial drawing/check the timings/timing improvements/....
-- [ ] for later: add support for the smaller waveshare epds
+- [ ] for later: add support for more waveshare epds
 - [ ] License: Stay with ISC (=MIT) or go to the Apache+MIT Dual License as used in many other projects?
 
 ## Graphics/Drawing
 
-Supports:
-- Lines
-- Squares
-- Circles
-- Pixels
-- Chars
-- Strings
+It is recommended to use the [embedded graphics](https://crates.io/crates/embedded-graphics) library.
 
-Chars and Strings work with a 8x8-Font.
-
-Support for bigger sized/independent Fonts is in work.
+Even though any u8-slice works, it is not recommended!
 
 ## Examples
 

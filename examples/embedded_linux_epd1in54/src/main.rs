@@ -55,13 +55,8 @@ impl<'a> InputPin for HackInputPin<'a> {
     }
 }
 
-
-/*
-*
-* BE CAREFUL: this wasn't tested yet, and the pins are also not choosen correctly (just some random ones atm)
-*
-*/
-
+//TODO: Test this implemenation
+//BE CAREFUL: this wasn't tested yet
 fn main() {
 
     run().unwrap();

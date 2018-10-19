@@ -51,8 +51,6 @@ impl<'a> HackInputPin<'a> {
     }
 }
 
-//TODO: make it safer?? or handle the errors better?
-// now it defaults to is_low if an error appears
 impl<'a> InputPin for HackInputPin<'a> {
     fn is_low(&self) -> bool {
         self.pin.get_value().unwrap_or(0) == 0
@@ -64,11 +62,7 @@ impl<'a> InputPin for HackInputPin<'a> {
 }
 
 
-/*
-*
-* BE CAREFUL: this wasn't tested yet, and the pins are also not choosen correctly (just some random ones atm)
-*
-*/
+
 fn main() {
     run().map_err(|e| println!("{}", e.to_string())).unwrap();
 }
