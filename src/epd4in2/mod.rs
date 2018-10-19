@@ -278,11 +278,11 @@ where
         &self.color
     }
 
-    fn width(&self) -> u16 {
+    fn width(&self) -> u32 {
         WIDTH
     }
 
-    fn height(&self) -> u16 {
+    fn height(&self) -> u32 {
         HEIGHT
     }
 }

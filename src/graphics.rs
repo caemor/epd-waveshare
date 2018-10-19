@@ -1,3 +1,6 @@
+use color::Color;
+use embedded_graphics::prelude::*;
+
 /// Displayrotation 
 #[derive(Clone, Copy)]
 pub enum DisplayRotation {
@@ -16,11 +19,71 @@ impl Default for DisplayRotation {
         DisplayRotation::Rotate0
     }
 }
+use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
 
 pub trait Display {
     fn buffer(&self) -> &[u8];
     fn set_rotation(&mut self, rotation: DisplayRotation);
     fn rotation(&self) -> DisplayRotation;
+}
+
+pub struct Graphics<'a> {
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) rotation: DisplayRotation,
+    pub(crate) buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
+}
+
+impl<'a> Graphics<'a> {
+    pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> Graphics<'a> {
+        let len = buffer.len() as u32;
+        assert!(width / 8 * height >= len);
+        Graphics {
+            width,
+            height,
+            rotation: DisplayRotation::default(),
+            buffer,
+        }
+    }
+
+    pub fn buffer(&self) -> &[u8] {
+        &self.buffer
+    }
+    pub fn set_rotation(&mut self, rotation: DisplayRotation) {
+        self.rotation = rotation;
+    }
+    pub fn rotation(&self) -> DisplayRotation {
+        self.rotation
+    }
+}
+
+
+impl<'a> Drawing<Color> for Graphics<'a> {
+    fn draw<T>(&mut self, item_pixels: T)
+    where
+        T: Iterator<Item = Pixel<Color>>
+    {
+        let width = WIDTH as u32;
+        let height = HEIGHT as u32;
+
+        for Pixel(UnsignedCoord(x,y), color) in item_pixels {
+            if outside_display(x, y, width, height, self.rotation) {
+                return;
+            }
+
+            let (idx, bit) = rotation(x, y, width, height, self.rotation);
+
+            let idx = idx as usize;
+            match color {
+                Color::Black => {
+                    self.buffer[idx] &= !bit;
+                }
+                Color::White => {
+                    self.buffer[idx] |= bit;
+                }
+            }            
+        }
+    }
 }
 
 

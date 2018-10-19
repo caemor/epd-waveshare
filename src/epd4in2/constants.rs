@@ -1,7 +1,7 @@
 use color::Color;
 
-pub(crate) const WIDTH: u16 = 400;
-pub(crate) const HEIGHT: u16 = 300;
+pub(crate) const WIDTH: u32 = 400;
+pub(crate) const HEIGHT: u32 = 300;
 pub(crate) const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 pub(crate) const LUT_VCOM0: [u8; 44] = [

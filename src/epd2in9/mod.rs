@@ -19,8 +19,8 @@
 //! epd4in2.sleep();
 //! ```
 
-const WIDTH: u16 = 128;
-const HEIGHT: u16 = 296;
+const WIDTH: u32 = 128;
+const HEIGHT: u32 = 296;
 const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 use hal::{
@@ -102,11 +102,11 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    fn width(&self) -> u16 {
+    fn width(&self) -> u32 {
         WIDTH
     }
 
-    fn height(&self) -> u16 {
+    fn height(&self) -> u32 {
         HEIGHT
     }
 
@@ -151,10 +151,10 @@ where
         &mut self, 
         spi: &mut SPI,
         buffer: &[u8],
-        x: u16,
-        y: u16,
-        width: u16,
-        height: u16,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
     ) -> Result<(), SPI::Error> {
         self.set_ram_area(spi, x, y, x + width, y + height)?;
         self.set_ram_counter(spi, x, y)?;
@@ -220,10 +220,10 @@ where
     pub(crate) fn set_ram_area(
         &mut self, 
         spi: &mut SPI,
-        start_x: u16,
-        start_y: u16,
-        end_x: u16,
-        end_y: u16,
+        start_x: u32,
+        start_y: u32,
+        end_x: u32,
+        end_y: u32,
     ) -> Result<(), SPI::Error> {
         assert!(start_x < end_x);
         assert!(start_y < end_y);
@@ -242,7 +242,7 @@ where
         )
     }
 
-    pub(crate) fn set_ram_counter(&mut self, spi: &mut SPI, x: u16, y: u16) -> Result<(), SPI::Error> {
+    pub(crate) fn set_ram_counter(&mut self, spi: &mut SPI, x: u32, y: u32) -> Result<(), SPI::Error> {
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface.cmd_with_data(spi, Command::SET_RAM_X_ADDRESS_COUNTER, &[(x >> 3) as u8])?;

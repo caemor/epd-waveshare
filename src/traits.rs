@@ -83,10 +83,10 @@ where
     fn background_color(&self) -> &Color;
 
     /// Get the width of the display
-    fn width(&self) -> u16;
+    fn width(&self) -> u32;
 
     /// Get the height of the display
-    fn height(&self) -> u16;
+    fn height(&self) -> u32;
 
     /// Transmit a full frame to the SRAM of the EPD
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
@@ -98,10 +98,10 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        x: u16,
-        y: u16,
-        width: u16,
-        height: u16,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
     ) -> Result<(), SPI::Error>;
 
     /// Displays the frame data from SRAM

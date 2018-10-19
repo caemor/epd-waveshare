@@ -44,7 +44,7 @@ impl Display {
     }
 }
 
-#[allow(dead_code)]
+
 pub struct Graphics<'a> {
     width: u16,
     height: u16,
