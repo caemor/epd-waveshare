@@ -19,7 +19,7 @@ impl Default for DisplayRotation {
         DisplayRotation::Rotate0
     }
 }
-use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
+//use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
 
 pub trait Display {
     fn buffer(&self) -> &[u8];
@@ -63,15 +63,12 @@ impl<'a> Drawing<Color> for Graphics<'a> {
     where
         T: Iterator<Item = Pixel<Color>>
     {
-        let width = WIDTH as u32;
-        let height = HEIGHT as u32;
-
         for Pixel(UnsignedCoord(x,y), color) in item_pixels {
-            if outside_display(x, y, width, height, self.rotation) {
+            if outside_display(x, y, self.width, self.height, self.rotation) {
                 return;
             }
 
-            let (idx, bit) = rotation(x, y, width, height, self.rotation);
+            let (idx, bit) = rotation(x, y, self.width, self.height, self.rotation);
 
             let idx = idx as usize;
             match color {

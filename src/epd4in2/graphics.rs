@@ -1,14 +1,3 @@
-use graphics::{
-    outside_display,
-    rotation,
-    DisplayRotation, 
-    Display
-};
-use color::Color;
-use embedded_graphics::prelude::*;
-
-use graphics::Graphics;
-
 use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
 
 pub struct DisplayEink4in2BlackWhite {
@@ -32,9 +21,11 @@ impl Default for DisplayEink4in2BlackWhite {
 mod tests {
     use super::*;
     use epd4in2;
-    use graphics::Graphics;
+    use graphics::{DisplayRotation, Graphics};
     use embedded_graphics::coord::Coord;
     use embedded_graphics::primitives::Line;
+    use color::Color;
+    use embedded_graphics::prelude::*;
 
     // test buffer length
     #[test]
@@ -48,7 +39,7 @@ mod tests {
     #[test]
     fn graphics_default() {
         let mut display4in2 = DisplayEink4in2BlackWhite::default();
-        let mut display = Graphics::new(WIDTH, HEIGHT, &mut display4in2.buffer);
+        let display = Graphics::new(WIDTH, HEIGHT, &mut display4in2.buffer);
         use epd4in2;
         for &byte in display.buffer() {
             assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());

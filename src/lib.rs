@@ -67,14 +67,14 @@ mod epd4in2;
 #[cfg(feature = "epd4in2")]
 pub use epd4in2::EPD4in2;
 #[cfg(feature = "epd4in2")]
-pub use epd4in2::graphics::DisplayEink4in2BlackWhite;
+pub use epd4in2::graphics::DisplayEink4in2BlackWhite as Buffer4in2;
 
 #[cfg(feature = "epd1in54")]
 mod epd1in54;
 #[cfg(feature = "epd1in54")]
 pub use epd1in54::EPD1in54;
 #[cfg(feature = "epd1in54")]
-pub use epd1in54::graphics::DisplayEink1in54BlackWhite;
+pub use epd1in54::graphics::DisplayEink1in54BlackWhite as Buffer1in54;
 
 
 #[cfg(feature = "epd2in9")]
