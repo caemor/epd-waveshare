@@ -122,15 +122,7 @@ mod tests {
         assert_eq!(Color::White, Color::from(1u8));
     }
 
-    // test all values aside from 0 and 1 which all should panic
-    #[test]
-    fn from_u8_panic() {
-        for val in 2..=u8::max_value() {
-            extern crate std;
-            let result = std::panic::catch_unwind(|| Color::from(val));
-            assert!(result.is_err());
-        }        
-    }
+
 
     // test buffer length
     #[test]
