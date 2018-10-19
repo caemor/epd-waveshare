@@ -6,9 +6,9 @@ extern crate eink_waveshare_rs;
 
 
 use eink_waveshare_rs::{
-    EPD4in2, 
-    drawing_old::{Graphics},
-    drawing::{DisplayEink42BlackWhite, Display, DisplayRotation},
+    EPD4in2,
+    DisplayEink42BlackWhite,
+    graphics::{Display, DisplayRotation},
     color::Color, 
     WaveshareDisplay,
 };

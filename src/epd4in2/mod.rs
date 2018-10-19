@@ -60,8 +60,11 @@ use self::constants::*;
 
 use color::Color;
 
-pub mod command;
+pub(crate) mod command;
 use self::command::Command;
+
+pub mod graphics;
+
 
 /// EPD4in2 driver
 ///

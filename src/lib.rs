@@ -48,7 +48,7 @@ extern crate embedded_hal as hal;
 use hal::spi::{Mode, Phase, Polarity};
 
 #[cfg(feature = "graphics")]
-pub mod drawing;
+pub mod graphics;
 
 //TODO: remove old drawing support
 #[cfg(feature = "graphics")]
@@ -66,6 +66,8 @@ mod interface;
 mod epd4in2;
 #[cfg(feature = "epd4in2")]
 pub use epd4in2::EPD4in2;
+#[cfg(feature = "epd4in2")]
+pub use epd4in2::graphics::DisplayEink42BlackWhite;
 
 #[cfg(feature = "epd1in54")]
 mod epd1in54;

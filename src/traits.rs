@@ -56,8 +56,6 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    
-
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
     /// This already initialises the device. That means [init()](WaveshareInterface::init()) isn't needed directly afterwards
