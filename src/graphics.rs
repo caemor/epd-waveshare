@@ -19,26 +19,26 @@ impl Default for DisplayRotation {
         DisplayRotation::Rotate0
     }
 }
-//use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
 
-pub trait Display {
+pub trait DisplayDimension {
     fn buffer(&self) -> &[u8];
-    fn set_rotation(&mut self, rotation: DisplayRotation);
-    fn rotation(&self) -> DisplayRotation;
+    fn width(&self) -> u32;
+    fn height(&self) -> u32;
 }
 
-pub struct Graphics<'a> {
+
+pub struct Display<'a> {
     width: u32,
     height: u32,
     rotation: DisplayRotation,
     buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
 }
 
-impl<'a> Graphics<'a> {
-    pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> Graphics<'a> {
+impl<'a> Display<'a> {
+    pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> Display<'a> {
         let len = buffer.len() as u32;
         assert!(width / 8 * height >= len);
-        Graphics {
+        Display {
             width,
             height,
             rotation: DisplayRotation::default(),
@@ -58,7 +58,7 @@ impl<'a> Graphics<'a> {
 }
 
 
-impl<'a> Drawing<Color> for Graphics<'a> {
+impl<'a> Drawing<Color> for Display<'a> {
     fn draw<T>(&mut self, item_pixels: T)
     where
         T: Iterator<Item = Pixel<Color>>

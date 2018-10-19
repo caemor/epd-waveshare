@@ -1,12 +1,19 @@
-use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
+use epd1in54::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
+use graphics::DisplayDimension;
 
 pub struct DisplayEink1in54BlackWhite {
-    pub buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
+    width: u32,
+    height: u32,
+    buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
 }
+
+
 
 impl Default for DisplayEink1in54BlackWhite {
     fn default() -> Self {
         DisplayEink1in54BlackWhite {
+            width: WIDTH,
+            height: HEIGHT,
             buffer: [
                 DEFAULT_BACKGROUND_COLOR.get_byte_value();
                 WIDTH as usize * HEIGHT as usize / 8                
@@ -15,11 +22,23 @@ impl Default for DisplayEink1in54BlackWhite {
     }
 }
 
+impl DisplayDimension for DisplayEink1in54BlackWhite {
+    fn buffer(&self) -> &[u8] {
+        &self.buffer
+    }
+    fn width(&self) -> u32 {
+        self.width
+    }
+    fn height(&self) -> u32 {
+        self.height
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use graphics::{DisplayRotation, Graphics};
+    use graphics::{DisplayRotation, Display};
     use embedded_graphics::coord::Coord;
     use embedded_graphics::primitives::Line;
     use color::Color;
@@ -29,7 +48,7 @@ mod tests {
     #[test]
     fn graphics_size() {
         let mut display1in54 = DisplayEink1in54BlackWhite::default();
-        let display = Graphics::new(WIDTH, HEIGHT, &mut display1in54.buffer);
+        let display = Display::new(WIDTH, HEIGHT, &mut display1in54.buffer);
         assert_eq!(display.buffer().len(), 5000);
     }
     
@@ -37,7 +56,7 @@ mod tests {
     #[test]
     fn graphics_default() {
         let mut display1in54 = DisplayEink1in54BlackWhite::default();
-        let display = Graphics::new(WIDTH, HEIGHT, &mut display1in54.buffer);
+        let display = Display::new(WIDTH, HEIGHT, &mut display1in54.buffer);
         for &byte in display.buffer() {
             assert_eq!(byte, DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
@@ -46,7 +65,7 @@ mod tests {
     #[test]
     fn graphics_rotation_0() {
         let mut display1in54 = DisplayEink1in54BlackWhite::default();
-        let mut display = Graphics::new(WIDTH, HEIGHT, &mut display1in54.buffer);
+        let mut display = Display::new(WIDTH, HEIGHT, &mut display1in54.buffer);
         display.draw(
             Line::new(Coord::new(0, 0), Coord::new(7, 0))
                 .with_stroke(Some(Color::Black))
@@ -65,7 +84,7 @@ mod tests {
     #[test]
     fn graphics_rotation_90() {
         let mut display1in54 = DisplayEink1in54BlackWhite::default();
-        let mut display = Graphics::new(WIDTH, HEIGHT, &mut display1in54.buffer);
+        let mut display = Display::new(WIDTH, HEIGHT, &mut display1in54.buffer);
         display.set_rotation(DisplayRotation::Rotate90);
         display.draw(
             Line::new(Coord::new(0, 192), Coord::new(0, 199))
@@ -85,7 +104,7 @@ mod tests {
     #[test]
     fn graphics_rotation_180() {
         let mut display1in54 = DisplayEink1in54BlackWhite::default();
-        let mut display = Graphics::new(WIDTH, HEIGHT, &mut display1in54.buffer);
+        let mut display = Display::new(WIDTH, HEIGHT, &mut display1in54.buffer);
         display.set_rotation(DisplayRotation::Rotate180);
         display.draw(
             Line::new(Coord::new(192, 199), Coord::new(199, 199))
@@ -109,7 +128,7 @@ mod tests {
     #[test]
     fn graphics_rotation_270() {
         let mut display1in54 = DisplayEink1in54BlackWhite::default();
-        let mut display = Graphics::new(WIDTH, HEIGHT, &mut display1in54.buffer);
+        let mut display = Display::new(WIDTH, HEIGHT, &mut display1in54.buffer);
         display.set_rotation(DisplayRotation::Rotate270);
         display.draw(
             Line::new(Coord::new(199, 0), Coord::new(199, 7))
