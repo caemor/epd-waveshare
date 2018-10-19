@@ -8,7 +8,7 @@ extern crate eink_waveshare_rs;
 use eink_waveshare_rs::{
     EPD1in54, 
     Buffer1in54,
-    graphics::{Display, DisplayRotation},
+    graphics::{Display, DisplayRotation, DisplayDimension},
     color::Color,
     WaveshareDisplay,
 };
@@ -126,7 +126,7 @@ fn run() -> Result<(), std::io::Error> {
 
     println!("Test all the rotations");
     let mut buffer = Buffer1in54::default();
-    let mut display = Display::new(buffer.width, buffer.height, &mut buffer.buffer);
+    let mut display = Display::new(buffer.width(), buffer.height(), &mut buffer.buffer);
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
             Font6x8::render_str("Rotate 0!")

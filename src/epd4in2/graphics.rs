@@ -21,8 +21,8 @@ impl Default for DisplayEink4in2BlackWhite {
 }
 
 impl DisplayDimension for DisplayEink4in2BlackWhite {
-    fn buffer(&self) -> &[u8] {
-        &self.buffer
+    fn buffer(&mut self) -> &mut [u8] {
+        &mut self.buffer
     }
     fn width(&self) -> u32 {
         self.width

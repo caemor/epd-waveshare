@@ -4,7 +4,7 @@ use graphics::DisplayDimension;
 pub struct DisplayEink1in54BlackWhite {
     width: u32,
     height: u32,
-    buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
+    pub buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
 }
 
 
@@ -23,8 +23,8 @@ impl Default for DisplayEink1in54BlackWhite {
 }
 
 impl DisplayDimension for DisplayEink1in54BlackWhite {
-    fn buffer(&self) -> &[u8] {
-        &self.buffer
+    fn buffer(&mut self) -> &mut [u8] {
+        &mut self.buffer
     }
     fn width(&self) -> u32 {
         self.width

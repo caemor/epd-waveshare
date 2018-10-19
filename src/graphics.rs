@@ -21,7 +21,7 @@ impl Default for DisplayRotation {
 }
 
 pub trait DisplayDimension {
-    fn buffer(&self) -> &[u8];
+    fn buffer(&mut self) -> &mut [u8];
     fn width(&self) -> u32;
     fn height(&self) -> u32;
 }
