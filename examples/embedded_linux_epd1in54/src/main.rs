@@ -7,7 +7,8 @@ extern crate eink_waveshare_rs;
 
 use eink_waveshare_rs::{
     EPD1in54, 
-    //drawing_old::{Graphics},
+    DisplayEink1in54BlackWhite,
+    graphics::{Display, DisplayRotation},
     color::Color,
     WaveshareDisplay,
 };
@@ -17,6 +18,16 @@ use lin_hal::{Pin, Spidev};
 use lin_hal::sysfs_gpio::Direction;
 use lin_hal::Delay;
 
+extern crate embedded_graphics;
+use embedded_graphics::coord::Coord;
+use embedded_graphics::fonts::{Font6x8};
+use embedded_graphics::prelude::*;
+//use embedded_graphics::primitives::{Circle, Line};
+use embedded_graphics::Drawing;
+
+extern crate embedded_hal;
+use embedded_hal::prelude::*;
+
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
@@ -25,7 +36,6 @@ use lin_hal::Delay;
 // DigitalIn Hack as long as it's not in the linux_embedded_hal
 // from https://github.com/rudihorn/max31865/blob/extra_examples/examples/rpi.rs
 // (slightly changed now as OutputPin doesn't provide is_high and is_low anymore)
-extern crate embedded_hal;
 use embedded_hal::digital::{InputPin};
 
 //TODO: Remove when linux_embedded_hal implements InputPin 
@@ -114,31 +124,48 @@ fn run() -> Result<(), std::io::Error> {
     epd.clear_frame(&mut spi).expect("clear frame 1");
     epd.display_frame(&mut spi).expect("disp 1");
 
-    // Speeddemo
-    let small_buffer =  [Color::Black.get_byte_value(); 32];//16x16
-    let number_of_runs = 1;
-    for i in 0..number_of_runs {
-        let offset = i * 8 % 150;
-        epd.update_partial_frame(&mut spi, &small_buffer, 25 + offset, 25 + offset, 16, 16).expect("partial frame");
-        epd.display_frame(&mut spi).expect("disp 2");
-    }
+    println!("Test all the rotations");
+    let mut display = DisplayEink1in54BlackWhite::default();
+    display.set_rotation(DisplayRotation::Rotate0);
+    display.draw(
+            Font6x8::render_str("Rotate 0!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))                
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
 
-    // Clear the full screen
-    epd.clear_frame(&mut spi).expect("clear frame 2");
-    epd.display_frame(&mut spi).expect("disp 3");
+    display.set_rotation(DisplayRotation::Rotate90);
+    display.draw(
+            Font6x8::render_str("Rotate 90!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
 
-    // Draw some squares
-    let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
-    epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160)?;
+    display.set_rotation(DisplayRotation::Rotate180);
+    display.draw(
+            Font6x8::render_str("Rotate 180!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
 
-    let small_buffer =  [Color::White.get_byte_value(); 800]; //80x80
-    epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80)?;
-
-    let small_buffer =  [Color::Black.get_byte_value(); 8]; //8x8
-    epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8).expect("partial frame 2");
+    display.set_rotation(DisplayRotation::Rotate270);
+    display.draw(
+            Font6x8::render_str("Rotate 270!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
 
     // Display updated frame
-    epd.display_frame(&mut spi).expect("disp 4");
+    epd.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(5000u16);
 
     // Set the EPD to sleep
     epd.sleep(&mut spi).expect("sleep");

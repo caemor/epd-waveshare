@@ -73,6 +73,9 @@ pub use epd4in2::graphics::DisplayEink42BlackWhite;
 mod epd1in54;
 #[cfg(feature = "epd1in54")]
 pub use epd1in54::EPD1in54;
+#[cfg(feature = "epd1in54")]
+pub use epd1in54::graphics::DisplayEink1in54BlackWhite;
+
 
 #[cfg(feature = "epd2in9")]
 mod epd2in9;

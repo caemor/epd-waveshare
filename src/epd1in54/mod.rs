@@ -40,6 +40,8 @@ use traits::{WaveshareDisplay};
 
 use interface::DisplayInterface;
 
+pub mod graphics;
+
 /// EPD1in54 driver
 ///
 pub struct EPD1in54<SPI, CS, BUSY, DC, RST> {
