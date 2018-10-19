@@ -28,10 +28,10 @@ pub trait Display {
 }
 
 pub struct Graphics<'a> {
-    pub(crate) width: u32,
-    pub(crate) height: u32,
-    pub(crate) rotation: DisplayRotation,
-    pub(crate) buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
+    width: u32,
+    height: u32,
+    rotation: DisplayRotation,
+    buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
 }
 
 impl<'a> Graphics<'a> {

@@ -196,12 +196,12 @@ where
         &mut self, 
         spi: &mut SPI,        
         buffer: &[u8],
-        x: u16,
-        y: u16,
-        width: u16,
-        height: u16,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
     ) -> Result<(), SPI::Error> {
-        if buffer.len() as u16 != width / 8 * height {
+        if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
         }
