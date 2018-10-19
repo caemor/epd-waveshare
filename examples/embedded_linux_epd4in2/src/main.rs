@@ -219,13 +219,13 @@ fn run() -> Result<(), std::io::Error> {
         println!("Moving Hello World. Loop {} from {}", i, limit);
 
         display.draw(
-            Font6x8::render_str(" Hello World! ")
+            Font6x8::render_str("  Hello World! ")
                 .with_style(Style {
                     fill_color: Some(Color::White),
                     stroke_color: Some(Color::Black),
                     stroke_width: 0u8, // Has no effect on fonts
                 })
-                .translate(Coord::new(5 + i*10, 50))
+                .translate(Coord::new(5 + i*12, 50))
                 .into_iter(),
         );        
 
