@@ -7,7 +7,7 @@ extern crate eink_waveshare_rs;
 
 use eink_waveshare_rs::{
     EPD4in2,
-    DisplayEink42BlackWhite,
+    Buffer4in2,
     graphics::{Display, DisplayRotation},
     color::Color, 
     WaveshareDisplay,
@@ -117,7 +117,8 @@ fn run() -> Result<(), std::io::Error> {
     let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy_in, dc, rst, &mut delay).expect("eink initalize error");
 
     println!("Test all the rotations");
-    let mut display = DisplayEink42BlackWhite::default();
+    let mut buffer = Buffer4in2::default();
+    let mut display = Display::new(epd4in2.width(), epd4in2.height(), &mut buffer.buffer);
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
             Font6x8::render_str("Rotate 0!")

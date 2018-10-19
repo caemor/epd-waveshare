@@ -20,13 +20,6 @@ impl Default for DisplayRotation {
     }
 }
 
-pub trait DisplayDimension {
-    fn buffer(&mut self) -> &mut [u8];
-    fn width(&self) -> u32;
-    fn height(&self) -> u32;
-}
-
-
 pub struct Display<'a> {
     width: u32,
     height: u32,
@@ -49,9 +42,11 @@ impl<'a> Display<'a> {
     pub fn buffer(&self) -> &[u8] {
         &self.buffer
     }
+
     pub fn set_rotation(&mut self, rotation: DisplayRotation) {
         self.rotation = rotation;
     }
+    
     pub fn rotation(&self) -> DisplayRotation {
         self.rotation
     }
