@@ -134,12 +134,6 @@ mod tests {
     use embedded_graphics::primitives::Line;
 
     #[test]
-    fn from_u8() {
-        assert_eq!(Color::Black, Color::from(0u8));
-        assert_eq!(Color::White, Color::from(1u8));
-    }
-
-    #[test]
     fn rotation_overflow() {
         use epd4in2::constants::{WIDTH, HEIGHT};
         let width = WIDTH as u32;
@@ -164,8 +158,6 @@ mod tests {
             }
         }
     }
-
-
 
     // test buffer length
     #[test]
