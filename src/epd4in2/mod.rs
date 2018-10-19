@@ -158,22 +158,15 @@ where
         self.init(spi, delay)
     }
 
-    //TODO: is such a long delay really needed inbetween?
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.interface.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
         self.command(spi, Command::VCM_DC_SETTING)?; // VCOM to 0V
         self.command(spi, Command::PANEL_SETTING)?;
 
-        //TODO: Removal of delay. TEST!
-        //self.delay_ms(100);
-
         self.command(spi, Command::POWER_SETTING)?; //VG&VS to 0V fast
         for _ in 0..4 {
             self.send_data(spi, &[0x00])?;
         }
-
-        //TODO: Removal of delay. TEST!
-        //self.delay_ms(100);
 
         self.command(spi, Command::POWER_OFF)?;
         self.wait_until_idle();
@@ -187,19 +180,11 @@ where
 
         self.interface.cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
 
-        //TODO: this was a send_command instead of a send_data. check if it's alright and doing what it should do (setting the default values)
-        //self.send_command_u8(0x97)?; //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
+        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
         self.interface.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
 
-
-        self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.send_data(spi, &[color_value; WIDTH as usize / 8 * HEIGHT as usize])?;
-        //for _ in 0..buffer.len() {
-        //    self.send_data(spi, &[color_value])?;
-        //}
-
-        //TODO: Removal of delay. TEST!
-        //self.delay_ms(2);
+        //TODO: compare with using a loop instead of the full buffer
+        self.interface.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_1, &[color_value; WIDTH as usize / 8 * HEIGHT as usize])?;
 
         self.interface.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)
     }

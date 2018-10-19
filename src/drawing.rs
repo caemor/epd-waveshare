@@ -28,7 +28,7 @@ pub trait Display {
 
 pub struct DisplayEink42BlackWhite {
     buffer: [u8; 400 * 300 / 8],
-    rotation: DisplayRotation, //TODO: check embedded_graphics for orientation
+    rotation: DisplayRotation,
 }
 
 impl Default for DisplayEink42BlackWhite {
@@ -56,7 +56,7 @@ impl Display for DisplayEink42BlackWhite {
     }
 }
 
-//TODO: add more tests for the rotation maybe? or test it at least once in real!
+
 impl Drawing<Color> for DisplayEink42BlackWhite {
     fn draw<T>(&mut self, item_pixels: T)
     where
@@ -126,7 +126,6 @@ fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) 
 
 
 
-//TODO: write tests
 #[cfg(test)]
 mod tests {
     use super::*;

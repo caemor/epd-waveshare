@@ -17,8 +17,8 @@ pub(crate) trait Command {
 }
 
 
-//TODO: add LUT trait with set_fast_lut and set_manual_lut and set_normal_lut or sth like that?
-// for partial updates
+// Trait for using various Waveforms from different LUTs
+// E.g. for partial updates
 trait LUTSupport<ERR> {
     fn set_lut(&mut self) -> Result<(), ERR>;
     fn set_lut_quick(&mut self) -> Result<(), ERR>;

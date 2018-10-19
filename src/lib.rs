@@ -84,7 +84,6 @@ pub(crate) mod type_a;
 
 extern crate embedded_graphics;
 
-//TODO: test spi mode
 /// SPI mode -
 /// For more infos see [Requirements: SPI](index.html#spi)
 pub const SPI_MODE: Mode = Mode {
