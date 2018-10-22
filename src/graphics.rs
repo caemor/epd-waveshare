@@ -1,3 +1,5 @@
+//! Graphics Support for EPDs
+
 use color::Color;
 use embedded_graphics::prelude::*;
 

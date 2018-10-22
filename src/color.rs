@@ -1,12 +1,16 @@
+//! B/W Color for EPDs
 
 
-
-/// Only for the B/W Displays atm
+/// Only for the Black/White-Displays
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
+    /// Black color
     Black,
+    /// White color
     White,
 }
+
+//TODO: Rename get_bit_value to bit() and get_byte_value to byte() ?
 
 impl Color {
     /// Get the color encoding of the color for one bit
@@ -25,7 +29,7 @@ impl Color {
         }
     }
 
-    /// Parses 
+    /// Parses from u8 to Color
     fn from_u8(val: u8) -> Self {
         match val {
             0 => Color::Black,

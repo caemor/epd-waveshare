@@ -29,8 +29,7 @@ use eink_waveshare_rs::{
     epd1in54::EPD1in54,
     SPI_MODE,
     //drawing_old::{Graphics},
-    color::Color,
-    WaveshareDisplay,
+    prelude::*,
 };
 
 

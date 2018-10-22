@@ -3,11 +3,7 @@ use hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
-
 use color::Color;
-
-
-
 
 
 /// All commands need to have this trait which gives the address of the command
@@ -16,7 +12,6 @@ pub(crate) trait Command {
     fn address(self) -> u8;
 }
 
-
 // Trait for using various Waveforms from different LUTs
 // E.g. for partial updates
 trait LUTSupport<ERR> {
@@ -24,7 +19,6 @@ trait LUTSupport<ERR> {
     fn set_lut_quick(&mut self) -> Result<(), ERR>;
     fn set_lut_manual(&mut self, data: &[u8]) -> Result<(), ERR>;
 }
-
 
 pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST>
 where
@@ -48,6 +42,9 @@ where
 }
 
 
+/// All the functions to interact with the EPDs
+/// 
+/// This trait includes all public functions to use the EPDS
 pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -73,6 +70,7 @@ where
     /// and initialising which already contains the reset
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
+    /// Wakes the device up from sleep
     fn wake_up<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;   
     
 

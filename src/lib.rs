@@ -48,7 +48,6 @@ extern crate embedded_graphics;
 pub mod graphics;
 
 mod traits;
-pub use traits::{WaveshareDisplay};
 
 pub mod color;
 
@@ -67,10 +66,18 @@ pub mod epd2in9;
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
 pub(crate) mod type_a;
 
-/// SPI mode -
-/// For more infos see [Requirements: SPI](index.html#spi)
+pub mod prelude {
+    pub use traits::{WaveshareDisplay};
+    pub use color::Color;
+    pub use SPI_MODE;
+}
+
+
 extern crate embedded_hal as hal;
 use hal::spi::{Mode, Phase, Polarity};
+
+/// SPI mode -
+/// For more infos see [Requirements: SPI](index.html#spi)
 pub const SPI_MODE: Mode = Mode {
     phase: Phase::CaptureOnFirstTransition,
     polarity: Polarity::IdleLow,
