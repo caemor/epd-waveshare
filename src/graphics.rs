@@ -20,22 +20,22 @@ impl Default for DisplayRotation {
     }
 }
 
-pub struct Display {
+pub struct Display<'a> {
     width: u32,
     height: u32,
     rotation: DisplayRotation,
-    buffer: [u8; 15000], //buffer: Box<u8>//[u8; 15000]
+    buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
 }
 
-impl Display {
-    pub fn new(width: u32, height: u32, buffer: & mut [u8]) -> Display {
+impl<'a> Display<'a> {
+    pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> Display<'a> {
         let len = buffer.len() as u32;
         assert!(width / 8 * height >= len);
         Display {
             width,
             height,
             rotation: DisplayRotation::default(),
-            buffer: [0u8; 15000],
+            buffer,
         }
     }
 
@@ -59,25 +59,28 @@ impl Display {
 }
 
 
-impl Drawing<Color> for Display {
+impl<'a> Drawing<Color> for Display<'a> {
     fn draw<T>(&mut self, item_pixels: T)
     where
         T: Iterator<Item = Pixel<Color>>
     {
         for Pixel(UnsignedCoord(x,y), color) in item_pixels {
+
             if outside_display(x, y, self.width, self.height, self.rotation) {
-                return;
+                continue;
             }
 
-            let (idx, bit) = rotation(x, y, self.width, self.height, self.rotation);
+            // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
+            let (index, bit) = rotation(x, y, self.width, self.height, self.rotation);
+            let index = index as usize;
 
-            let idx = idx as usize;
+            // "Draw" the Pixel on that bit
             match color {
                 Color::Black => {
-                    self.buffer[idx] &= !bit;
+                    self.buffer[index] &= !bit;
                 }
                 Color::White => {
-                    self.buffer[idx] |= bit;
+                    self.buffer[index] |= bit;
                 }
             }            
         }
@@ -85,7 +88,7 @@ impl Drawing<Color> for Display {
 }
 
 
-pub(crate) fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> bool {
+fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> bool {
     match rotation {
         DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
             if x >= width || y >= height {
@@ -101,7 +104,7 @@ pub(crate) fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation:
     false
 }
 
-pub(crate) fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
+fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
     match rotation {
         DisplayRotation::Rotate0 => (
             x / 8 + (width / 8) * y,
