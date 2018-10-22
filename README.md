@@ -2,18 +2,16 @@
 
 This library contains a driver for E-Paper Modules  from Waveshare.
 
-Support for more than the 4.2in EPD (especially the smaller and faster ones) is in the work.
-
-The 2.9in (A) and 1.54 (A) variant should both work but aren't tested yet.
+It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) library for the optional graphics support.
 
 ## (Supported) Devices
 
 | Device (with Link) | Colors | Flexible Display | Partial Refresh | Supported | Tested |
 | :---: | --- | :---: | :---: | :---: | :---: |
 | [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[1](#42-inch-e-ink-blackwhite)] | ✔ | ✔ |
-| [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ |  |
+| [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.13 Inch B/W (A)](https://www.waveshare.com/product/2.13inch-e-paper-hat.htm) | Black, White | ✕ | ✔ |  |  |
-| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ |  |
+| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 
 
 ### 4.2 Inch E-Ink Black/White
@@ -61,14 +59,6 @@ They are also called A and B, but you shouldn't get confused and mix it with the
 ## TODO's
 
 - [ ] improve the partial drawing/check the timings/timing improvements/....
-- [ ] for later: add support for more waveshare epds
-- [ ] License: Stay with ISC (=MIT) or go to the Apache+MIT Dual License as used in many other projects?
-
-## Graphics/Drawing
-
-It is recommended to use the [embedded graphics](https://crates.io/crates/embedded-graphics) library.
-
-Even though any u8-slice works, it is not recommended!
 
 ## Examples
 
