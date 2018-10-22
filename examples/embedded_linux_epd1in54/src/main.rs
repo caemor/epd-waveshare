@@ -11,8 +11,7 @@ use eink_waveshare_rs::{
         Buffer1in54,
     },
     graphics::{Display, DisplayRotation},
-    color::Color,
-    WaveshareDisplay,
+    prelude::*,
 };
 
 use lin_hal::spidev::{self, SpidevOptions};

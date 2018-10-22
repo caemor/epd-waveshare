@@ -11,8 +11,7 @@ use eink_waveshare_rs::{
         Buffer4in2,
     },
     graphics::{Display, DisplayRotation},
-    color::Color, 
-    WaveshareDisplay,
+    prelude::*,
 };
 
 extern crate embedded_graphics;
