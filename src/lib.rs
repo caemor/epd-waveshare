@@ -41,21 +41,11 @@
 //!
 #![no_std]
 
-//TODO: Make more assertions about buffersizes?
-
-extern crate embedded_hal as hal;
-
-use hal::spi::{Mode, Phase, Polarity};
-
 #[cfg(feature = "graphics")]
 extern crate embedded_graphics;
 
 #[cfg(feature = "graphics")]
 pub mod graphics;
-
-//TODO: remove old drawing support
-#[cfg(feature = "graphics")]
-pub mod drawing_old;
 
 mod traits;
 pub use traits::{WaveshareDisplay};
@@ -77,10 +67,10 @@ pub mod epd2in9;
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
 pub(crate) mod type_a;
 
-
-
 /// SPI mode -
 /// For more infos see [Requirements: SPI](index.html#spi)
+extern crate embedded_hal as hal;
+use hal::spi::{Mode, Phase, Polarity};
 pub const SPI_MODE: Mode = Mode {
     phase: Phase::CaptureOnFirstTransition,
     polarity: Polarity::IdleLow,
