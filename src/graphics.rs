@@ -20,22 +20,22 @@ impl Default for DisplayRotation {
     }
 }
 
-pub struct Display<'a> {
+pub struct Display {
     width: u32,
     height: u32,
     rotation: DisplayRotation,
-    buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
+    buffer: [u8; 15000], //buffer: Box<u8>//[u8; 15000]
 }
 
-impl<'a> Display<'a> {
-    pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> Display<'a> {
+impl Display {
+    pub fn new(width: u32, height: u32, buffer: & mut [u8]) -> Display {
         let len = buffer.len() as u32;
         assert!(width / 8 * height >= len);
         Display {
             width,
             height,
             rotation: DisplayRotation::default(),
-            buffer,
+            buffer: [0u8; 15000],
         }
     }
 
@@ -59,7 +59,7 @@ impl<'a> Display<'a> {
 }
 
 
-impl<'a> Drawing<Color> for Display<'a> {
+impl Drawing<Color> for Display {
     fn draw<T>(&mut self, item_pixels: T)
     where
         T: Iterator<Item = Pixel<Color>>
