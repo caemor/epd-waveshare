@@ -48,6 +48,9 @@ extern crate embedded_hal as hal;
 use hal::spi::{Mode, Phase, Polarity};
 
 #[cfg(feature = "graphics")]
+extern crate embedded_graphics;
+
+#[cfg(feature = "graphics")]
 pub mod graphics;
 
 //TODO: remove old drawing support
@@ -74,7 +77,7 @@ pub mod epd2in9;
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
 pub(crate) mod type_a;
 
-extern crate embedded_graphics;
+
 
 /// SPI mode -
 /// For more infos see [Requirements: SPI](index.html#spi)

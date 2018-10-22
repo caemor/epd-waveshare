@@ -131,6 +131,9 @@ fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) 
 mod tests {
     use super::{DisplayRotation, outside_display, rotation, Display};
     use color::Color;
+    use embedded_graphics::coord::Coord;
+    use embedded_graphics::primitives::Line;
+    use embedded_graphics::prelude::*;
 
     #[test]
     fn buffer_clear() {
@@ -174,6 +177,61 @@ mod tests {
                     assert!(idx < max_value);
                 }
             }
+        }
+    }
+
+
+
+    #[test]
+    fn graphics_rotation_0() {
+        use epd2in9::{DEFAULT_BACKGROUND_COLOR};        
+        let width = 128;
+        let height = 296;
+        
+        let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
+        let mut display = Display::new(width, height, &mut buffer);
+
+        display.draw(
+            Line::new(Coord::new(0, 0), Coord::new(7, 0))
+                .with_stroke(Some(Color::Black))
+                .into_iter(),
+        );
+        
+        let buffer = display.buffer();
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, DEFAULT_BACKGROUND_COLOR.get_byte_value());
+        }
+    }
+
+    #[test]
+    fn graphics_rotation_90() {
+        use epd2in9::{DEFAULT_BACKGROUND_COLOR};        
+        let width = 128;
+        let height = 296;
+        
+        let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
+        let mut display = Display::new(width, height, &mut buffer);
+
+        display.set_rotation(DisplayRotation::Rotate90);
+
+        display.draw(
+            Line::new(Coord::new(0, 120), Coord::new(0, 295))
+                .with_stroke(Some(Color::Black))
+                .into_iter(),
+        );
+        
+        let buffer = display.buffer();
+
+        extern crate std;
+        std::println!("{:?}", buffer);
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 }

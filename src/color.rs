@@ -1,5 +1,5 @@
 
-use embedded_graphics::prelude::*;
+
 
 /// Only for the B/W Displays atm
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -85,6 +85,9 @@ impl Color {
     }
 }
 
+#[cfg(feature = "graphics")]
+use embedded_graphics::prelude::*;
+#[cfg(feature = "graphics")]
 impl PixelColor for Color {}
 
 impl From<u8> for Color {

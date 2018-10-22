@@ -39,6 +39,9 @@ use traits::*;
 
 use interface::DisplayInterface;
 
+mod graphics;
+pub use epd2in9::graphics::Buffer2in9;
+
 /// EPD2in9 driver
 ///
 pub struct EPD2in9<SPI, CS, BUSY, DC, RST> {

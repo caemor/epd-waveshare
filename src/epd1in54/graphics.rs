@@ -12,7 +12,7 @@ impl Default for Buffer1in54BlackWhite {
                 WIDTH as usize * HEIGHT as usize / 8                
             ]
         }
-    }
+    }    
 }
 
 
