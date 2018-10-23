@@ -169,6 +169,29 @@ fn run() -> Result<(), std::io::Error> {
     epd.display_frame(&mut spi).expect("display frame new graphics");
     delay.delay_ms(5000u16);
 
+    // a moving `Hello World!`
+    epd.set_lut_quick(&mut spi).expect("SET LUT QUICK error");
+    let limit = 20;
+    for i in 0..limit {
+        println!("Moving Hello World. Loop {} from {}", i, limit);
+
+        display.draw(
+            Font6x8::render_str("  Hello World! ")
+                .with_style(Style {
+                    fill_color: Some(Color::White),
+                    stroke_color: Some(Color::Black),
+                    stroke_width: 0u8, // Has no effect on fonts
+                })
+                .translate(Coord::new(5 + i*6, 50))
+                .into_iter(),
+        );        
+
+        epd.update_frame(&mut spi, &display.buffer()).unwrap();
+        epd.display_frame(&mut spi).expect("display frame new graphics");
+
+        delay.delay_ms(1_000u16);
+    }
+
     // Set the EPD to sleep
     epd.sleep(&mut spi).expect("sleep");
 
