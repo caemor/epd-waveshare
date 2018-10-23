@@ -169,11 +169,12 @@ fn run() -> Result<(), std::io::Error> {
     epd.display_frame(&mut spi).expect("display frame new graphics");
     delay.delay_ms(5000u16);
 
-    // a moving `Hello World!`
+    // a quickly moving `Hello World!`
+    display.set_rotation(DisplayRotation::Rotate0);
     epd.set_lut_quick(&mut spi).expect("SET LUT QUICK error");
     let limit = 20;
     for i in 0..limit {
-        println!("Moving Hello World. Loop {} from {}", i, limit);
+        println!("Moving Hello World. Loop {} from {}", (i+1), limit);
 
         display.draw(
             Font6x8::render_str("  Hello World! ")
@@ -188,8 +189,6 @@ fn run() -> Result<(), std::io::Error> {
 
         epd.update_frame(&mut spi, &display.buffer()).unwrap();
         epd.display_frame(&mut spi).expect("display frame new graphics");
-
-        delay.delay_ms(1_000u16);
     }
 
     // Set the EPD to sleep
