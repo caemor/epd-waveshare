@@ -212,7 +212,7 @@ fn run() -> Result<(), std::io::Error> {
     // a moving `Hello World!`
     let limit = 10;
     for i in 0..limit {
-        println!("Moving Hello World. Loop {} from {}", i, limit);
+        println!("Moving Hello World. Loop {} from {}", (i+1), limit);
 
         display.draw(
             Font6x8::render_str("  Hello World! ")

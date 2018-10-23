@@ -1,8 +1,7 @@
 //! A simple Driver for the Waveshare 1.54" E-Ink Display via SPI
-//!
-//!
-//! # Examples from the 4.2" Display. It should work the same for the 1.54" one.
-//!
+//! 
+//! # Example for the 1.54 in E-Ink Display
+//! 
 //! ```ignore
 //! use eink_waveshare_rs::{
 //!     epd1in54::{EPD1in54, Buffer1in54},
