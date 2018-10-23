@@ -1,5 +1,9 @@
 use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
 
+/// Full size buffer for use with the 4in2 EPD
+/// 
+/// Can also be manuall constructed:
+/// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]` 
 pub struct Buffer4in2 {
     pub buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
 }

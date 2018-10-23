@@ -30,8 +30,6 @@ epd4in2_fast_update = []
 [dependencies.embedded-graphics]
 optional = true
 version = "0.4.3"
-# embedded-graphics = {git = "https://github.com/caemor/embedded-graphics", branch = "master"}
-# embedded-graphics = {git = "https://github.com/jamwaffles/embedded-graphics", branch = "master"}
 
 [dependencies.embedded-hal]
 features = ["unproven"]
