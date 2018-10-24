@@ -1,40 +1,62 @@
 //! A simple Driver for the Waveshare 2.9" E-Ink Display via SPI
 //!
+//! Untested!
 //!
-//! # Examples from the 4.2" Display. It should work the same for the 2.9" one.
-//!
+//! # Example for the 2.9 in E-Ink Display
+//! 
 //! ```ignore
-//! let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay).unwrap();
+//! use eink_waveshare_rs::{
+//!     epd2in9::{EPD2in9, Buffer2in9},
+//!     graphics::{Display, DisplayRotation},
+//!     prelude::*,
+//! }; 
+//! 
+//! // Setup EPD
+//! let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
-//! let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
+//! // Use display graphics
+//! let mut buffer = Buffer2in9::default();
+//! let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+//! 
+//! // Write some hello world in the screenbuffer
+//! display.draw(
+//!     Font6x8::render_str("Hello World!")
+//!         .with_stroke(Some(Color::Black))
+//!         .with_fill(Some(Color::White))
+//!         .translate(Coord::new(5, 50))
+//!         .into_iter(),
+//! );
 //!
-//! // draw something into the buffer
-//!
-//! epd4in2.display_and_transfer_buffer(buffer, None);
-//!
-//! // wait and look at the image
-//!
-//! epd4in2.clear_frame(None);
-//!
-//! epd4in2.sleep();
+//! // Display updated frame
+//! epd.update_frame(&mut spi, &display.buffer()).unwrap();
+//! epd.display_frame(&mut spi).expect("display frame new graphics");
+//! 
+//! // Set the EPD to sleep
+//! epd.sleep(&mut spi).expect("sleep");
 //! ```
 
-const WIDTH: u16 = 128;
-const HEIGHT: u16 = 296;
-const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+pub const WIDTH: u32 = 128;
+pub const HEIGHT: u32 = 296;
+pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 use hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
 
-use type_a::{command::Command, LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
+use type_a::{
+    command::Command, 
+    constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE}
+};
 
 use color::Color;
 
 use traits::*;
 
 use interface::DisplayInterface;
+
+mod graphics;
+pub use epd2in9::graphics::Buffer2in9;
 
 /// EPD2in9 driver
 ///
@@ -99,11 +121,11 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    fn width(&self) -> u16 {
+    fn width(&self) -> u32 {
         WIDTH
     }
 
-    fn height(&self) -> u16 {
+    fn height(&self) -> u32 {
         HEIGHT
     }
 
@@ -148,10 +170,10 @@ where
         &mut self, 
         spi: &mut SPI,
         buffer: &[u8],
-        x: u16,
-        y: u16,
-        width: u16,
-        height: u16,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
     ) -> Result<(), SPI::Error> {
         self.set_ram_area(spi, x, y, x + width, y + height)?;
         self.set_ram_counter(spi, x, y)?;
@@ -217,10 +239,10 @@ where
     pub(crate) fn set_ram_area(
         &mut self, 
         spi: &mut SPI,
-        start_x: u16,
-        start_y: u16,
-        end_x: u16,
-        end_y: u16,
+        start_x: u32,
+        start_y: u32,
+        end_x: u32,
+        end_y: u32,
     ) -> Result<(), SPI::Error> {
         assert!(start_x < end_x);
         assert!(start_y < end_y);
@@ -239,7 +261,7 @@ where
         )
     }
 
-    pub(crate) fn set_ram_counter(&mut self, spi: &mut SPI, x: u16, y: u16) -> Result<(), SPI::Error> {
+    pub(crate) fn set_ram_counter(&mut self, spi: &mut SPI, x: u32, y: u32) -> Result<(), SPI::Error> {
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface.cmd_with_data(spi, Command::SET_RAM_X_ADDRESS_COUNTER, &[(x >> 3) as u8])?;

@@ -3,11 +3,7 @@ use hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
-
 use color::Color;
-
-
-
 
 
 /// All commands need to have this trait which gives the address of the command
@@ -16,15 +12,13 @@ pub(crate) trait Command {
     fn address(self) -> u8;
 }
 
-
-//TODO: add LUT trait with set_fast_lut and set_manual_lut and set_normal_lut or sth like that?
-// for partial updates
+// Trait for using various Waveforms from different LUTs
+// E.g. for partial updates
 trait LUTSupport<ERR> {
     fn set_lut(&mut self) -> Result<(), ERR>;
     fn set_lut_quick(&mut self) -> Result<(), ERR>;
     fn set_lut_manual(&mut self, data: &[u8]) -> Result<(), ERR>;
 }
-
 
 pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST>
 where
@@ -48,6 +42,9 @@ where
 }
 
 
+/// All the functions to interact with the EPDs
+/// 
+/// This trait includes all public functions to use the EPDS
 pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -56,8 +53,6 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    
-
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
     /// This already initialises the device. That means [init()](WaveshareInterface::init()) isn't needed directly afterwards
@@ -75,6 +70,7 @@ where
     /// and initialising which already contains the reset
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
+    /// Wakes the device up from sleep
     fn wake_up<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;   
     
 
@@ -85,10 +81,10 @@ where
     fn background_color(&self) -> &Color;
 
     /// Get the width of the display
-    fn width(&self) -> u16;
+    fn width(&self) -> u32;
 
     /// Get the height of the display
-    fn height(&self) -> u16;
+    fn height(&self) -> u32;
 
     /// Transmit a full frame to the SRAM of the EPD
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
@@ -100,10 +96,10 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        x: u16,
-        y: u16,
-        width: u16,
-        height: u16,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
     ) -> Result<(), SPI::Error>;
 
     /// Displays the frame data from SRAM

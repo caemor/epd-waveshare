@@ -41,17 +41,13 @@
 //!
 #![no_std]
 
-//TODO: Make more assertions about buffersizes?
-
-extern crate embedded_hal as hal;
-
-use hal::spi::{Mode, Phase, Polarity};
+#[cfg(feature = "graphics")]
+extern crate embedded_graphics;
 
 #[cfg(feature = "graphics")]
-pub mod drawing;
+pub mod graphics;
 
 mod traits;
-pub use traits::{WaveshareDisplay};
 
 pub mod color;
 
@@ -59,26 +55,27 @@ pub mod color;
 mod interface;
 
 #[cfg(feature = "epd4in2")]
-mod epd4in2;
-#[cfg(feature = "epd4in2")]
-pub use epd4in2::EPD4in2;
+pub mod epd4in2;
 
 #[cfg(feature = "epd1in54")]
-mod epd1in54;
-#[cfg(feature = "epd1in54")]
-pub use epd1in54::EPD1in54;
+pub mod epd1in54;
 
 #[cfg(feature = "epd2in9")]
-mod epd2in9;
-///2in9 eink
-#[cfg(feature = "epd2in9")]
-///2in9 eink
-pub use epd2in9::EPD2in9;
+pub mod epd2in9;
 
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
 pub(crate) mod type_a;
 
-//TODO: test spi mode
+pub mod prelude {
+    pub use traits::{WaveshareDisplay};
+    pub use color::Color;
+    pub use SPI_MODE;
+}
+
+
+extern crate embedded_hal as hal;
+use hal::spi::{Mode, Phase, Polarity};
+
 /// SPI mode -
 /// For more infos see [Requirements: SPI](index.html#spi)
 pub const SPI_MODE: Mode = Mode {

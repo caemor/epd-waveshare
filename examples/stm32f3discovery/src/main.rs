@@ -26,11 +26,10 @@ extern crate eink_waveshare_rs;
 
 
 use eink_waveshare_rs::{
-    EPD1in54,
+    epd1in54::EPD1in54,
     SPI_MODE,
-    //drawing::{Graphics},
-    color::Color,
-    WaveshareDisplay,
+    //drawing_old::{Graphics},
+    prelude::*,
 };
 
 

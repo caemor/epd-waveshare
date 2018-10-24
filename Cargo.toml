@@ -20,15 +20,16 @@ travis-ci = { repository = "Caemor/eink-waveshare-rs" }
 [features]
 default = ["epd1in54", "epd2in9", "epd4in2", "graphics"]
 
-graphics = []
+graphics = ["embedded-graphics"]
 epd1in54 = []
 epd2in9 = []
 epd4in2 = []
 # Activates the fast LUT for EPD4in2
 epd4in2_fast_update = []
 
-[dependencies]
-
+[dependencies.embedded-graphics]
+optional = true
+version = "0.4.3"
 
 [dependencies.embedded-hal]
 features = ["unproven"]

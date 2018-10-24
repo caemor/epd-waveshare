@@ -84,7 +84,7 @@ where
         &mut self,
         spi: &mut SPI,
         val: u8,
-        repetitions: u16,
+        repetitions: u32,
     ) -> Result<(), SPI::Error> {
         // high for data
         self.dc.set_high();
