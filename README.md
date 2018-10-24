@@ -11,15 +11,19 @@ It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) libr
 | [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[1](#42-inch-e-ink-blackwhite)] | ✔ | ✔ |
 | [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.13 Inch B/W (A)](https://www.waveshare.com/product/2.13inch-e-paper-hat.htm) | Black, White | ✕ | ✔ |  |  |
-| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
+| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ [[2](#)] |
 
 
-### 4.2 Inch E-Ink Black/White
+### [1]: 4.2 Inch E-Ink Black/White - Partial Refresh
 
 Out of the Box the original driver from Waveshare only supports full updates. 
 
-- [1]: Be careful with the quick refresh updates: <br>
+That means: Be careful with the quick refresh updates: <br>
 It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
+
+### [2]: 2.9 Inch E-Ink Black/White - Tests
+
+Since my 2.9 Inch-Display has some blurring issues I am not absolutly sure if everything was working correctly
 
 ### Interface
 
