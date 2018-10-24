@@ -128,6 +128,9 @@ fn run() -> Result<(), std::io::Error> {
     println!("Test all the rotations");
     let mut buffer = Buffer2in9::default();
     let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+    epd.update_frame(&mut spi, display.buffer()).unwrap();
+    epd.display_frame(&mut spi);
+
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
             Font6x8::render_str("Rotate 0!")
