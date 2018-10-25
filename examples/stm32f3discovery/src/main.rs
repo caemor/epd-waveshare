@@ -2,7 +2,7 @@
 #![deny(unsafe_code)]
 #![no_main]
 #![no_std]
-//#![deny(warnings)]
+#![deny(warnings)]
 
 
 extern crate cortex_m_rt as rt;
@@ -18,7 +18,6 @@ use stm32f30x_hal::stm32f30x;
 use stm32f30x_hal::delay::Delay;
 use rt::ExceptionFrame;
 
-//entry!(main);
 
 
 // the eink library
@@ -28,21 +27,8 @@ extern crate eink_waveshare_rs;
 use eink_waveshare_rs::{
     epd1in54::EPD1in54,
     SPI_MODE,
-    //drawing_old::{Graphics},
     prelude::*,
 };
-
-
-
-
-// use lin_hal::spidev::{self, SpidevOptions};
-// use lin_hal::{Pin, Spidev};
-// use lin_hal::sysfs_gpio::Direction;
-// use lin_hal::Delay;
-
-// activate spi, gpio in raspi-config
-// needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
-// see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
 /*
 *
@@ -65,55 +51,37 @@ fn main() -> ! {
     let mut gpioa = p.GPIOA.split(&mut rcc.ahb);
     let mut gpioe = p.GPIOE.split(&mut rcc.ahb);
 
-    // // Configure Digital I/O Pin to be used as Chip Select for SPI
+    // Configure Digital I/O Pin to be used as Chip Select for SPI
     let mut cs = gpioe
         .pe3
         .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
     cs.set_high();
 
-    // // Configure Busy Input Pin
+    // Configure Busy Input Pin
     let busy = gpioe
         .pe4
         .into_floating_input(&mut gpioe.moder, &mut gpioe.pupdr);
-   //     .pe4
-    //    .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
-    
-    // let busy = Pin::new(5);//pin 29
-    // busy.export().expect("busy export");
-    // while !busy.is_exported() {}
-    // busy.set_direction(Direction::In).expect("busy Direction");
-    // //busy.set_value(1).expect("busy Value set to 1");
-    // let busy_in = HackInputPin::new(&busy);
 
-    // // Configure Data/Command OutputPin
+    // Configure Data/Command OutputPin
     let mut dc = gpioe
         .pe5
         .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
     dc.set_high();
-    // let dc = Pin::new(6); //pin 31 //bcm6
-    // dc.export().expect("dc export");
-    // while !dc.is_exported() {}
-    // dc.set_direction(Direction::Out).expect("dc Direction");
-    // dc.set_value(1).expect("dc Value set to 1");
 
+    // Configure Reset OutputPin
     let mut rst = gpioe
         .pe6
         .into_push_pull_output(&mut gpioe.moder, &mut gpioe.otyper);
     rst.set_high();
-    // // Configure Reset OutputPin
-    // let rst = Pin::new(16); //pin 36 //bcm16
-    // rst.export().expect("rst export");
-    // while !rst.is_exported() {}
-    // rst.set_direction(Direction::Out).expect("rst Direction");
-    // rst.set_value(1).expect("rst Value set to 1");   
 
-    // // Configure Delay
+    // Configure Delay
     let mut delay = Delay::new(cp.SYST, clocks);
 
     // copied from the l3gd20 example
     // The `L3gd20` abstraction exposed by the `f3` crate requires a specific pin configuration to
     // be used and won't accept any configuration other than the one used here. Trying to use a
     // different pin configuration will result in a compiler error.
+    //TODO: test if this isn't also working with external connections/read datasheet if it doesn't :-D
     let sck = gpioa.pa5.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
     let miso = gpioa.pa6.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
     let mosi = gpioa.pa7.into_af5(&mut gpioa.moder, &mut gpioa.afrl);
@@ -129,9 +97,7 @@ fn main() -> ! {
 
     // // Setup of the needed pins is finished here
     // // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(&mut spi, cs, busy, dc, rst, &mut delay).unwrap();
-
-    
+    let mut epd = EPD1in54::new(&mut spi, cs, busy, dc, rst, &mut delay).unwrap();    
 
     // Clear the full screen
     epd.clear_frame(&mut spi).unwrap();

@@ -21,25 +21,39 @@
 //! # Examples
 //!
 //! ```ignore
-//! use eink-waveshare-rs::epd4in2::EPD4in2;
+//! use eink_waveshare_rs::{
+//!     epd1in54::{EPD1in54, Buffer1in54},
+//!     graphics::{Display, DisplayRotation},
+//!     prelude::*,
+//! }; 
+//! 
+//! // Setup EPD
+//! let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
-//! let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay).unwrap();
+//! // Use display graphics
+//! let mut buffer = Buffer1in54::default();
+//! let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+//! 
+//! // Write some hello world in the screenbuffer
+//! display.draw(
+//!     Font6x8::render_str("Hello World!")
+//!         .with_stroke(Some(Color::Black))
+//!         .with_fill(Some(Color::White))
+//!         .translate(Coord::new(5, 50))
+//!         .into_iter(),
+//! );
 //!
-//! let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
-//!
-//! // draw something into the buffer
-//!
-//! epd4in2.display_and_transfer_buffer(buffer, None);
-//!
-//! // wait and look at the image
-//!
-//! epd4in2.clear_frame(None);
-//!
-//! epd4in2.sleep();
+//! // Display updated frame
+//! epd.update_frame(&mut spi, &display.buffer()).unwrap();
+//! epd.display_frame(&mut spi).expect("display frame new graphics");
+//! 
+//! // Set the EPD to sleep
+//! epd.sleep(&mut spi).expect("sleep");
 //! ```
 //!
 //!
 #![no_std]
+#![deny(warnings)]
 
 #[cfg(feature = "graphics")]
 extern crate embedded_graphics;
