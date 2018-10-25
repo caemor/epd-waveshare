@@ -25,10 +25,21 @@ extern crate eink_waveshare_rs;
 
 
 use eink_waveshare_rs::{
-    epd1in54::EPD1in54,
-    SPI_MODE,
+    epd1in54::{
+        EPD1in54, 
+        Buffer1in54,
+    },
+    graphics::{Display, DisplayRotation},
     prelude::*,
+    SPI_MODE,
 };
+
+extern crate embedded_graphics;
+use embedded_graphics::coord::Coord;
+use embedded_graphics::fonts::{Font6x8};
+use embedded_graphics::prelude::*;
+//use embedded_graphics::primitives::{Circle, Line};
+use embedded_graphics::Drawing;
 
 /*
 *
@@ -127,7 +138,53 @@ fn main() -> ! {
     epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8).unwrap();
 
     // Display updated frame
-    epd.display_frame(&mut spi).unwrap();
+    epd.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(5000u16);
+
+
+    
+    let mut buffer = Buffer1in54::default();
+    let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+    display.set_rotation(DisplayRotation::Rotate0);
+    display.draw(
+            Font6x8::render_str("Rotate 0!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))                
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+
+    display.set_rotation(DisplayRotation::Rotate90);
+    display.draw(
+            Font6x8::render_str("Rotate 90!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+
+    display.set_rotation(DisplayRotation::Rotate180);
+    display.draw(
+            Font6x8::render_str("Rotate 180!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+
+    display.set_rotation(DisplayRotation::Rotate270);
+    display.draw(
+            Font6x8::render_str("Rotate 270!")
+                .with_stroke(Some(Color::Black))
+                .with_fill(Some(Color::White))
+                .translate(Coord::new(5, 50))
+                .into_iter(),
+    );
+
+    // Display updated frame
+    epd.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd.display_frame(&mut spi).expect("display frame new graphics");
+    delay.delay_ms(5000u16);
 
     // Set the EPD to sleep
     epd.sleep(&mut spi).unwrap();
