@@ -48,8 +48,8 @@ use embedded_graphics::Drawing;
 */
 #[entry]
 fn main() -> ! {
-    let cp = cortex_m::Peripherals::take().unwrap();
-    let p = stm32f30x::Peripherals::take().unwrap();
+    let cp = cortex_m::Peripherals::take().expect("cortex m peripherals");
+    let p = stm32f30x::Peripherals::take().expect("stm32f30x peripherals");
 
     let mut flash = p.FLASH.constrain();
     let mut rcc = p.RCC.constrain();
