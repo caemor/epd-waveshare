@@ -10,6 +10,3 @@ It showcases most of what can be done with the crate.
 
 This example doesn't use the graphics feature of the crate and shows the fast update rate of the 1in54 EPD.
 
-### stm32f3discovery
-
-Not tested yet! 
