@@ -323,18 +323,18 @@ where
         self.send_data(spi, &[h as u8])
     }
 
-    /// Fill the look-up table for the EPD
-    //TODO: make public?
-    fn set_lut(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    /// Fill the look-up table for the EPD for a full refresh (slower)
+    pub fn set_lut(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.set_lut_helper(spi, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
     }
 
-    /// Fill the look-up table for a quick display (partial refresh)
+    /// Fill the look-up table for a quick refresh (partial refresh)
     ///
-    /// Is automatically done by [EPD4in2::display_frame_quick()](EPD4in2::display_frame_quick())
-    /// //TODO: make public?
+    /// WARNING: Might lead to ghosting-effects
+    #[allow(dead_code)]
+    #[deprecated(note = "Might lead to ghosting-effects/problems with your display. Use set_lut instead!")]
     #[cfg(feature = "epd4in2_fast_update")]
-    fn set_lut_quick(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    pub fn set_lut_quick(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.set_lut_helper(
             spi,
             &LUT_VCOM0_QUICK,

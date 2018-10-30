@@ -4,6 +4,7 @@ pub const WIDTH: u32 = 400;
 pub const HEIGHT: u32 = 300;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
+
 pub(crate) const LUT_VCOM0: [u8; 44] = [
 0x00, 0x17, 0x00, 0x00, 0x00, 0x02,        
 0x00, 0x17, 0x17, 0x00, 0x00, 0x02,        
@@ -14,6 +15,7 @@ pub(crate) const LUT_VCOM0: [u8; 44] = [
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
+#[allow(dead_code)]
 #[cfg(feature = "epd4in2_fast_update")]
 pub(crate) const LUT_VCOM0_QUICK: [u8; 44] = [
 0x00, 0x0E, 0x00, 0x00, 0x00, 0x01,        
@@ -36,6 +38,7 @@ pub(crate) const LUT_WW: [u8; 42] =[
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 ];
 
+#[allow(dead_code)]
 #[cfg(feature = "epd4in2_fast_update")]
 pub(crate) const LUT_WW_QUICK: [u8; 42] =[
 0xA0, 0x0E, 0x00, 0x00, 0x00, 0x01,
@@ -58,6 +61,7 @@ pub(crate) const LUT_BW: [u8; 42] =[
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,      
 ];
 
+#[allow(dead_code)]
 #[cfg(feature = "epd4in2_fast_update")]
 pub(crate) const LUT_BW_QUICK: [u8; 42] =[
 0xA0, 0x0E, 0x00, 0x00, 0x00, 0x01,
@@ -80,6 +84,7 @@ pub(crate) const LUT_BB: [u8; 42] =[
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,             
 ];
 
+#[allow(dead_code)]
 #[cfg(feature = "epd4in2_fast_update")]
 pub(crate) const LUT_BB_QUICK: [u8; 42] =[
 0x50, 0x0E, 0x00, 0x00, 0x00, 0x01,
@@ -102,6 +107,7 @@ pub(crate) const LUT_WB: [u8; 42] =[
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,            
 ];
 
+#[allow(dead_code)]
 #[cfg(feature = "epd4in2_fast_update")]
 pub(crate) const LUT_WB_QUICK: [u8; 42] =[
 0x50, 0x0E, 0x00, 0x00, 0x00, 0x01,

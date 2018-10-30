@@ -1,10 +1,12 @@
 // the library for the embedded linux device
 extern crate linux_embedded_hal as lin_hal;
+use lin_hal::spidev::{self, SpidevOptions};
+use lin_hal::{Pin, Spidev};
+use lin_hal::sysfs_gpio::Direction;
+use lin_hal::Delay;
 
 // the eink library
 extern crate eink_waveshare_rs;
-
-
 use eink_waveshare_rs::{
     epd1in54::{
         EPD1in54, 
@@ -14,11 +16,7 @@ use eink_waveshare_rs::{
     prelude::*,
 };
 
-use lin_hal::spidev::{self, SpidevOptions};
-use lin_hal::{Pin, Spidev};
-use lin_hal::sysfs_gpio::Direction;
-use lin_hal::Delay;
-
+// Graphics
 extern crate embedded_graphics;
 use embedded_graphics::coord::Coord;
 use embedded_graphics::fonts::{Font6x8};
@@ -26,6 +24,7 @@ use embedded_graphics::prelude::*;
 //use embedded_graphics::primitives::{Circle, Line};
 use embedded_graphics::Drawing;
 
+// HAL (Traits)
 extern crate embedded_hal;
 use embedded_hal::prelude::*;
 
@@ -33,43 +32,7 @@ use embedded_hal::prelude::*;
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-
-// DigitalIn Hack as long as it's not in the linux_embedded_hal
-// from https://github.com/rudihorn/max31865/blob/extra_examples/examples/rpi.rs
-// (slightly changed now as OutputPin doesn't provide is_high and is_low anymore)
-use embedded_hal::digital::{InputPin};
-
-//TODO: Remove when linux_embedded_hal implements InputPin 
-struct HackInputPin<'a> {
-    pin: &'a Pin
-}
-
-//TODO: Remove when linux_embedded_hal implements InputPin 
-impl<'a> HackInputPin<'a> {
-    fn new(p : &'a Pin) -> HackInputPin {
-        HackInputPin {
-            pin: p
-        }
-    }
-}
-
-//TODO: Remove when linux_embedded_hal implements InputPin 
-// for now it defaults to is_low if an error appears
-// could be handled better!
-impl<'a> InputPin for HackInputPin<'a> {
-    fn is_low(&self) -> bool {
-        self.pin.get_value().unwrap_or(0) == 0
-    }
-
-    fn is_high(&self) -> bool {
-        !self.is_low()
-    }
-}
-
-//TODO: Test this implemenation
-//BE CAREFUL: this wasn't tested yet
 fn main() {
-
     run().unwrap();
 }
 
@@ -97,7 +60,6 @@ fn run() -> Result<(), std::io::Error> {
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
     //busy.set_value(1).expect("busy Value set to 1");
-    let busy_in = HackInputPin::new(&busy);
 
     // Configure Data/Command OutputPin
     let dc = Pin::new(6); //pin 31 //bcm6
@@ -119,7 +81,7 @@ fn run() -> Result<(), std::io::Error> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+    let mut epd = EPD1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
 
     // Clear the full screen
     epd.clear_frame(&mut spi).expect("clear frame 1");

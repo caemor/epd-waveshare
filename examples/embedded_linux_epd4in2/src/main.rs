@@ -1,10 +1,12 @@
 // the library for the embedded linux device
 extern crate linux_embedded_hal as lin_hal;
+use lin_hal::spidev::{self, SpidevOptions};
+use lin_hal::{Pin, Spidev};
+use lin_hal::sysfs_gpio::Direction;
+use lin_hal::Delay;
 
 // the eink library
 extern crate eink_waveshare_rs;
-
-
 use eink_waveshare_rs::{
     epd4in2::{
         EPD4in2,
@@ -14,6 +16,7 @@ use eink_waveshare_rs::{
     prelude::*,
 };
 
+// Graphics
 extern crate embedded_graphics;
 use embedded_graphics::coord::Coord;
 use embedded_graphics::fonts::{Font6x8, Font12x16};
@@ -21,53 +24,17 @@ use embedded_graphics::prelude::*;
 use embedded_graphics::primitives::{Circle, Line};
 use embedded_graphics::Drawing;
 
-use lin_hal::spidev::{self, SpidevOptions};
-use lin_hal::{Pin, Spidev};
-use lin_hal::sysfs_gpio::Direction;
-use lin_hal::Delay;
+// HAL (Traits)
+extern crate embedded_hal;
+use embedded_hal::prelude::*;
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-
-// DigitalIn Hack as long as it's not in the linux_embedded_hal
-// from https://github.com/rudihorn/max31865/blob/extra_examples/examples/rpi.rs
-// (slightly changed now as OutputPin doesn't provide is_high and is_low anymore)
-extern crate embedded_hal;
-use embedded_hal::{
-    digital::{InputPin},
-}; 
-use embedded_hal::prelude::*;
-
-struct HackInputPin<'a> {
-    pin: &'a Pin
-}
-
-impl<'a> HackInputPin<'a> {
-    fn new(p : &'a Pin) -> HackInputPin {
-        HackInputPin {
-            pin: p
-        }
-    }
-}
-
-impl<'a> InputPin for HackInputPin<'a> {
-    fn is_low(&self) -> bool {
-        self.pin.get_value().unwrap_or(0) == 0
-    }
-
-    fn is_high(&self) -> bool {
-        self.pin.get_value().unwrap_or(0) == 1
-    }
-}
-
-
-
 fn main() {
     run().map_err(|e| println!("{}", e.to_string())).unwrap();
 }
-
 
 fn run() -> Result<(), std::io::Error> {
 
@@ -93,7 +60,6 @@ fn run() -> Result<(), std::io::Error> {
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
     //busy.set_value(1).expect("busy Value set to 1");
-    let busy_in = HackInputPin::new(&busy);
 
     let dc = Pin::new(6); //pin 31 //bcm6
     dc.export().expect("dc export");
@@ -115,7 +81,7 @@ fn run() -> Result<(), std::io::Error> {
 
     //TODO: wait for Digital::InputPin
     //fixed currently with the HackInputPin, see further above
-    let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy_in, dc, rst, &mut delay).expect("eink initalize error");
+    let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     println!("Test all the rotations");
     let mut buffer = Buffer4in2::default();
