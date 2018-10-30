@@ -190,8 +190,8 @@ where
         //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
         self.interface.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
 
-        //TODO: compare with using a loop instead of the full buffer
-        self.interface.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_1, &[color_value; WIDTH as usize / 8 * HEIGHT as usize])?;
+        self.interface.cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface.data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
         self.interface.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)
     }
@@ -230,7 +230,7 @@ where
         //TODO: handle dtm somehow
         let is_dtm1 = false;
         if is_dtm1 {
-            self.command(spi, Command::DATA_START_TRANSMISSION_1)?
+            self.command(spi, Command::DATA_START_TRANSMISSION_1)? //TODO: check if data_start transmission 1 also needs "old"/background data here
         } else {
             self.command(spi, Command::DATA_START_TRANSMISSION_2)?
         }
@@ -252,25 +252,16 @@ where
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.send_resolution(spi)?;
 
-        //let size = WIDTH as usize / 8 * HEIGHT as usize;
         let color_value = self.color.get_byte_value();
 
-        //TODO: this is using a big buffer atm, is it better to just loop over sending a single byte?
-        self.interface.cmd_with_data(
-            spi,
-            Command::DATA_START_TRANSMISSION_1,
-            &[color_value; WIDTH as usize / 8 * HEIGHT as usize]
-        )?;
+        self.interface.cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface.data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(2);
 
-        //TODO: this is using a big buffer atm, is it better to just loop over sending a single byte?
-        self.interface.cmd_with_data(
-            spi,
-            Command::DATA_START_TRANSMISSION_2,
-            &[color_value; WIDTH as usize / 8 * HEIGHT as usize]
-        )
+        self.interface.cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.interface.data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)
     }
 
     fn set_background_color(&mut self, color: Color) {
