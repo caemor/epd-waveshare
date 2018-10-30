@@ -34,40 +34,6 @@ use embedded_hal::prelude::*;
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
 
-// DigitalIn Hack as long as it's not in the linux_embedded_hal
-// from https://github.com/rudihorn/max31865/blob/extra_examples/examples/rpi.rs
-// (slightly changed now as OutputPin doesn't provide is_high and is_low anymore)
-use embedded_hal::digital::{InputPin};
-
-//TODO: Remove when linux_embedded_hal implements InputPin 
-struct HackInputPin<'a> {
-    pin: &'a Pin
-}
-
-//TODO: Remove when linux_embedded_hal implements InputPin 
-impl<'a> HackInputPin<'a> {
-    fn new(p : &'a Pin) -> HackInputPin {
-        HackInputPin {
-            pin: p
-        }
-    }
-}
-
-//TODO: Remove when linux_embedded_hal implements InputPin 
-// for now it defaults to is_low if an error appears
-// could be handled better!
-impl<'a> InputPin for HackInputPin<'a> {
-    fn is_low(&self) -> bool {
-        self.pin.get_value().unwrap_or(0) == 0
-    }
-
-    fn is_high(&self) -> bool {
-        !self.is_low()
-    }
-}
-
-//TODO: Test this implemenation
-//BE CAREFUL: this wasn't tested yet
 fn main() {
 
     run().unwrap();

@@ -30,40 +30,6 @@ use lin_hal::Delay;
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-
-// DigitalIn Hack as long as it's not in the linux_embedded_hal
-// from https://github.com/rudihorn/max31865/blob/extra_examples/examples/rpi.rs
-// (slightly changed now as OutputPin doesn't provide is_high and is_low anymore)
-extern crate embedded_hal;
-use embedded_hal::{
-    digital::{InputPin},
-}; 
-use embedded_hal::prelude::*;
-
-struct HackInputPin<'a> {
-    pin: &'a Pin
-}
-
-impl<'a> HackInputPin<'a> {
-    fn new(p : &'a Pin) -> HackInputPin {
-        HackInputPin {
-            pin: p
-        }
-    }
-}
-
-impl<'a> InputPin for HackInputPin<'a> {
-    fn is_low(&self) -> bool {
-        self.pin.get_value().unwrap_or(0) == 0
-    }
-
-    fn is_high(&self) -> bool {
-        self.pin.get_value().unwrap_or(0) == 1
-    }
-}
-
-
-
 fn main() {
     run().map_err(|e| println!("{}", e.to_string())).unwrap();
 }

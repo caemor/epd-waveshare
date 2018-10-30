@@ -9,7 +9,7 @@ authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
 #eink_waveshare_rs = { path = "../../"}
 eink_waveshare_rs = { path = "../../", default-features = false, features = ["epd1in54", "graphics"]}
 
-linux-embedded-hal = "0.2.0"
+linux-embedded-hal = "0.2.1"
 
 embedded-graphics = "0.4.3"
 
