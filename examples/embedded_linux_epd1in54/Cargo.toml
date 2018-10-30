@@ -5,7 +5,7 @@ authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
 
 [dependencies]
 
-eink_waveshare_rs = { path = "../../", default-features = false, features = ["epd1in54", "graphics"]}
+epd_waveshare = { path = "../../", default-features = false, features = ["epd1in54", "graphics"]}
 
 linux-embedded-hal = "0.2.1"
 

@@ -6,8 +6,8 @@ use lin_hal::sysfs_gpio::Direction;
 use lin_hal::Delay;
 
 // the eink library
-extern crate eink_waveshare_rs;
-use eink_waveshare_rs::{
+extern crate epd_waveshare;
+use epd_waveshare::{
     epd4in2::{
         EPD4in2,
         Buffer4in2,
