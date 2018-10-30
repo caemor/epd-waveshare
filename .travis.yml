@@ -103,7 +103,7 @@ script:
   - cargo doc --all-features --release
   - cd examples/embedded_linux_epd4in2 && cargo check && cd ../../
   - cd examples/embedded_linux_epd1in54 && cargo check && cd ../../
-  - cd examples/stm32f3discovery && cargo check --target thumbv7m-none-eabi && cd ../../
+  # - cd examples/stm32f3discovery && cargo check --target thumbv7m-none-eabi && cd ../../
   #- cd ../f3_stm32f30x && cargo build
 
 after_success:
