@@ -1,9 +1,12 @@
 // the library for the embedded linux device
 extern crate linux_embedded_hal as lin_hal;
+use lin_hal::spidev::{self, SpidevOptions};
+use lin_hal::{Pin, Spidev};
+use lin_hal::sysfs_gpio::Direction;
+use lin_hal::Delay;
 
 // the eink library
 extern crate eink_waveshare_rs;
-
 use eink_waveshare_rs::{
     epd4in2::{
         EPD4in2,
@@ -13,6 +16,7 @@ use eink_waveshare_rs::{
     prelude::*,
 };
 
+// Graphics
 extern crate embedded_graphics;
 use embedded_graphics::coord::Coord;
 use embedded_graphics::fonts::{Font6x8, Font12x16};
@@ -20,10 +24,9 @@ use embedded_graphics::prelude::*;
 use embedded_graphics::primitives::{Circle, Line};
 use embedded_graphics::Drawing;
 
-use lin_hal::spidev::{self, SpidevOptions};
-use lin_hal::{Pin, Spidev};
-use lin_hal::sysfs_gpio::Direction;
-use lin_hal::Delay;
+// HAL (Traits)
+extern crate embedded_hal;
+use embedded_hal::prelude::*;
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems

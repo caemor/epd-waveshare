@@ -1,9 +1,12 @@
 // the library for the embedded linux device
 extern crate linux_embedded_hal as lin_hal;
+use lin_hal::spidev::{self, SpidevOptions};
+use lin_hal::{Pin, Spidev};
+use lin_hal::sysfs_gpio::Direction;
+use lin_hal::Delay;
 
 // the eink library
 extern crate eink_waveshare_rs;
-
 use eink_waveshare_rs::{
     epd2in9::{
         EPD2in9, 
@@ -13,11 +16,7 @@ use eink_waveshare_rs::{
     prelude::*,
 };
 
-use lin_hal::spidev::{self, SpidevOptions};
-use lin_hal::{Pin, Spidev};
-use lin_hal::sysfs_gpio::Direction;
-use lin_hal::Delay;
-
+// Graphics
 extern crate embedded_graphics;
 use embedded_graphics::coord::Coord;
 use embedded_graphics::fonts::{Font6x8};
@@ -25,6 +24,7 @@ use embedded_graphics::prelude::*;
 //use embedded_graphics::primitives::{Circle, Line};
 use embedded_graphics::Drawing;
 
+// HAL (Traits)
 extern crate embedded_hal;
 use embedded_hal::prelude::*;
 
