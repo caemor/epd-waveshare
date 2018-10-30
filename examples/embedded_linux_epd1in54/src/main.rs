@@ -33,9 +33,7 @@ use embedded_hal::prelude::*;
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-
 fn main() {
-
     run().unwrap();
 }
 
@@ -63,7 +61,6 @@ fn run() -> Result<(), std::io::Error> {
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
     //busy.set_value(1).expect("busy Value set to 1");
-    let busy_in = HackInputPin::new(&busy);
 
     // Configure Data/Command OutputPin
     let dc = Pin::new(6); //pin 31 //bcm6
@@ -85,7 +82,7 @@ fn run() -> Result<(), std::io::Error> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+    let mut epd = EPD1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
 
     // Clear the full screen
     epd.clear_frame(&mut spi).expect("clear frame 1");

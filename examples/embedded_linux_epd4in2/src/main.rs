@@ -4,7 +4,6 @@ extern crate linux_embedded_hal as lin_hal;
 // the eink library
 extern crate eink_waveshare_rs;
 
-
 use eink_waveshare_rs::{
     epd4in2::{
         EPD4in2,
@@ -34,7 +33,6 @@ fn main() {
     run().map_err(|e| println!("{}", e.to_string())).unwrap();
 }
 
-
 fn run() -> Result<(), std::io::Error> {
 
     // Configure SPI
@@ -59,7 +57,6 @@ fn run() -> Result<(), std::io::Error> {
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
     //busy.set_value(1).expect("busy Value set to 1");
-    let busy_in = HackInputPin::new(&busy);
 
     let dc = Pin::new(6); //pin 31 //bcm6
     dc.export().expect("dc export");
@@ -81,7 +78,7 @@ fn run() -> Result<(), std::io::Error> {
 
     //TODO: wait for Digital::InputPin
     //fixed currently with the HackInputPin, see further above
-    let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy_in, dc, rst, &mut delay).expect("eink initalize error");
+    let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     println!("Test all the rotations");
     let mut buffer = Buffer4in2::default();
