@@ -94,11 +94,11 @@ install:
   - cargo install cargo-travis || true
   - rustup override set nightly
   - rustup target add thumbv7m-none-eabi
+  - rustup component add clippy-preview
 
 script:
   - cargo check
-  - cargo build --release
-  - cargo test
+  - cargo clippy --all-targets --all-features -- -D warnings
   - cargo test --all-features --release
   - cargo doc --all-features --release
   - cd examples/embedded_linux_epd4in2 && cargo check && cd ../../
