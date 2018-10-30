@@ -42,8 +42,6 @@ where
     /// Basic function for sending [Commands](Command).
     ///
     /// Enables direct interaction with the device with the help of [data()](DisplayInterface::data())
-    /// 
-    /// //TODO: make public?
     pub(crate) fn cmd<T: Command>(&mut self, spi: &mut SPI, command: T) -> Result<(), SPI::Error> {
         // low for commands
         self.dc.set_low();
@@ -55,8 +53,6 @@ where
     /// Basic function for sending an array of u8-values of data over spi
     ///
     /// Enables direct interaction with the device with the help of [command()](EPD4in2::command())
-    /// 
-    /// //TODO: make public?
     pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
         // high for data
         self.dc.set_high();
@@ -67,7 +63,6 @@ where
 
     /// Basic function for sending [Commands](Command) and the data belonging to it.
     /// 
-    /// //TODO: make public?
     /// TODO: directly use ::write? cs wouldn't needed to be changed twice than
     pub(crate) fn cmd_with_data<T: Command>(&mut self, spi: &mut SPI, command: T, data: &[u8]) -> Result<(), SPI::Error> {
        self.cmd(spi, command)?;
@@ -78,8 +73,6 @@ where
     /// Basic function for sending the same byte of data (one u8) multiple times over spi
     ///
     /// Enables direct interaction with the device with the help of [command()](ConnectionInterface::command())
-    /// 
-    /// //TODO: make public?
     pub(crate) fn data_x_times(
         &mut self,
         spi: &mut SPI,

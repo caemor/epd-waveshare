@@ -92,7 +92,7 @@ fn run() -> Result<(), std::io::Error> {
     let mut buffer = Buffer2in9::default();
     let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
     epd.update_frame(&mut spi, display.buffer()).unwrap();
-    epd.display_frame(&mut spi);
+    epd.display_frame(&mut spi).expect("display frame x03");
 
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
@@ -137,7 +137,7 @@ fn run() -> Result<(), std::io::Error> {
 
     // a quickly moving `Hello World!`
     display.set_rotation(DisplayRotation::Rotate0);
-    epd.set_lut_quick(&mut spi).expect("SET LUT QUICK error");
+    epd.set_lut(&mut spi, Some(RefreshLUT::QUICK)).expect("SET LUT QUICK error");
     let limit = 20;
     for i in 0..limit {
         println!("Moving Hello World. Loop {} from {}", (i+1), limit);

@@ -67,7 +67,7 @@ pub mod epd2in9;
 pub(crate) mod type_a;
 
 pub mod prelude {
-    pub use traits::{WaveshareDisplay};
+    pub use traits::{WaveshareDisplay, RefreshLUT};
     pub use color::Color;
     pub use SPI_MODE;
 }

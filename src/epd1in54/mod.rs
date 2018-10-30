@@ -50,7 +50,7 @@ use type_a::{
 
 use color::Color;
 
-use traits::{WaveshareDisplay};
+use traits::{WaveshareDisplay, RefreshLUT};
 
 use interface::DisplayInterface;
 
@@ -62,10 +62,10 @@ pub use epd1in54::graphics::Buffer1in54BlackWhite as Buffer1in54;
 pub struct EPD1in54<SPI, CS, BUSY, DC, RST> {
     /// SPI
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
-    /// EPD (width, height)
-    //epd: EPD,
     /// Color
     background_color: Color,
+    /// Refresh LUT
+    refresh: RefreshLUT,
 }
 
 impl<SPI, CS, BUSY, DC, RST> EPD1in54<SPI, CS, BUSY, DC, RST>
@@ -110,7 +110,7 @@ where
         //  -> address: x increment, y increment, address counter is updated in x direction
         self.interface.cmd_with_data(spi, Command::DATA_ENTRY_MODE_SETTING, &[0x03])?;
 
-        self.set_lut(spi)
+        self.set_lut(spi, None)
     }
 
 }
@@ -140,6 +140,7 @@ where
         let mut epd = EPD1in54 {
             interface,
             background_color: DEFAULT_BACKGROUND_COLOR,
+            refresh: RefreshLUT::FULL
         };
 
         epd.init(spi, delay)?;
@@ -217,6 +218,20 @@ where
     fn background_color(&self) -> &Color {
         &self.background_color
     }
+
+    fn set_lut(&mut self, spi: &mut SPI, refresh_rate: Option<RefreshLUT>) -> Result<(), SPI::Error> {
+        if let Some(refresh_lut) = refresh_rate {
+            self.refresh = refresh_lut;
+        }
+        match self.refresh {
+            RefreshLUT::FULL => {
+                self.set_lut_helper(spi, &LUT_FULL_UPDATE)
+            },
+            RefreshLUT::QUICK => {
+                self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE)
+            }
+        }
+    }
 }
 
 impl<SPI, CS, BUSY, DC, RST> EPD1in54<SPI, CS, BUSY, DC, RST>
@@ -283,21 +298,6 @@ where
         self.wait_until_idle();
         Ok(())
     }
-
-    /// Uses the slower full update
-    pub fn set_lut(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.set_lut_helper(spi, &LUT_FULL_UPDATE)
-    }
-
-    /// Uses the quick partial refresh
-    pub fn set_lut_quick(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE)
-    }
-
-    //TODO: assert length for LUT is exactly 30
-    //fn set_lut_manual(&mut self, buffer: &[u8]) -> Result<(), E> {
-    //    self.set_lut_helper(buffer)
-    //}
 
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         assert!(buffer.len() == 30);

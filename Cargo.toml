@@ -24,8 +24,6 @@ graphics = ["embedded-graphics"]
 epd1in54 = []
 epd2in9 = []
 epd4in2 = []
-# Activates the fast LUT for EPD4in2
-epd4in2_fast_update = []
 
 [dependencies.embedded-graphics]
 optional = true

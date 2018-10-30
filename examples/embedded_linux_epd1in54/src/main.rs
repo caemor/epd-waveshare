@@ -133,7 +133,7 @@ fn run() -> Result<(), std::io::Error> {
 
     // a quickly moving `Hello World!`
     display.set_rotation(DisplayRotation::Rotate0);
-    epd.set_lut_quick(&mut spi).expect("SET LUT QUICK error");
+    epd.set_lut(&mut spi, Some(RefreshLUT::QUICK)).expect("SET LUT QUICK error");
     let limit = 20;
     for i in 0..limit {
         println!("Moving Hello World. Loop {} from {}", (i+1), limit);

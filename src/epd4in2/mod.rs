@@ -51,11 +51,11 @@ use hal::{
     digital::*,
 };
 
-use traits::{WaveshareDisplay, InternalWiAdditions};
+use traits::{WaveshareDisplay, InternalWiAdditions, RefreshLUT};
 use interface::DisplayInterface;
 
 //The Lookup Tables for the Display
-pub(crate) mod constants; //TODO: Limit to crate::drawing
+mod constants; //TODO: Limit to crate::drawing
 pub use self::constants::*;
 
 use color::Color;
@@ -74,6 +74,8 @@ pub struct EPD4in2<SPI, CS, BUSY, DC, RST> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
     color: Color,
+    /// Refresh LUT
+    refresh: RefreshLUT,
 }
 
 
@@ -113,7 +115,7 @@ where
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
         self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3A])?;
         
-        self.set_lut(spi)?;
+        self.set_lut(spi, None)?;
 
         Ok(())
     }
@@ -151,6 +153,7 @@ where
         let mut epd = EPD4in2 {
             interface,
             color,
+            refresh: RefreshLUT::FULL
         };
 
         epd.init(spi, delay)?;
@@ -270,7 +273,6 @@ where
         )
     }
 
-    /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())
     fn set_background_color(&mut self, color: Color) {
         self.color = color;
     }
@@ -285,6 +287,27 @@ where
 
     fn height(&self) -> u32 {
         HEIGHT
+    }
+
+    fn set_lut(&mut self, spi: &mut SPI, refresh_rate: Option<RefreshLUT>) -> Result<(), SPI::Error> {
+        if let Some(refresh_lut) = refresh_rate {
+            self.refresh = refresh_lut;
+        }
+        match self.refresh {
+            RefreshLUT::FULL => {
+                self.set_lut_helper(spi, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
+            },
+            RefreshLUT::QUICK => {
+                self.set_lut_helper(
+                    spi,
+                    &LUT_VCOM0_QUICK,
+                    &LUT_WW_QUICK,
+                    &LUT_BW_QUICK,
+                    &LUT_WB_QUICK,
+                    &LUT_BB_QUICK,
+                )
+            }
+        }
     }
 }
 
@@ -321,28 +344,6 @@ where
         self.send_data(spi, &[w as u8])?;
         self.send_data(spi, &[(h >> 8) as u8])?;
         self.send_data(spi, &[h as u8])
-    }
-
-    /// Fill the look-up table for the EPD for a full refresh (slower)
-    pub fn set_lut(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.set_lut_helper(spi, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
-    }
-
-    /// Fill the look-up table for a quick refresh (partial refresh)
-    ///
-    /// WARNING: Might lead to ghosting-effects
-    #[allow(dead_code)]
-    #[deprecated(note = "Might lead to ghosting-effects/problems with your display. Use set_lut instead!")]
-    #[cfg(feature = "epd4in2_fast_update")]
-    pub fn set_lut_quick(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.set_lut_helper(
-            spi,
-            &LUT_VCOM0_QUICK,
-            &LUT_WW_QUICK,
-            &LUT_BW_QUICK,
-            &LUT_WB_QUICK,
-            &LUT_BB_QUICK,
-        )
     }
 
     fn set_lut_helper(

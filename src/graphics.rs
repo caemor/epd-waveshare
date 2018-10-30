@@ -139,7 +139,7 @@ mod tests {
 
     #[test]
     fn buffer_clear() {
-        use epd4in2::constants::{WIDTH, HEIGHT};
+        use epd4in2::{WIDTH, HEIGHT};
 
         let mut buffer = [Color::Black.get_byte_value(); WIDTH as usize / 8 * HEIGHT as usize];
         let mut display = Display::new(WIDTH, HEIGHT, &mut buffer);
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn rotation_overflow() {
-        use epd4in2::constants::{WIDTH, HEIGHT};
+        use epd4in2::{WIDTH, HEIGHT};
         let width = WIDTH as u32;
         let height = HEIGHT as u32;
         test_rotation_overflow(width, height, DisplayRotation::Rotate0);

@@ -63,10 +63,10 @@ pub use epd2in9::graphics::Buffer2in9;
 pub struct EPD2in9<SPI, CS, BUSY, DC, RST> {
     /// SPI
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
-    /// EPD (width, height)
-    //epd: EPD,
     /// Color
     background_color: Color,
+    /// Refresh LUT
+    refresh: RefreshLUT,
 }
 
 impl<SPI, CS, BUSY, DC, RST> EPD2in9<SPI, CS, BUSY, DC, RST>
@@ -107,7 +107,7 @@ where
         //  -> address: x increment, y increment, address counter is updated in x direction
         self.interface.cmd_with_data(spi, Command::DATA_ENTRY_MODE_SETTING, &[0x03])?;
 
-        self.set_lut(spi)
+        self.set_lut(spi, None)
     }
 }
 
@@ -137,6 +137,7 @@ where
         let mut epd = EPD2in9 {
             interface,
             background_color: DEFAULT_BACKGROUND_COLOR,
+            refresh: RefreshLUT::FULL,
         };
 
         epd.init(spi, delay)?;
@@ -206,13 +207,26 @@ where
         )
     }
 
-    /// Sets the backgroundcolor for various commands like [WaveshareInterface::clear_frame()](clear_frame())
     fn set_background_color(&mut self, background_color: Color) {
         self.background_color = background_color;
     }
 
     fn background_color(&self) -> &Color {
         &self.background_color
+    }
+
+    fn set_lut(&mut self, spi: &mut SPI, refresh_rate: Option<RefreshLUT>) -> Result<(), SPI::Error> {
+        if let Some(refresh_lut) = refresh_rate {
+            self.refresh = refresh_lut;
+        }
+        match self.refresh {
+            RefreshLUT::FULL => {
+                self.set_lut_helper(spi, &LUT_FULL_UPDATE)
+            },
+            RefreshLUT::QUICK => {
+                self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE)
+            }
+        }
     }
 }
 
@@ -228,7 +242,7 @@ where
         self.interface.wait_until_idle(false);
     }
 
-    pub(crate) fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         // choose full frame/ram
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
@@ -236,7 +250,7 @@ where
         self.set_ram_counter(spi, 0, 0)
     }
 
-    pub(crate) fn set_ram_area(
+    fn set_ram_area(
         &mut self, 
         spi: &mut SPI,
         start_x: u32,
@@ -261,7 +275,7 @@ where
         )
     }
 
-    pub(crate) fn set_ram_counter(&mut self, spi: &mut SPI, x: u32, y: u32) -> Result<(), SPI::Error> {
+    fn set_ram_counter(&mut self, spi: &mut SPI, x: u32, y: u32) -> Result<(), SPI::Error> {
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface.cmd_with_data(spi, Command::SET_RAM_X_ADDRESS_COUNTER, &[(x >> 3) as u8])?;
@@ -272,21 +286,6 @@ where
         self.wait_until_idle();
         Ok(())
     }
-
-    /// Uses the slower full update
-    pub fn set_lut(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.set_lut_helper(spi, &LUT_FULL_UPDATE)
-    }
-
-    /// Uses the quick partial refresh
-    pub fn set_lut_quick(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE)
-    }
-
-    //TODO: assert length for LUT is exactly 30
-    //fn set_lut_manual(&mut self, buffer: &[u8]) -> Result<(), E> {
-    //    self.set_lut_helper(buffer)
-    //}
 
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         assert!(buffer.len() == 30);
