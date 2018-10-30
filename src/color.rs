@@ -14,7 +14,7 @@ pub enum Color {
 
 impl Color {
     /// Get the color encoding of the color for one bit
-    pub fn get_bit_value(&self) -> u8 {
+    pub fn get_bit_value(self) -> u8 {
         match self {
             Color::White => 1u8,
             Color::Black => 0u8,
@@ -22,7 +22,7 @@ impl Color {
     }
 
     /// Gets a full byte of black or white pixels
-    pub fn get_byte_value(&self) -> u8 {
+    pub fn get_byte_value(self) -> u8 {
         match self {
             Color::White => 0xff,
             Color::Black => 0x00,
@@ -41,7 +41,7 @@ impl Color {
     /// Returns the inverse of the given color. 
     /// 
     /// Black returns White and White returns Black
-    pub fn inverse(&self) -> Color {
+    pub fn inverse(self) -> Color {
         match self {
             Color::White => Color::Black,
             Color::Black => Color::White,
