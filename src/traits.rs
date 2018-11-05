@@ -1,10 +1,9 @@
+use color::Color;
 use core::marker::Sized;
 use hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
-use color::Color;
-
 
 /// All commands need to have this trait which gives the address of the command
 /// which needs to be send via SPI with activated CommandsPin (Data/Command Pin in CommandMode)
@@ -17,8 +16,8 @@ pub enum RefreshLUT {
     /// The "normal" full Lookuptable for the Refresh-Sequence
     FULL,
     /// The quick LUT where not the full refresh sequence is followed.
-    /// This might lead to some 
-    QUICK
+    /// This might lead to some
+    QUICK,
 }
 
 impl Default for RefreshLUT {
@@ -37,20 +36,23 @@ where
 {
     /// This initialises the EPD and powers it up
     ///
-    /// This function is already called from 
+    /// This function is already called from
     ///  - [new()](WaveshareInterface::new())
     ///  - [`wake_up`]
-    /// 
+    ///
     ///
     /// This function calls [reset()](WaveshareInterface::reset()),
     /// so you don't need to call reset your self when trying to wake your device up
     /// after setting it to sleep.
-    fn init<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
+    fn init<DELAY: DelayMs<u8>>(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error>;
 }
 
-
 /// All the functions to interact with the EPDs
-/// 
+///
 /// This trait includes all public functions to use the EPDS
 pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST>
 where
@@ -64,10 +66,15 @@ where
     ///
     /// This already initialises the device. That means [init()](WaveshareInterface::init()) isn't needed directly afterwards
     fn new<DELAY: DelayMs<u8>>(
-        spi: &mut SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY,
+        spi: &mut SPI,
+        cs: CS,
+        busy: BUSY,
+        dc: DC,
+        rst: RST,
+        delay: &mut DELAY,
     ) -> Result<Self, SPI::Error>
     where
-        Self: Sized;  
+        Self: Sized;
 
     /// Let the device enter deep-sleep mode to save power.
     ///
@@ -78,7 +85,11 @@ where
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Wakes the device up from sleep
-    fn wake_up<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;    
+    fn wake_up<DELAY: DelayMs<u8>>(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error>;
 
     /// Sets the backgroundcolor for various commands like [clear_frame()](WaveshareInterface::clear_frame())
     fn set_background_color(&mut self, color: Color);
@@ -98,7 +109,7 @@ where
     /// Transmits partial data to the SRAM of the EPD
     ///
     /// (x,y) is the top left corner
-    /// 
+    ///
     /// BUFFER needs to be of size: width / 8 * height !
     fn update_partial_frame(
         &mut self,
@@ -119,11 +130,15 @@ where
 
     /// Trait for using various Waveforms from different LUTs
     /// E.g. for partial refreshes
-    /// 
-    /// A full refresh is needed after a certain amount of quick refreshes! 
-    /// 
+    ///
+    /// A full refresh is needed after a certain amount of quick refreshes!
+    ///
     /// WARNING: Quick Refresh might lead to ghosting-effects/problems with your display. Especially for the 4.2in Display!
-    /// 
+    ///
     /// If None is used the old value will be loaded on the LUTs once more
-    fn set_lut(&mut self, spi: &mut SPI, refresh_rate: Option<RefreshLUT>) -> Result<(), SPI::Error>;
+    fn set_lut(
+        &mut self,
+        spi: &mut SPI,
+        refresh_rate: Option<RefreshLUT>,
+    ) -> Result<(), SPI::Error>;
 }

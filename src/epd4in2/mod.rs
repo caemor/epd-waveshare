@@ -51,8 +51,8 @@ use hal::{
     digital::*,
 };
 
-use traits::{WaveshareDisplay, InternalWiAdditions, RefreshLUT};
 use interface::DisplayInterface;
+use traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
 
 //The Lookup Tables for the Display
 mod constants; //TODO: Limit to crate::drawing
@@ -66,7 +66,6 @@ use self::command::Command;
 mod graphics;
 pub use self::graphics::Buffer4in2;
 
-
 /// EPD4in2 driver
 ///
 pub struct EPD4in2<SPI, CS, BUSY, DC, RST> {
@@ -78,11 +77,7 @@ pub struct EPD4in2<SPI, CS, BUSY, DC, RST> {
     refresh: RefreshLUT,
 }
 
-
-
-
-impl<SPI, CS, BUSY, DC, RST>
-    InternalWiAdditions<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
     for EPD4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -91,15 +86,24 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    fn init<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn init<DELAY: DelayMs<u8>>(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         // reset the device
         self.interface.reset(delay);
 
         // set the power settings
-        self.interface.cmd_with_data(spi, Command::POWER_SETTING, &[0x03, 0x00, 0x2b, 0x2b, 0xff])?;
+        self.interface.cmd_with_data(
+            spi,
+            Command::POWER_SETTING,
+            &[0x03, 0x00, 0x2b, 0x2b, 0xff],
+        )?;
 
         // start the booster
-        self.interface.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;        
+        self.interface
+            .cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;
 
         // power on
         self.command(spi, Command::POWER_ON)?;
@@ -114,15 +118,14 @@ where
         // TODO: Test these other frequencies
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
         self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3A])?;
-        
+
         self.set_lut(spi, None)?;
 
         Ok(())
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST>
-    WaveshareDisplay<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
     for EPD4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -146,14 +149,21 @@ where
     ///
     /// epd4in2.sleep();
     /// ```
-    fn new<DELAY: DelayMs<u8>>(spi: &mut SPI, cs: CS, busy: BUSY, dc: DC, rst: RST, delay: &mut DELAY) -> Result<Self, SPI::Error> {
+    fn new<DELAY: DelayMs<u8>>(
+        spi: &mut SPI,
+        cs: CS,
+        busy: BUSY,
+        dc: DC,
+        rst: RST,
+        delay: &mut DELAY,
+    ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = EPD4in2 {
             interface,
             color,
-            refresh: RefreshLUT::FULL
+            refresh: RefreshLUT::FULL,
         };
 
         epd.init(spi, delay)?;
@@ -161,12 +171,17 @@ where
         Ok(epd)
     }
 
-    fn wake_up<DELAY: DelayMs<u8>>(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wake_up<DELAY: DelayMs<u8>>(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         self.init(spi, delay)
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.interface.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
+        self.interface
+            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
         self.command(spi, Command::VCM_DC_SETTING)?; // VCOM to 0V
         self.command(spi, Command::PANEL_SETTING)?;
 
@@ -177,7 +192,8 @@ where
 
         self.command(spi, Command::POWER_OFF)?;
         self.wait_until_idle();
-        self.interface.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])
+        self.interface
+            .cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
@@ -185,20 +201,25 @@ where
 
         self.send_resolution(spi)?;
 
-        self.interface.cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
+        self.interface
+            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
 
         //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.interface.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+        self.interface
+            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
 
-        self.interface.cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface
+            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
-        self.interface.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)
+        self.interface
+            .cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)
     }
 
     fn update_partial_frame(
-        &mut self, 
-        spi: &mut SPI,        
+        &mut self,
+        spi: &mut SPI,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -240,8 +261,6 @@ where
         self.command(spi, Command::PARTIAL_OUT)
     }
 
-
-
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.command(spi, Command::DISPLAY_REFRESH)?;
 
@@ -254,14 +273,18 @@ where
 
         let color_value = self.color.get_byte_value();
 
-        self.interface.cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface
+            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
         //TODO: Removal of delay. TEST!
         //self.delay_ms(2);
 
-        self.interface.cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
-        self.interface.data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.interface
+            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)
     }
 
     fn set_background_color(&mut self, color: Color) {
@@ -280,24 +303,26 @@ where
         HEIGHT
     }
 
-    fn set_lut(&mut self, spi: &mut SPI, refresh_rate: Option<RefreshLUT>) -> Result<(), SPI::Error> {
+    fn set_lut(
+        &mut self,
+        spi: &mut SPI,
+        refresh_rate: Option<RefreshLUT>,
+    ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
         match self.refresh {
             RefreshLUT::FULL => {
                 self.set_lut_helper(spi, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
-            },
-            RefreshLUT::QUICK => {
-                self.set_lut_helper(
-                    spi,
-                    &LUT_VCOM0_QUICK,
-                    &LUT_WW_QUICK,
-                    &LUT_BW_QUICK,
-                    &LUT_WB_QUICK,
-                    &LUT_BB_QUICK,
-                )
             }
+            RefreshLUT::QUICK => self.set_lut_helper(
+                spi,
+                &LUT_VCOM0_QUICK,
+                &LUT_WW_QUICK,
+                &LUT_BW_QUICK,
+                &LUT_WB_QUICK,
+                &LUT_BB_QUICK,
+            ),
         }
     }
 }
@@ -318,7 +343,12 @@ where
         self.interface.data(spi, data)
     }
 
-    fn cmd_with_data(&mut self, spi: &mut SPI, command: Command, data: &[u8]) -> Result<(), SPI::Error> {
+    fn cmd_with_data(
+        &mut self,
+        spi: &mut SPI,
+        command: Command,
+        data: &[u8],
+    ) -> Result<(), SPI::Error> {
         self.interface.cmd_with_data(spi, command, data)
     }
 
@@ -347,42 +377,21 @@ where
         lut_bb: &[u8],
     ) -> Result<(), SPI::Error> {
         // LUT VCOM
-        self.cmd_with_data(
-            spi, 
-            Command::LUT_FOR_VCOM,
-            lut_vcom
-        )?;
+        self.cmd_with_data(spi, Command::LUT_FOR_VCOM, lut_vcom)?;
 
         // LUT WHITE to WHITE
-        self.cmd_with_data(
-            spi,
-            Command::LUT_WHITE_TO_WHITE, 
-            lut_ww
-        )?;
+        self.cmd_with_data(spi, Command::LUT_WHITE_TO_WHITE, lut_ww)?;
 
         // LUT BLACK to WHITE
-        self.cmd_with_data(
-            spi,
-            Command::LUT_BLACK_TO_WHITE,
-            lut_bw 
-        )?;
+        self.cmd_with_data(spi, Command::LUT_BLACK_TO_WHITE, lut_bw)?;
 
         // LUT WHITE to BLACK
-        self.cmd_with_data(
-            spi, 
-            Command::LUT_WHITE_TO_BLACK,
-            lut_wb, 
-        )?;
+        self.cmd_with_data(spi, Command::LUT_WHITE_TO_BLACK, lut_wb)?;
 
         // LUT BLACK to BLACK
-        self.cmd_with_data(
-            spi, 
-            Command::LUT_BLACK_TO_BLACK,
-            lut_bb,
-        )
+        self.cmd_with_data(spi, Command::LUT_BLACK_TO_BLACK, lut_bb)
     }
 }
-
 
 #[cfg(test)]
 mod tests {

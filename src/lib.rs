@@ -67,11 +67,10 @@ pub mod epd2in9;
 pub(crate) mod type_a;
 
 pub mod prelude {
-    pub use traits::{WaveshareDisplay, RefreshLUT};
     pub use color::Color;
+    pub use traits::{RefreshLUT, WaveshareDisplay};
     pub use SPI_MODE;
 }
-
 
 extern crate embedded_hal as hal;
 use hal::spi::{Mode, Phase, Polarity};

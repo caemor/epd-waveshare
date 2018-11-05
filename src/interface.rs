@@ -1,8 +1,8 @@
+use core::marker::PhantomData;
 use hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
-use core::marker::PhantomData;
 use traits::Command;
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
@@ -20,8 +20,7 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST> {
     rst: RST,
 }
 
-impl<SPI, CS, BUSY, DC, RST>
-    DisplayInterface<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> DisplayInterface<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -62,13 +61,17 @@ where
     }
 
     /// Basic function for sending [Commands](Command) and the data belonging to it.
-    /// 
+    ///
     /// TODO: directly use ::write? cs wouldn't needed to be changed twice than
-    pub(crate) fn cmd_with_data<T: Command>(&mut self, spi: &mut SPI, command: T, data: &[u8]) -> Result<(), SPI::Error> {
-       self.cmd(spi, command)?;
-       self.data(spi, data)
+    pub(crate) fn cmd_with_data<T: Command>(
+        &mut self,
+        spi: &mut SPI,
+        command: T,
+        data: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.cmd(spi, command)?;
+        self.data(spi, data)
     }
-
 
     /// Basic function for sending the same byte of data (one u8) multiple times over spi
     ///
@@ -89,8 +92,7 @@ where
     }
 
     // spi write helper/abstraction function
-    fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error>
-    {
+    fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
         // activate spi with cs low
         self.cs.set_low();
 
@@ -104,7 +106,7 @@ where
         } else {
             spi.write(data)?;
         }
-        
+
         // deativate spi with cs high
         self.cs.set_high();
 
@@ -125,7 +127,7 @@ where
     /// Most likely there was a mistake with the 2in9 busy connection
     /// //TODO: use the #cfg feature to make this compile the right way for the certain types
     pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
-        // TODO: removal of delay. TEST! 
+        // TODO: removal of delay. TEST!
         //self.delay_ms(1);
         //low: busy, high: idle
         while (is_busy_low && self.busy.is_low()) || (!is_busy_low && self.busy.is_high()) {
