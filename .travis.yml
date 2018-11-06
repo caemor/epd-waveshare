@@ -95,11 +95,13 @@ install:
   - rustup override set nightly
   - rustup target add thumbv7m-none-eabi
   - rustup component add clippy-preview
+  - rustup component add rustfmt-preview
 
   #TODO: remove -A clippy::new_ret_no_self when new version of clippy gets released!
 script:
-  - cargo check
+  - cargo fmt --all -- --check
   - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
+  - cargo check  
   - cargo test --all-features --release
   - cargo doc --all-features --release
   - cd examples/embedded_linux_epd4in2 && cargo check && cd ../../
