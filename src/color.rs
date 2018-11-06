@@ -1,6 +1,5 @@
 //! B/W Color for EPDs
 
-
 /// Only for the Black/White-Displays
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
@@ -34,12 +33,15 @@ impl Color {
         match val {
             0 => Color::Black,
             1 => Color::White,
-            e => panic!("DisplayColor only parses 0 and 1 (Black and White) and not `{}`", e),
+            e => panic!(
+                "DisplayColor only parses 0 and 1 (Black and White) and not `{}`",
+                e
+            ),
         }
     }
 
-    /// Returns the inverse of the given color. 
-    /// 
+    /// Returns the inverse of the given color.
+    ///
     /// Black returns White and White returns Black
     pub fn inverse(self) -> Color {
         match self {
@@ -60,8 +62,6 @@ impl From<u8> for Color {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -79,7 +79,7 @@ mod tests {
             extern crate std;
             let result = std::panic::catch_unwind(|| Color::from(val));
             assert!(result.is_err());
-        }        
+        }
     }
 
     #[test]

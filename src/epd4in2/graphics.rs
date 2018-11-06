@@ -1,9 +1,9 @@
-use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
+use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 
 /// Full size buffer for use with the 4in2 EPD
-/// 
+///
 /// Can also be manuall constructed:
-/// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]` 
+/// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]`
 pub struct Buffer4in2 {
     pub buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
 }
@@ -11,24 +11,21 @@ pub struct Buffer4in2 {
 impl Default for Buffer4in2 {
     fn default() -> Self {
         Buffer4in2 {
-            buffer: [
-                DEFAULT_BACKGROUND_COLOR.get_byte_value();
-                WIDTH as usize * HEIGHT as usize / 8                
-            ]
+            buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value();
+                WIDTH as usize * HEIGHT as usize / 8],
         }
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use epd4in2;
-    use graphics::{DisplayRotation, Display};
-    use embedded_graphics::coord::Coord;
-    use embedded_graphics::primitives::Line;
     use color::Color;
+    use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;
+    use embedded_graphics::primitives::Line;
+    use epd4in2;
+    use graphics::{Display, DisplayRotation};
 
     // test buffer length
     #[test]
@@ -37,7 +34,7 @@ mod tests {
         let display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
         assert_eq!(display.buffer().len(), 15000);
     }
-    
+
     // test default background color on all bytes
     #[test]
     fn graphics_default() {
@@ -45,7 +42,10 @@ mod tests {
         let display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
         use epd4in2;
         for &byte in display.buffer() {
-            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+            assert_eq!(
+                byte,
+                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
+            );
         }
     }
 
@@ -58,13 +58,16 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+            assert_eq!(
+                byte,
+                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
+            );
         }
     }
 
@@ -78,13 +81,16 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+            assert_eq!(
+                byte,
+                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
+            );
         }
     }
 
@@ -98,7 +104,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         extern crate std;
@@ -107,9 +113,11 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+            assert_eq!(
+                byte,
+                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
+            );
         }
-        
     }
 
     #[test]
@@ -122,7 +130,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         extern crate std;
@@ -131,9 +139,10 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(byte, epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value());
+            assert_eq!(
+                byte,
+                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
+            );
         }
-        
     }
 }
-

@@ -1,8 +1,36 @@
-# eink-waveshare-rs [![Build Status](https://travis-ci.com/Caemor/eink-waveshare-rs.svg?branch=master)](https://travis-ci.com/Caemor/eink-waveshare-rs)
+[![Build Status](https://travis-ci.com/caemor/epd-waveshare.svg?branch=master)](https://travis-ci.com/caemor/epd-waveshare)
 
 This library contains a driver for E-Paper Modules  from Waveshare.
 
 It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) library for the optional graphics support.
+
+## Examples
+
+There are multiple examples in the examples folder. For more infos about the examples see the seperate Readme [there](/examples/Readme.md).
+
+```Rust
+// Setup the epd
+let mut epd = EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay)?;
+
+// Setup the graphics
+let mut buffer = Buffer4in2::default();
+let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+
+// Draw some text
+display.draw(
+    Font12x16::render_str("Hello Rust!")
+        .with_stroke(Some(Color::Black))
+        .with_fill(Some(Color::White))
+        .translate(Coord::new(5, 50))
+        .into_iter(),
+);
+
+// Transfer the frame data to the epd
+epd.update_frame(&mut spi, &display.buffer())?;
+
+// Display the frame on the epd
+epd.display_frame(&mut spi)?;
+```
 
 ## (Supported) Devices
 
@@ -64,9 +92,7 @@ They are also called A and B, but you shouldn't get confused and mix it with the
 
 - [ ] improve the partial drawing/check the timings/timing improvements/....
 
-## Examples
 
-There are multiple examples in the examples folder. For more infos see the seperate Readme [there](/examples/Readme.md):
 
 
 

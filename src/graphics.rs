@@ -3,7 +3,7 @@
 use color::Color;
 use embedded_graphics::prelude::*;
 
-/// Displayrotation 
+/// Displayrotation
 #[derive(Clone, Copy)]
 pub enum DisplayRotation {
     /// No rotation
@@ -60,14 +60,12 @@ impl<'a> Display<'a> {
     }
 }
 
-
 impl<'a> Drawing<Color> for Display<'a> {
     fn draw<T>(&mut self, item_pixels: T)
     where
-        T: Iterator<Item = Pixel<Color>>
+        T: Iterator<Item = Pixel<Color>>,
     {
-        for Pixel(UnsignedCoord(x,y), color) in item_pixels {
-
+        for Pixel(UnsignedCoord(x, y), color) in item_pixels {
             if outside_display(x, y, self.width, self.height, self.rotation) {
                 continue;
             }
@@ -84,11 +82,10 @@ impl<'a> Drawing<Color> for Display<'a> {
                 Color::White => {
                     self.buffer[index] |= bit;
                 }
-            }            
+            }
         }
     }
 }
-
 
 fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> bool {
     match rotation {
@@ -96,16 +93,18 @@ fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRot
             if x >= width || y >= height {
                 return true;
             }
-        },
+        }
         DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => {
             if y >= width || x >= height {
                 return true;
-            } 
+            }
         }
     }
     false
 }
 
+#[rustfmt::skip]
+//returns index position in the u8-slice and the bit-position inside that u8
 fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
     match rotation {
         DisplayRotation::Rotate0 => (
@@ -127,19 +126,17 @@ fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) 
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
-    use super::{DisplayRotation, outside_display, rotation, Display};
+    use super::{outside_display, rotation, Display, DisplayRotation};
     use color::Color;
     use embedded_graphics::coord::Coord;
-    use embedded_graphics::primitives::Line;
     use embedded_graphics::prelude::*;
+    use embedded_graphics::primitives::Line;
 
     #[test]
     fn buffer_clear() {
-        use epd4in2::constants::{WIDTH, HEIGHT};
+        use epd4in2::{HEIGHT, WIDTH};
 
         let mut buffer = [Color::Black.get_byte_value(); WIDTH as usize / 8 * HEIGHT as usize];
         let mut display = Display::new(WIDTH, HEIGHT, &mut buffer);
@@ -152,25 +149,24 @@ mod tests {
 
         for &byte in display.buffer.iter() {
             assert_eq!(byte, Color::White.get_byte_value());
-        }        
+        }
     }
-
 
     #[test]
     fn rotation_overflow() {
-        use epd4in2::constants::{WIDTH, HEIGHT};
+        use epd4in2::{HEIGHT, WIDTH};
         let width = WIDTH as u32;
         let height = HEIGHT as u32;
         test_rotation_overflow(width, height, DisplayRotation::Rotate0);
         test_rotation_overflow(width, height, DisplayRotation::Rotate90);
         test_rotation_overflow(width, height, DisplayRotation::Rotate180);
         test_rotation_overflow(width, height, DisplayRotation::Rotate270);
-        
     }
 
     fn test_rotation_overflow(width: u32, height: u32, rotation2: DisplayRotation) {
         let max_value = width / 8 * height;
-        for x in 0..(width + height) { //limit x because it runs too long 
+        for x in 0..(width + height) {
+            //limit x because it runs too long
             for y in 0..(u32::max_value()) {
                 if outside_display(x, y, width, height, rotation2) {
                     break;
@@ -182,14 +178,12 @@ mod tests {
         }
     }
 
-
-
     #[test]
     fn graphics_rotation_0() {
-        use epd2in9::{DEFAULT_BACKGROUND_COLOR};        
+        use epd2in9::DEFAULT_BACKGROUND_COLOR;
         let width = 128;
         let height = 296;
-        
+
         let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
         let mut display = Display::new(width, height, &mut buffer);
 
@@ -198,7 +192,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         assert_eq!(buffer[0], Color::Black.get_byte_value());
@@ -210,10 +204,10 @@ mod tests {
 
     #[test]
     fn graphics_rotation_90() {
-        use epd2in9::{DEFAULT_BACKGROUND_COLOR};        
+        use epd2in9::DEFAULT_BACKGROUND_COLOR;
         let width = 128;
         let height = 296;
-        
+
         let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
         let mut display = Display::new(width, height, &mut buffer);
 
@@ -224,7 +218,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         extern crate std;

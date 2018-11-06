@@ -1,20 +1,20 @@
 [package]
-authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
+authors = ["Christoph Groß <caemor@mailbox.org>"]
 categories = ["embedded", "hardware-support", "no-std"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare"
-documentation = "https://docs.rs/eink-waveshare-rs"
-homepage = "https://github.com/Caemor/eink-waveshare-rs"
-keywords = ["ePaper", "Display"]
+documentation = "https://docs.rs/epd-waveshare"
+homepage = "https://github.com/caemor/epd-waveshare"
+keywords = ["ePaper", "Display", "epd"]
 license = "ISC"
-name = "eink_waveshare_rs"
+name = "epd-waveshare"
 readme = "README.md"
-repository = "https://github.com/Caemor/eink-waveshare-rs.git"
-version = "0.1.2"
+repository = "https://github.com/Caemor/epd_waveshare.git"
+version = "0.2.0"
 
 [badges]
 # Travis CI: `repository` in format "<user>/<project>" is required.
 # `branch` is optional; default is `master`
-travis-ci = { repository = "Caemor/eink-waveshare-rs" }
+travis-ci = { repository = "caemor/epd-waveshare" }
 
 
 [features]
@@ -24,8 +24,6 @@ graphics = ["embedded-graphics"]
 epd1in54 = []
 epd2in9 = []
 epd4in2 = []
-# Activates the fast LUT for EPD4in2
-epd4in2_fast_update = []
 
 [dependencies.embedded-graphics]
 optional = true

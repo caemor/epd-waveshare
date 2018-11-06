@@ -3,7 +3,9 @@
 
 dist: trusty
 language: rust
-rust: 
+rust:
+  - stable
+  - beta
   - nightly
 sudo: required
 
@@ -12,6 +14,8 @@ sudo: required
 
 
 matrix:
+  allow_failures:
+  #  - nightly
   # TODO These are all the build jobs. Adjust as necessary. Comment out what you
   # don't need
   include:
@@ -95,15 +99,18 @@ install:
   - rustup override set nightly
   - rustup target add thumbv7m-none-eabi
   - rustup component add clippy-preview
+  - rustup component add rustfmt-preview
 
   #TODO: remove -A clippy::new_ret_no_self when new version of clippy gets released!
 script:
-  - cargo check
+  - cargo fmt --all -- --check
   - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
+  - cargo check  
   - cargo test --all-features --release
   - cargo doc --all-features --release
-  - cd examples/embedded_linux_epd4in2 && cargo check && cd ../../
-  - cd examples/embedded_linux_epd1in54 && cargo check && cd ../../
+  - cd examples/embedded_linux_epd4in2 && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/embedded_linux_epd1in54 && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/embedded_linux_epd2in9 && cargo fmt --all -- --check && cargo check && cd ../../
   # - cd examples/stm32f3discovery && cargo check --target thumbv7m-none-eabi && cd ../../
   #- cd ../f3_stm32f30x && cargo build
 

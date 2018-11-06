@@ -1,9 +1,9 @@
-use epd1in54::{DEFAULT_BACKGROUND_COLOR, WIDTH, HEIGHT};
+use epd1in54::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 
 /// Full size buffer for use with the 1in54 EPD
-/// 
+///
 /// Can also be manuall constructed:
-/// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]` 
+/// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]`
 pub struct Buffer1in54BlackWhite {
     pub buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
 }
@@ -11,23 +11,20 @@ pub struct Buffer1in54BlackWhite {
 impl Default for Buffer1in54BlackWhite {
     fn default() -> Self {
         Buffer1in54BlackWhite {
-            buffer: [
-                DEFAULT_BACKGROUND_COLOR.get_byte_value();
-                WIDTH as usize * HEIGHT as usize / 8                
-            ]
+            buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value();
+                WIDTH as usize * HEIGHT as usize / 8],
         }
-    }    
+    }
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use graphics::{DisplayRotation, Display};
-    use embedded_graphics::coord::Coord;
-    use embedded_graphics::primitives::Line;
     use color::Color;
+    use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;
+    use embedded_graphics::primitives::Line;
+    use graphics::{Display, DisplayRotation};
 
     // test buffer length
     #[test]
@@ -36,7 +33,7 @@ mod tests {
         let display = Display::new(WIDTH, HEIGHT, &mut display1in54.buffer);
         assert_eq!(display.buffer().len(), 5000);
     }
-    
+
     // test default background color on all bytes
     #[test]
     fn graphics_default() {
@@ -56,7 +53,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         assert_eq!(buffer[0], Color::Black.get_byte_value());
@@ -76,7 +73,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         assert_eq!(buffer[0], Color::Black.get_byte_value());
@@ -96,7 +93,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         extern crate std;
@@ -107,7 +104,6 @@ mod tests {
         for &byte in buffer.iter().skip(1) {
             assert_eq!(byte, DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
-        
     }
 
     #[test]
@@ -120,7 +116,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         extern crate std;
@@ -131,6 +127,5 @@ mod tests {
         for &byte in buffer.iter().skip(1) {
             assert_eq!(byte, DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
-        
     }
 }
