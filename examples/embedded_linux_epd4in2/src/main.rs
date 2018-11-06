@@ -76,11 +76,6 @@ fn run() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     
- 
-    
-
-    //TODO: wait for Digital::InputPin
-    //fixed currently with the HackInputPin, see further above
     let mut epd4in2 = EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     println!("Test all the rotations");
