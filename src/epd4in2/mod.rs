@@ -55,7 +55,7 @@ use interface::DisplayInterface;
 use traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
 
 //The Lookup Tables for the Display
-mod constants; //TODO: Limit to crate::drawing
+mod constants;
 pub use self::constants::*;
 
 use color::Color;
@@ -277,9 +277,6 @@ where
             .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
-
-        //TODO: Removal of delay. TEST!
-        //self.delay_ms(2);
 
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
