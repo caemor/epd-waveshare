@@ -1,12 +1,12 @@
 [package]
-authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
+authors = ["Christoph Groß <caemor@mailbox.org>"]
 categories = ["embedded", "hardware-support", "no-std"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare"
-documentation = "https://docs.rs/epd_waveshare"
-homepage = "https://github.com/Caemor/epd_waveshare"
+documentation = "https://docs.rs/epd-waveshare"
+homepage = "https://github.com/caemor/epd-waveshare"
 keywords = ["ePaper", "Display", "epd"]
 license = "ISC"
-name = "epd_waveshare"
+name = "epd-waveshare"
 readme = "README.md"
 repository = "https://github.com/Caemor/epd_waveshare.git"
 version = "0.2.0"
@@ -14,7 +14,7 @@ version = "0.2.0"
 [badges]
 # Travis CI: `repository` in format "<user>/<project>" is required.
 # `branch` is optional; default is `master`
-travis-ci = { repository = "Caemor/epd_waveshare" }
+travis-ci = { repository = "caemor/epd-waveshare" }
 
 
 [features]

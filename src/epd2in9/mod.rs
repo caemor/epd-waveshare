@@ -5,7 +5,7 @@
 //! # Example for the 2.9 in E-Ink Display
 //!
 //! ```ignore
-//! use eink_waveshare_rs::{
+//! use epd_waveshare::{
 //!     epd2in9::{EPD2in9, Buffer2in9},
 //!     graphics::{Display, DisplayRotation},
 //!     prelude::*,
@@ -221,7 +221,7 @@ where
 
         // clear the ram with the background color
         let color = self.background_color.get_byte_value();
-        
+
         self.interface.cmd(spi, Command::WRITE_RAM)?;
         self.interface.data_x_times(spi, color, WIDTH / 8 * HEIGHT)
     }

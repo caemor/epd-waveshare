@@ -6,7 +6,7 @@ authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
 [dependencies]
 
 ## The Only difference between this one and the one without default features sizewise seems to be a different .d-file Size (dependencies-file)
-#eink_waveshare_rs = { path = "../../"}
+#epd_waveshare = { path = "../../"}
 epd_waveshare = { path = "../../", default-features = false, features = ["epd4in2", "graphics"]}
 
 linux-embedded-hal = "0.2.1"

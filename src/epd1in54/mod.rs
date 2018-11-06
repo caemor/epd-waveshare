@@ -3,7 +3,7 @@
 //! # Example for the 1.54 in E-Ink Display
 //!
 //! ```ignore
-//! use eink_waveshare_rs::{
+//! use epd_waveshare::{
 //!     epd1in54::{EPD1in54, Buffer1in54},
 //!     graphics::{Display, DisplayRotation},
 //!     prelude::*,
