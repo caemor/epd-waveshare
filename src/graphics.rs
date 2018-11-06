@@ -3,7 +3,7 @@
 use color::Color;
 use embedded_graphics::prelude::*;
 
-/// Displayrotation 
+/// Displayrotation
 #[derive(Clone, Copy)]
 pub enum DisplayRotation {
     /// No rotation
@@ -82,7 +82,7 @@ impl<'a> Drawing<Color> for Display<'a> {
                 Color::White => {
                     self.buffer[index] |= bit;
                 }
-            }            
+            }
         }
     }
 }
@@ -97,12 +97,14 @@ fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRot
         DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => {
             if y >= width || x >= height {
                 return true;
-            } 
+            }
         }
     }
     false
 }
 
+#[rustfmt::skip]
+//returns index position in the u8-slice and the bit-position inside that u8
 fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
     match rotation {
         DisplayRotation::Rotate0 => (
@@ -147,7 +149,7 @@ mod tests {
 
         for &byte in display.buffer.iter() {
             assert_eq!(byte, Color::White.get_byte_value());
-        }        
+        }
     }
 
     #[test]
@@ -181,7 +183,7 @@ mod tests {
         use epd2in9::DEFAULT_BACKGROUND_COLOR;
         let width = 128;
         let height = 296;
-        
+
         let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
         let mut display = Display::new(width, height, &mut buffer);
 
@@ -190,7 +192,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         assert_eq!(buffer[0], Color::Black.get_byte_value());
@@ -205,7 +207,7 @@ mod tests {
         use epd2in9::DEFAULT_BACKGROUND_COLOR;
         let width = 128;
         let height = 296;
-        
+
         let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
         let mut display = Display::new(width, height, &mut buffer);
 
@@ -216,7 +218,7 @@ mod tests {
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
         );
-        
+
         let buffer = display.buffer();
 
         extern crate std;
