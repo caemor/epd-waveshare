@@ -1,4 +1,4 @@
-use epd1in54::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::epd1in54::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 
 /// Full size buffer for use with the 1in54 EPD
 ///
@@ -20,11 +20,11 @@ impl Default for Buffer1in54BlackWhite {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use color::Color;
+    use crate::color::Color;
     use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;
     use embedded_graphics::primitives::Line;
-    use graphics::{Display, DisplayRotation};
+    use crate::graphics::{Display, DisplayRotation};
 
     // test buffer length
     #[test]

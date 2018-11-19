@@ -1,6 +1,6 @@
 //! Graphics Support for EPDs
 
-use color::Color;
+use crate::color::Color;
 use embedded_graphics::prelude::*;
 
 /// Displayrotation
@@ -129,14 +129,14 @@ fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) 
 #[cfg(test)]
 mod tests {
     use super::{outside_display, rotation, Display, DisplayRotation};
-    use color::Color;
+    use crate::color::Color;
     use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;
     use embedded_graphics::primitives::Line;
 
     #[test]
     fn buffer_clear() {
-        use epd4in2::{HEIGHT, WIDTH};
+        use crate::epd4in2::{HEIGHT, WIDTH};
 
         let mut buffer = [Color::Black.get_byte_value(); WIDTH as usize / 8 * HEIGHT as usize];
         let mut display = Display::new(WIDTH, HEIGHT, &mut buffer);
@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn rotation_overflow() {
-        use epd4in2::{HEIGHT, WIDTH};
+        use crate::epd4in2::{HEIGHT, WIDTH};
         let width = WIDTH as u32;
         let height = HEIGHT as u32;
         test_rotation_overflow(width, height, DisplayRotation::Rotate0);
@@ -180,7 +180,7 @@ mod tests {
 
     #[test]
     fn graphics_rotation_0() {
-        use epd2in9::DEFAULT_BACKGROUND_COLOR;
+        use crate::epd2in9::DEFAULT_BACKGROUND_COLOR;
         let width = 128;
         let height = 296;
 
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn graphics_rotation_90() {
-        use epd2in9::DEFAULT_BACKGROUND_COLOR;
+        use crate::epd2in9::DEFAULT_BACKGROUND_COLOR;
         let width = 128;
         let height = 296;
 

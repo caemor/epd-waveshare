@@ -38,24 +38,24 @@ pub const HEIGHT: u32 = 200;
 //const DPI: u16 = 184;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
-use hal::{
+use crate::hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
 
-use type_a::{
+use crate::type_a::{
     command::Command,
     constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE},
 };
 
-use color::Color;
+use crate::color::Color;
 
-use traits::{RefreshLUT, WaveshareDisplay};
+use crate::traits::{RefreshLUT, WaveshareDisplay};
 
-use interface::DisplayInterface;
+use crate::interface::DisplayInterface;
 
 mod graphics;
-pub use epd1in54::graphics::Buffer1in54BlackWhite as Buffer1in54;
+pub use crate::epd1in54::graphics::Buffer1in54BlackWhite as Buffer1in54;
 
 /// EPD1in54 driver
 ///
