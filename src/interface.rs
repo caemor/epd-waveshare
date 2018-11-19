@@ -1,5 +1,5 @@
 use core::marker::PhantomData;
-use crate::hal::{
+use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };

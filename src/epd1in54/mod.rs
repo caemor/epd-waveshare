@@ -38,7 +38,7 @@ pub const HEIGHT: u32 = 200;
 //const DPI: u16 = 184;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
-use crate::hal::{
+use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };

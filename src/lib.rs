@@ -41,8 +41,7 @@
 //!
 #![no_std]
 
-#[cfg(feature = "graphics")]
-extern crate embedded_graphics;
+
 
 #[cfg(feature = "graphics")]
 pub mod graphics;
@@ -72,8 +71,7 @@ pub mod prelude {
     pub use crate::SPI_MODE;
 }
 
-extern crate embedded_hal as hal;
-use crate::hal::spi::{Mode, Phase, Polarity};
+use embedded_hal::spi::{Mode, Phase, Polarity};
 
 /// SPI mode -
 /// For more infos see [Requirements: SPI](index.html#spi)

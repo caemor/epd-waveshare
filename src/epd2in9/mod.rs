@@ -39,7 +39,7 @@ pub const WIDTH: u32 = 128;
 pub const HEIGHT: u32 = 296;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
-use crate::hal::{
+use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };

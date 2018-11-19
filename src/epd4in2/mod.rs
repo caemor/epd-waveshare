@@ -46,7 +46,7 @@
 //!
 //! BE CAREFUL! The screen can get ghosting/burn-ins through the Partial Fast Update Drawing.
 
-use crate::hal::{
+use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
