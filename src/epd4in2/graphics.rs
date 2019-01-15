@@ -21,11 +21,11 @@ impl Default for Buffer4in2 {
 mod tests {
     use super::*;
     use crate::color::Color;
+    use crate::epd4in2;
+    use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;
     use embedded_graphics::primitives::Line;
-    use crate::epd4in2;
-    use crate::graphics::{Display, DisplayRotation};
 
     // test buffer length
     #[test]

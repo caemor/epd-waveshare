@@ -41,8 +41,6 @@
 //!
 #![no_std]
 
-
-
 #[cfg(feature = "graphics")]
 pub mod graphics;
 

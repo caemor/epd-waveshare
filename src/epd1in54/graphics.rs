@@ -21,10 +21,10 @@ impl Default for Buffer1in54BlackWhite {
 mod tests {
     use super::*;
     use crate::color::Color;
+    use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;
     use embedded_graphics::primitives::Line;
-    use crate::graphics::{Display, DisplayRotation};
 
     // test buffer length
     #[test]
