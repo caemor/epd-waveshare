@@ -56,7 +56,12 @@ use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
 
 //The Lookup Tables for the Display
 mod constants;
-pub use self::constants::*;
+use constants::*;
+
+pub const WIDTH: u32 = 400;
+pub const HEIGHT: u32 = 300;
+pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+const IS_BUSY_LOW: bool = true;
 
 use crate::color::Color;
 
@@ -322,6 +327,10 @@ where
             ),
         }
     }
+
+    fn is_busy(&self) -> bool {
+        self.interface.is_busy(IS_BUSY_LOW)
+    }
 }
 
 impl<SPI, CS, BUSY, DC, RST> EPD4in2<SPI, CS, BUSY, DC, RST>
@@ -350,7 +359,7 @@ where
     }
 
     fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(true)
+        self.interface.wait_until_idle(IS_BUSY_LOW)
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {

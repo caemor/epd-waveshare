@@ -38,6 +38,7 @@
 pub const WIDTH: u32 = 128;
 pub const HEIGHT: u32 = 296;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
@@ -247,6 +248,10 @@ where
             RefreshLUT::QUICK => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
         }
     }
+
+    fn is_busy(&self) -> bool {
+        self.interface.is_busy(IS_BUSY_LOW)
+    }
 }
 
 impl<SPI, CS, BUSY, DC, RST> EPD2in9<SPI, CS, BUSY, DC, RST>
@@ -258,7 +263,7 @@ where
     RST: OutputPin,
 {
     fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(false);
+        self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {

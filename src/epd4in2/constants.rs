@@ -1,9 +1,3 @@
-use crate::color::Color;
-
-pub const WIDTH: u32 = 400;
-pub const HEIGHT: u32 = 300;
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
-
 #[rustfmt::skip]
 pub(crate) const LUT_VCOM0: [u8; 44] = [
 0x00, 0x17, 0x00, 0x00, 0x00, 0x02,        

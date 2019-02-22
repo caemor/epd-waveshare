@@ -1,4 +1,4 @@
-use crate::epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::epd4in2::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 
 /// Full size buffer for use with the 4in2 EPD
 ///
@@ -42,10 +42,7 @@ mod tests {
         let display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
         use crate::epd4in2;
         for &byte in display.buffer() {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 
@@ -64,10 +61,7 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 
@@ -87,10 +81,7 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 
@@ -113,10 +104,7 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 
@@ -139,10 +127,7 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 }

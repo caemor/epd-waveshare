@@ -127,14 +127,31 @@ where
     /// Most likely there was a mistake with the 2in9 busy connection
     /// //TODO: use the #cfg feature to make this compile the right way for the certain types
     pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
-        // TODO: removal of delay. TEST!
+        //tested: worked without the delay for all tested devices
         //self.delay_ms(1);
-        //low: busy, high: idle
-        while (is_busy_low && self.busy.is_low()) || (!is_busy_low && self.busy.is_high()) {
-            //TODO: REMOVAL of DELAY: it's only waiting for the signal anyway and should continue work asap
+
+        while self.is_busy(is_busy_low) {
+            //tested: REMOVAL of DELAY: it's only waiting for the signal anyway and should continue work asap
             //old: shorten the time? it was 100 in the beginning
             //self.delay_ms(5);
         }
+    }
+
+    /// Checks if device is still busy
+    ///  
+    /// This is normally handled by the more complicated commands themselves,
+    /// but in the case you send data and commands directly you might need to check
+    /// if the device is still busy
+    ///
+    /// is_busy_low
+    ///
+    ///  - TRUE for epd4in2, epd2in13, epd2in7, epd5in83, epd7in5
+    ///  - FALSE for epd2in9, epd1in54 (for all Display Type A ones?)
+    ///
+    /// Most likely there was a mistake with the 2in9 busy connection
+    /// //TODO: use the #cfg feature to make this compile the right way for the certain types
+    pub(crate) fn is_busy(&self, is_busy_low: bool) -> bool {
+        (is_busy_low && self.busy.is_low()) || (!is_busy_low && self.busy.is_high())
     }
 
     /// Resets the device.

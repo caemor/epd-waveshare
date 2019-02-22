@@ -141,4 +141,11 @@ where
         spi: &mut SPI,
         refresh_rate: Option<RefreshLUT>,
     ) -> Result<(), SPI::Error>;
+
+    /// Checks if the display is busy transmitting data
+    ///
+    /// This is normally handled by the more complicated commands themselves,
+    /// but in the case you send data and commands directly you might need to check
+    /// if the device is still busy
+    fn is_busy(&self) -> bool;
 }
