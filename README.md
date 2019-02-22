@@ -1,10 +1,12 @@
 [![Build Status](https://travis-ci.com/caemor/epd-waveshare.svg?branch=master)](https://travis-ci.com/caemor/epd-waveshare)
 
-This library contains a driver for E-Paper Modules from Waveshare.
+This library contains a driver for E-Paper Modules from Waveshare (which are basically the same as the Dalian Good Display ones).
 
 It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) library for the optional graphics support.
 
 A 2018-edition compatible version (Rust 1.31+) is needed.
+
+Other similiar libraries with support for much more displays are [u8g2](https://github.com/olikraus/u8g2) and [GxEPD](https://github.com/ZinggJM/GxEPD) for arduino.
 
 ## Examples
 

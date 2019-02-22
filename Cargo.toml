@@ -1,10 +1,10 @@
 [package]
 authors = ["Christoph Groß <caemor@mailbox.org>"]
 categories = ["embedded", "hardware-support", "no-std"]
-description = "An embedded-hal based driver for ePaper displays from Waveshare"
+description = "An embedded-hal based driver for ePaper displays from Waveshare formerly published as eink-waveshare-rs"
 documentation = "https://docs.rs/epd-waveshare"
 homepage = "https://github.com/caemor/epd-waveshare"
-keywords = ["ePaper", "Display", "epd"]
+keywords = ["ePaper", "Display", "epd", "eink"]
 license = "ISC"
 name = "epd-waveshare"
 readme = "README.md"
