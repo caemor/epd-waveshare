@@ -39,24 +39,24 @@ pub const WIDTH: u32 = 128;
 pub const HEIGHT: u32 = 296;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
-use hal::{
+use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };
 
-use type_a::{
+use crate::type_a::{
     command::Command,
     constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE},
 };
 
-use color::Color;
+use crate::color::Color;
 
-use traits::*;
+use crate::traits::*;
 
-use interface::DisplayInterface;
+use crate::interface::DisplayInterface;
 
 mod graphics;
-pub use epd2in9::graphics::Buffer2in9;
+pub use crate::epd2in9::graphics::Buffer2in9;
 
 /// EPD2in9 driver
 ///

@@ -1,4 +1,4 @@
-use epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 
 /// Full size buffer for use with the 4in2 EPD
 ///
@@ -20,12 +20,12 @@ impl Default for Buffer4in2 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use color::Color;
+    use crate::color::Color;
+    use crate::epd4in2;
+    use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;
     use embedded_graphics::primitives::Line;
-    use epd4in2;
-    use graphics::{Display, DisplayRotation};
 
     // test buffer length
     #[test]
@@ -40,7 +40,7 @@ mod tests {
     fn graphics_default() {
         let mut display4in2 = Buffer4in2::default();
         let display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
-        use epd4in2;
+        use crate::epd4in2;
         for &byte in display.buffer() {
             assert_eq!(
                 byte,

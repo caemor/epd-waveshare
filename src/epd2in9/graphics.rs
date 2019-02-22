@@ -1,4 +1,4 @@
-use epd2in9::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::epd2in9::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 
 /// Full size buffer for use with the 2in9 EPD
 ///
@@ -20,7 +20,7 @@ impl Default for Buffer2in9 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use graphics::Display;
+    use crate::graphics::Display;
 
     // test buffer length
     #[test]

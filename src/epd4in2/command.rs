@@ -1,5 +1,5 @@
 //! SPI Commands for the Waveshare 4.2" E-Ink Display
-use traits;
+use crate::traits;
 /// EPD4IN2 commands
 ///
 /// Should rarely (never?) be needed directly.
@@ -165,7 +165,7 @@ impl traits::Command for Command {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use traits::Command as CommandTrait;
+    use crate::traits::Command as CommandTrait;
 
     #[test]
     fn command_addr() {

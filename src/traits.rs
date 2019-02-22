@@ -1,6 +1,6 @@
-use color::Color;
+use crate::color::Color;
 use core::marker::Sized;
-use hal::{
+use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
 };

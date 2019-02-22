@@ -1,4 +1,4 @@
-use color::Color;
+use crate::color::Color;
 
 pub const WIDTH: u32 = 400;
 pub const HEIGHT: u32 = 300;

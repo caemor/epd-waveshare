@@ -1,8 +1,10 @@
 [![Build Status](https://travis-ci.com/caemor/epd-waveshare.svg?branch=master)](https://travis-ci.com/caemor/epd-waveshare)
 
-This library contains a driver for E-Paper Modules  from Waveshare.
+This library contains a driver for E-Paper Modules from Waveshare.
 
 It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) library for the optional graphics support.
+
+A 2018-edition compatible version (Rust 1.31+) is needed.
 
 ## Examples
 
