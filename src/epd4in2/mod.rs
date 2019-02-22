@@ -56,7 +56,7 @@ use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
 
 //The Lookup Tables for the Display
 mod constants;
-use constants::*;
+use crate::epd4in2::constants::*;
 
 pub const WIDTH: u32 = 400;
 pub const HEIGHT: u32 = 300;
