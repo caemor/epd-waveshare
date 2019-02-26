@@ -22,23 +22,29 @@ impl Default for DisplayRotation {
     }
 }
 
-
-pub trait Display {
+pub trait Display: Drawing<Color> {
+    /// Clears the buffer of the display with the chosen background color
     fn clear_buffer(&mut self, background_color: Color) {
         for elem in self.get_mut_buffer().iter_mut() {
             *elem = background_color.get_byte_value();
         }
     }
 
+    /// Returns the buffer
     fn buffer(&self) -> &[u8];
 
-    fn get_mut_buffer<'a>(&'a mut self) -> &'a mut [u8];
+    /// Returns a mutable buffer
+    fn get_mut_buffer(&mut self) -> &mut [u8];
 
     /// Sets the rotation of the display
     fn set_rotation(&mut self, rotation: DisplayRotation);
+
     /// Get the current rotation of the display
     fn rotation(&self) -> DisplayRotation;
 
+    /// Helperfunction for the Embedded Graphics draw trait
+    /// 
+    /// Becomes uneccesary when const_generics become stablised
     fn draw_helper<T>(&mut self, width: u32, height: u32, item_pixels: T)
     where
         T: Iterator<Item = Pixel<Color>>,
@@ -54,8 +60,6 @@ pub trait Display {
             let (index, bit) = find_position(x, y, width, height, rotation);
             let index = index as usize;
 
-
-
             // "Draw" the Pixel on that bit
             match color {
                 Color::Black => {
@@ -70,9 +74,27 @@ pub trait Display {
 }
 
 /// A variable Display without a predefined buffer
-/// 
+///
 /// The buffer can be created as following:
 /// buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]
+/// 
+/// Example:
+/// ```
+/// use epd_waveshare::epd2in9::DEFAULT_BACKGROUND_COLOR;
+/// let width = 128;
+/// let height = 296;
+/// 
+/// let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
+/// let mut display = VarDisplay::new(width, height, &mut buffer);
+/// 
+/// display.set_rotation(DisplayRotation::Rotate90);
+/// 
+/// display.draw(
+///     Line::new(Coord::new(0, 120), Coord::new(0, 295))
+///         .with_stroke(Some(Color::Black))
+///         .into_iter(),
+/// );
+/// ```
 pub struct VarDisplay<'a> {
     width: u32,
     height: u32,
@@ -106,8 +128,8 @@ impl<'a> Display for VarDisplay<'a> {
     fn buffer(&self) -> &[u8] {
         &self.buffer
     }
-    
-    fn get_mut_buffer<'b>(&'b mut self) -> &'b mut [u8] {
+
+    fn get_mut_buffer(&mut self) -> &mut [u8] {
         &mut self.buffer
     }
 
@@ -160,12 +182,9 @@ fn find_position(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotat
     }
 }
 
-
-
-
 #[cfg(test)]
 mod tests {
-    use super::{outside_display, find_position, VarDisplay, Display, DisplayRotation};
+    use super::{find_position, outside_display, Display, DisplayRotation, VarDisplay};
     use crate::color::Color;
     use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;

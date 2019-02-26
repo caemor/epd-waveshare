@@ -35,8 +35,8 @@ impl Display for Display4in2 {
     fn buffer(&self) -> &[u8] {
         &self.buffer
     }
-    
-    fn get_mut_buffer<'a>(&'a mut self) -> &'a mut [u8] {
+
+    fn get_mut_buffer(&mut self) -> &mut [u8] {
         &mut self.buffer
     }
 
@@ -49,7 +49,6 @@ impl Display for Display4in2 {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -57,20 +56,19 @@ mod tests {
     use crate::epd4in2;
     use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::coord::Coord;
-    use embedded_graphics::prelude::*;
     use embedded_graphics::primitives::Line;
 
     // test buffer length
     #[test]
     fn graphics_size() {
-        let mut display = Display4in2::default();
+        let display = Display4in2::default();
         assert_eq!(display.buffer().len(), 15000);
     }
 
     // test default background color on all bytes
     #[test]
     fn graphics_default() {
-        let mut display = Display4in2::default();
+        let display = Display4in2::default();
         for &byte in display.buffer() {
             assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }

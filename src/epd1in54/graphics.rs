@@ -35,8 +35,8 @@ impl Display for Display1in54 {
     fn buffer(&self) -> &[u8] {
         &self.buffer
     }
-    
-    fn get_mut_buffer<'a>(&'a mut self) -> &'a mut [u8] {
+
+    fn get_mut_buffer(&mut self) -> &mut [u8] {
         &mut self.buffer
     }
 
@@ -55,20 +55,19 @@ mod tests {
     use crate::color::Color;
     use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::coord::Coord;
-    use embedded_graphics::prelude::*;
     use embedded_graphics::primitives::Line;
 
     // test buffer length
     #[test]
     fn graphics_size() {
-        let mut display = Display1in54::default();
+        let display = Display1in54::default();
         assert_eq!(display.buffer().len(), 5000);
     }
 
     // test default background color on all bytes
     #[test]
     fn graphics_default() {
-        let mut display = Display1in54::default();
+        let display = Display1in54::default();
         for &byte in display.buffer() {
             assert_eq!(byte, DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }

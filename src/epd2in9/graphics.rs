@@ -35,8 +35,8 @@ impl Display for Display2in9 {
     fn buffer(&self) -> &[u8] {
         &self.buffer
     }
-    
-    fn get_mut_buffer<'a>(&'a mut self) -> &'a mut [u8] {
+
+    fn get_mut_buffer(&mut self) -> &mut [u8] {
         &mut self.buffer
     }
 
@@ -49,8 +49,6 @@ impl Display for Display2in9 {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -58,14 +56,14 @@ mod tests {
     // test buffer length
     #[test]
     fn graphics_size() {
-        let mut display = Display2in9::default();
+        let display = Display2in9::default();
         assert_eq!(display.buffer().len(), 4736);
     }
 
     // test default background color on all bytes
     #[test]
     fn graphics_default() {
-        let mut display = Display2in9::default();
+        let display = Display2in9::default();
         for &byte in display.buffer() {
             assert_eq!(byte, DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
