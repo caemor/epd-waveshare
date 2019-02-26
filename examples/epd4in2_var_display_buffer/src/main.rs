@@ -1,38 +1,32 @@
 #![deny(warnings)]
 
-// the library for the embedded linux device
-extern crate linux_embedded_hal as lin_hal;
-use lin_hal::spidev::{self, SpidevOptions};
-use lin_hal::sysfs_gpio::Direction;
-use lin_hal::Delay;
-use lin_hal::{Pin, Spidev};
-
-// the eink library
-extern crate epd_waveshare;
+use embedded_graphics::{
+    coord::Coord,
+    fonts::{Font12x16, Font6x8},
+    prelude::*,
+    primitives::{Circle, Line},
+    Drawing,
+};
+use embedded_hal::prelude::*;
 use epd_waveshare::{
-    epd4in2::{self, Buffer4in2, EPD4in2},
-    graphics::{Display, DisplayRotation},
+    epd4in2::{self, EPD4in2},
+    graphics::{Display, DisplayRotation, VarDisplay},
     prelude::*,
 };
-
-// Graphics
-extern crate embedded_graphics;
-use embedded_graphics::coord::Coord;
-use embedded_graphics::fonts::{Font12x16, Font6x8};
-use embedded_graphics::prelude::*;
-use embedded_graphics::primitives::{Circle, Line};
-use embedded_graphics::Drawing;
-
-// HAL (Traits)
-extern crate embedded_hal;
-use embedded_hal::prelude::*;
+use linux_embedded_hal::{
+    spidev::{self, SpidevOptions},
+    sysfs_gpio::Direction,
+    Delay, Pin, Spidev,
+};
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
 fn main() {
-    run().map_err(|e| println!("{}", e.to_string())).unwrap();
+    if let Err(e) = run() {
+        eprintln!("Program exited early with error: {}", e);
+    }
 }
 
 fn run() -> Result<(), std::io::Error> {
@@ -77,9 +71,11 @@ fn run() -> Result<(), std::io::Error> {
         EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     println!("Test all the rotations");
-    
-    let mut buffer =  [epd4in2::BACKGROUND_COLOR.get_byte_value(); epd4in2::WIDTH * epd4in2::HEIGHT];
-    let mut display = VarDisplay::new(epd4in2.width(), epd4in2.height(), &mut buffer);
+
+    let (x, y, width, height) = (50, 50, 250, 250);
+
+    let mut buffer = [epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value(); 62500]; //250*250
+    let mut display = VarDisplay::new(width, height, &mut buffer);
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
         Font6x8::render_str("Rotate 0!")
@@ -116,7 +112,9 @@ fn run() -> Result<(), std::io::Error> {
             .into_iter(),
     );
 
-    epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+    epd4in2
+        .update_partial_frame(&mut spi, &display.buffer(), x, y, width, height)
+        .unwrap();
     epd4in2
         .display_frame(&mut spi)
         .expect("display frame new graphics");

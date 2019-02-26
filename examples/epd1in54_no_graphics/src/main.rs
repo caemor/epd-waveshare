@@ -1,19 +1,12 @@
 #![deny(warnings)]
 
-// the library for the embedded linux device
-extern crate linux_embedded_hal as lin_hal;
-use lin_hal::spidev::{self, SpidevOptions};
-use lin_hal::sysfs_gpio::Direction;
-use lin_hal::Delay;
-use lin_hal::{Pin, Spidev};
-
-// the eink library
-extern crate epd_waveshare;
-use epd_waveshare::{epd1in54::EPD1in54, prelude::*};
-
-// HAL (Traits)
-extern crate embedded_hal;
 use embedded_hal::prelude::*;
+use epd_waveshare::{epd1in54::EPD1in54, prelude::*};
+use linux_embedded_hal::{
+    spidev::{self, SpidevOptions},
+    sysfs_gpio::Direction,
+    Delay, Pin, Spidev,
+};
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems

@@ -1,38 +1,32 @@
 #![deny(warnings)]
 
-// the library for the embedded linux device
-extern crate linux_embedded_hal as lin_hal;
-use lin_hal::spidev::{self, SpidevOptions};
-use lin_hal::sysfs_gpio::Direction;
-use lin_hal::Delay;
-use lin_hal::{Pin, Spidev};
-
-// the eink library
-extern crate epd_waveshare;
+use embedded_graphics::{
+    coord::Coord,
+    fonts::{Font12x16, Font6x8},
+    prelude::*,
+    primitives::{Circle, Line},
+    Drawing,
+};
+use embedded_hal::prelude::*;
 use epd_waveshare::{
     epd4in2::{Display4in2, EPD4in2},
     graphics::{Display, DisplayRotation},
     prelude::*,
 };
-
-// Graphics
-extern crate embedded_graphics;
-use embedded_graphics::coord::Coord;
-use embedded_graphics::fonts::{Font12x16, Font6x8};
-use embedded_graphics::prelude::*;
-use embedded_graphics::primitives::{Circle, Line};
-use embedded_graphics::Drawing;
-
-// HAL (Traits)
-extern crate embedded_hal;
-use embedded_hal::prelude::*;
+use linux_embedded_hal::{
+    spidev::{self, SpidevOptions},
+    sysfs_gpio::Direction,
+    Delay, Pin, Spidev,
+};
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
 fn main() {
-    run().map_err(|e| println!("{}", e.to_string())).unwrap();
+    if let Err(e) = run() {
+        eprintln!("Program exited early with error: {}", e);
+    }
 }
 
 fn run() -> Result<(), std::io::Error> {
