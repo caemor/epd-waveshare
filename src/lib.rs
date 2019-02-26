@@ -67,6 +67,9 @@ pub mod prelude {
     pub use crate::color::Color;
     pub use crate::traits::{RefreshLUT, WaveshareDisplay};
     pub use crate::SPI_MODE;
+
+    #[cfg(feature = "graphics")]
+    pub use crate::graphics::{Display, DisplayRotation};
 }
 
 use embedded_hal::spi::{Mode, Phase, Polarity};
