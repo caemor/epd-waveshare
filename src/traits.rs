@@ -125,7 +125,7 @@ where
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Clears the frame buffer on the EPD with the declared background color
-    /// 
+    ///
     /// The background color can be changed with [`set_background_color`]
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 

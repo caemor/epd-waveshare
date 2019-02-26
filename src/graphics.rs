@@ -43,7 +43,7 @@ pub trait Display: Drawing<Color> {
     fn rotation(&self) -> DisplayRotation;
 
     /// Helperfunction for the Embedded Graphics draw trait
-    /// 
+    ///
     /// Becomes uneccesary when const_generics become stablised
     fn draw_helper<T>(&mut self, width: u32, height: u32, item_pixels: T)
     where
@@ -77,18 +77,18 @@ pub trait Display: Drawing<Color> {
 ///
 /// The buffer can be created as following:
 /// buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]
-/// 
+///
 /// Example:
 /// ```
 /// use epd_waveshare::epd2in9::DEFAULT_BACKGROUND_COLOR;
 /// let width = 128;
 /// let height = 296;
-/// 
+///
 /// let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
 /// let mut display = VarDisplay::new(width, height, &mut buffer);
-/// 
+///
 /// display.set_rotation(DisplayRotation::Rotate90);
-/// 
+///
 /// display.draw(
 ///     Line::new(Coord::new(0, 120), Coord::new(0, 295))
 ///         .with_stroke(Some(Color::Black))
