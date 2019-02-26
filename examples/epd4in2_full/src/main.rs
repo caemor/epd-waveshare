@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 // the library for the embedded linux device
 extern crate linux_embedded_hal as lin_hal;
 use lin_hal::spidev::{self, SpidevOptions};
@@ -8,7 +10,7 @@ use lin_hal::{Pin, Spidev};
 // the eink library
 extern crate epd_waveshare;
 use epd_waveshare::{
-    epd4in2::{Buffer4in2, EPD4in2},
+    epd4in2::{Display4in2, EPD4in2},
     graphics::{Display, DisplayRotation},
     prelude::*,
 };
@@ -75,8 +77,7 @@ fn run() -> Result<(), std::io::Error> {
         EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     println!("Test all the rotations");
-    let mut buffer = Buffer4in2::default();
-    let mut display = Display::new(epd4in2.width(), epd4in2.height(), &mut buffer.buffer);
+    let mut display = Display4in2::default();
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
         Font6x8::render_str("Rotate 0!")

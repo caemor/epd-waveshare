@@ -68,7 +68,9 @@ use crate::color::Color;
 pub(crate) mod command;
 use self::command::Command;
 
+#[cfg(feature = "graphics")]
 mod graphics;
+#[cfg(feature = "graphics")]
 pub use self::graphics::Display4in2;
 
 /// EPD4in2 driver

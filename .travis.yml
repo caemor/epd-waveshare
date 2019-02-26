@@ -122,9 +122,10 @@ script:
   - cargo check  
   - cargo test --all-features --release
   - cargo doc --all-features --release
-  - cd examples/embedded_linux_epd4in2 && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/embedded_linux_epd1in54 && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/embedded_linux_epd2in9 && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd4in2_full && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd2in9_full && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd1in54_full && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cargo check && cd ../../
   - cd examples/epd4in2_var_buffer && cargo fmt --all -- --check && cargo check && cd ../../
 
 after_success: 

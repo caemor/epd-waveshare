@@ -40,6 +40,7 @@
 //!
 //!
 #![no_std]
+#![deny(warnings)]
 
 #[cfg(feature = "graphics")]
 pub mod graphics;

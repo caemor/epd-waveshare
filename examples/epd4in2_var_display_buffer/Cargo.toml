@@ -2,6 +2,7 @@
 name = "embedded_linux_eink_example"
 version = "0.1.0"
 authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
+edition = "2018"
 
 [dependencies]
 

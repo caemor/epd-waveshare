@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 // the library for the embedded linux device
 extern crate linux_embedded_hal as lin_hal;
 use lin_hal::spidev::{self, SpidevOptions};
@@ -8,7 +10,7 @@ use lin_hal::{Pin, Spidev};
 // the eink library
 extern crate epd_waveshare;
 use epd_waveshare::{
-    epd1in54::{Buffer1in54, EPD1in54},
+    epd2in9::{Display2in9, EPD2in9},
     graphics::{Display, DisplayRotation},
     prelude::*,
 };
@@ -29,6 +31,7 @@ use embedded_hal::prelude::*;
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
+//TODO: Test this implemenation with a new display
 fn main() {
     run().unwrap();
 }
@@ -79,15 +82,17 @@ fn run() -> Result<(), std::io::Error> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
+    let mut epd = EPD2in9::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
 
     // Clear the full screen
     epd.clear_frame(&mut spi).expect("clear frame 1");
     epd.display_frame(&mut spi).expect("disp 1");
 
     println!("Test all the rotations");
-    let mut buffer = Buffer1in54::default();
-    let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+    let mut display = Display2in9::default();
+    epd.update_frame(&mut spi, display.buffer()).unwrap();
+    epd.display_frame(&mut spi).expect("display frame x03");
+
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
         Font6x8::render_str("Rotate 0!")

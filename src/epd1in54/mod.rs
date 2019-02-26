@@ -55,7 +55,9 @@ use crate::traits::{RefreshLUT, WaveshareDisplay};
 
 use crate::interface::DisplayInterface;
 
+#[cfg(feature = "graphics")]
 mod graphics;
+#[cfg(feature = "graphics")]
 pub use crate::epd1in54::graphics::Display1in54;
 
 /// EPD1in54 driver
