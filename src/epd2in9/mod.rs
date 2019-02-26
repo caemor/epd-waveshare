@@ -4,19 +4,19 @@
 //!
 //! # Example for the 2.9 in E-Ink Display
 //!
-//! ```ignore
+//! ```rust,ignore
 //! use epd_waveshare::{
-//!     epd2in9::{EPD2in9, Buffer2in9},
+//!     epd2in9::{EPD2in9, Display2in9},
 //!     graphics::{Display, DisplayRotation},
 //!     prelude::*,
 //! };
+//! use embedded_graphics::Drawing;
 //!
 //! // Setup EPD
-//! let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//! let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
 //!
 //! // Use display graphics
-//! let mut buffer = Buffer2in9::default();
-//! let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+//! let mut display = Display2in9::default();
 //!
 //! // Write some hello world in the screenbuffer
 //! display.draw(

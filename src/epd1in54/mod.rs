@@ -2,19 +2,19 @@
 //!
 //! # Example for the 1.54 in E-Ink Display
 //!
-//! ```ignore
+//! ```rust,ignore
 //! use epd_waveshare::{
-//!     epd1in54::{EPD1in54, Buffer1in54},
+//!     epd1in54::{EPD1in54, Display1in54},
 //!     graphics::{Display, DisplayRotation},
 //!     prelude::*,
 //! };
+//! use embedded_graphics::Drawing;
 //!
 //! // Setup EPD
-//! let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//! let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
 //!
 //! // Use display graphics
-//! let mut buffer = Buffer1in54::default();
-//! let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+//! let mut display = Display1in54::default();
 //!
 //! // Write some hello world in the screenbuffer
 //! display.draw(

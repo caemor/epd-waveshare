@@ -79,8 +79,12 @@ pub trait Display: Drawing<Color> {
 /// buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]
 ///
 /// Example:
-/// ```
-/// use epd_waveshare::epd2in9::DEFAULT_BACKGROUND_COLOR;
+/// ```rust,no_run
+/// # use epd_waveshare::epd2in9::DEFAULT_BACKGROUND_COLOR;
+/// # use epd_waveshare::prelude::*;
+/// # use epd_waveshare::graphics::VarDisplay;
+/// # use embedded_graphics::prelude::*;
+/// # use embedded_graphics::primitives::{Circle, Line};
 /// let width = 128;
 /// let height = 296;
 ///
