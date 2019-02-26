@@ -69,7 +69,7 @@ pub(crate) mod command;
 use self::command::Command;
 
 mod graphics;
-pub use self::graphics::Buffer4in2;
+pub use self::graphics::Display4in2;
 
 /// EPD4in2 driver
 ///

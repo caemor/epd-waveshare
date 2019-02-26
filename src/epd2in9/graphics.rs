@@ -1,15 +1,15 @@
 use crate::epd2in9::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
-use crate::graphics::Display;
+use crate::graphics::{Display, DisplayRotation};
 use crate::prelude::*;
 use embedded_graphics::prelude::*;
 
-/// Full size buffer for use with the 2in9 EPD
+/// Display with Fullsize buffer for use with the 2in9 EPD
 ///
 /// Can also be manuall constructed:
 /// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]`
 pub struct Display2in9 {
-    pub buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
-    display: Display,
+    buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
+    rotation: DisplayRotation,
 }
 
 impl Default for Display2in9 {
@@ -17,7 +17,7 @@ impl Default for Display2in9 {
         Display2in9 {
             buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value();
                 WIDTH as usize * HEIGHT as usize / 8],
-            display: Display::default(),
+            rotation: DisplayRotation::default(),
         }
     }
 }
@@ -27,7 +27,25 @@ impl Drawing<Color> for Display2in9 {
     where
         T: Iterator<Item = Pixel<Color>>,
     {
-        self.display.draw(&mut self.buffer, WIDTH, HEIGHT, item_pixels);
+        self.draw_helper(WIDTH, HEIGHT, item_pixels);
+    }
+}
+
+impl Display for Display2in9 {
+    fn buffer(&self) -> &[u8] {
+        &self.buffer
+    }
+    
+    fn get_mut_buffer<'a>(&'a mut self) -> &'a mut [u8] {
+        &mut self.buffer
+    }
+
+    fn set_rotation(&mut self, rotation: DisplayRotation) {
+        self.rotation = rotation;
+    }
+
+    fn rotation(&self) -> DisplayRotation {
+        self.rotation
     }
 }
 
@@ -36,21 +54,18 @@ impl Drawing<Color> for Display2in9 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::graphics::Display;
 
     // test buffer length
     #[test]
     fn graphics_size() {
         let mut display = Display2in9::default();
-        let display = Display::new(WIDTH, HEIGHT, &mut buffer.buffer);
         assert_eq!(display.buffer().len(), 4736);
     }
 
     // test default background color on all bytes
     #[test]
     fn graphics_default() {
-        let mut buffer = Buffer2in9::default();
-        let display = Display::new(WIDTH, HEIGHT, &mut buffer.buffer);
+        let mut display = Display2in9::default();
         for &byte in display.buffer() {
             assert_eq!(byte, DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }

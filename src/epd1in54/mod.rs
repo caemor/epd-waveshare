@@ -56,7 +56,7 @@ use crate::traits::{RefreshLUT, WaveshareDisplay};
 use crate::interface::DisplayInterface;
 
 mod graphics;
-pub use crate::epd1in54::graphics::Buffer1in54BlackWhite as Buffer1in54;
+pub use crate::epd1in54::graphics::Display1in54;
 
 /// EPD1in54 driver
 ///
