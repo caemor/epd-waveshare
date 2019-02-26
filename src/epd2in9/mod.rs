@@ -57,7 +57,7 @@ use crate::traits::*;
 use crate::interface::DisplayInterface;
 
 mod graphics;
-pub use crate::epd2in9::graphics::Buffer2in9;
+pub use crate::epd2in9::graphics::Display2in9;
 
 /// EPD2in9 driver
 ///

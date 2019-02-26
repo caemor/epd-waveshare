@@ -22,31 +22,77 @@ impl Default for DisplayRotation {
     }
 }
 
-pub struct Display<'a> {
-    width: u32,
-    height: u32,
+
+#[derive(Default)]
+pub struct Display {
+    //width: u32,
+    //height: u32,
     rotation: DisplayRotation,
-    buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
+    //buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
 }
 
-impl<'a> Display<'a> {
-    pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> Display<'a> {
-        let len = buffer.len() as u32;
-        assert!(width / 8 * height >= len);
-        Display {
-            width,
-            height,
-            rotation: DisplayRotation::default(),
-            buffer,
+pub trait Graphics {
+    fn clear_buffer(&mut self, background_color: Color) {
+        for elem in self.get_mut_buffer().iter_mut() {
+            *elem = background_color.get_byte_value();
         }
     }
 
-    pub fn buffer(&self) -> &[u8] {
-        &self.buffer
+    fn get_mut_buffer<'a>(&'a mut self) -> &'a mut [u8];
+
+    /// Sets the rotation of the display
+    fn set_rotation(&mut self, rotation: DisplayRotation);
+    /// Get the current rotation of the display
+    fn rotation(&self) -> DisplayRotation;
+
+    fn draw<T>(&mut self, width: u32, height: u32, item_pixels: T)
+    where
+        T: Iterator<Item = Pixel<Color>>,
+    {
+        let rotation = self.rotation();
+        let buffer = self.get_mut_buffer();
+        for Pixel(UnsignedCoord(x, y), color) in item_pixels {
+            if outside_display(x, y, width, height, rotation) {
+                continue;
+            }
+
+            // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
+            let (index, bit) = find_position(x, y, width, height, rotation);
+            let index = index as usize;
+
+
+
+            // "Draw" the Pixel on that bit
+            match color {
+                Color::Black => {
+                    buffer[index] &= !bit;
+                }
+                Color::White => {
+                    buffer[index] |= bit;
+                }
+            }
+        }
+    }
+}
+
+impl Display {
+    pub fn new() -> Display {
+        //let len = buffer.len() as u32;
+        //assert!(width / 8 * height >= len);
+        Display {
+            //width,
+            //height,
+            rotation: DisplayRotation::default(),
+            //buffer,
+        }
     }
 
-    pub fn clear_buffer(&mut self, background_color: Color) {
-        for elem in &mut self.buffer.iter_mut() {
+    //pub fn buffer(&self) -> &[u8] {
+    //    &self.buffer
+    //}
+
+    pub fn clear_buffer(&self, buffer: &mut [u8], background_color: Color) {
+        for elem in &mut buffer.iter_mut() {
             *elem = background_color.get_byte_value();
         }
     }
@@ -58,8 +104,33 @@ impl<'a> Display<'a> {
     pub fn rotation(&self) -> DisplayRotation {
         self.rotation
     }
-}
 
+    pub fn draw<T>(&self, buffer: &mut [u8], width: u32, height: u32, item_pixels: T)
+    where
+        T: Iterator<Item = Pixel<Color>>,
+    {
+        for Pixel(UnsignedCoord(x, y), color) in item_pixels {
+            if outside_display(x, y, width, height, self.rotation) {
+                continue;
+            }
+
+            // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
+            let (index, bit) = find_position(x, y, width, height, self.rotation);
+            let index = index as usize;
+
+            // "Draw" the Pixel on that bit
+            match color {
+                Color::Black => {
+                    buffer[index] &= !bit;
+                }
+                Color::White => {
+                    buffer[index] |= bit;
+                }
+            }
+        }
+    }
+}
+/*
 impl<'a> Drawing<Color> for Display<'a> {
     fn draw<T>(&mut self, item_pixels: T)
     where
@@ -86,7 +157,7 @@ impl<'a> Drawing<Color> for Display<'a> {
         }
     }
 }
-
+*/
 fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> bool {
     match rotation {
         DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
@@ -105,7 +176,7 @@ fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRot
 
 #[rustfmt::skip]
 //returns index position in the u8-slice and the bit-position inside that u8
-fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
+fn find_position(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
     match rotation {
         DisplayRotation::Rotate0 => (
             x / 8 + (width / 8) * y,
@@ -145,7 +216,7 @@ mod tests {
             assert_eq!(byte, Color::Black.get_byte_value());
         }
 
-        display.clear_buffer(Color::White);
+        display.clear_buffer(&mut buffer, Color::White);
 
         for &byte in display.buffer.iter() {
             assert_eq!(byte, Color::White.get_byte_value());
@@ -188,6 +259,7 @@ mod tests {
         let mut display = Display::new(width, height, &mut buffer);
 
         display.draw(
+            &mut buffer,
             Line::new(Coord::new(0, 0), Coord::new(7, 0))
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
@@ -214,6 +286,7 @@ mod tests {
         display.set_rotation(DisplayRotation::Rotate90);
 
         display.draw(
+            &mut buffer,
             Line::new(Coord::new(0, 120), Coord::new(0, 295))
                 .with_stroke(Some(Color::Black))
                 .into_iter(),
