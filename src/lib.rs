@@ -53,8 +53,6 @@
 //!
 //!
 #![no_std]
-#![deny(warnings)]
-#![warn(intra_doc_link_resolution_failure)]
 
 #[cfg(feature = "graphics")]
 pub mod graphics;
