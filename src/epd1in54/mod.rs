@@ -2,19 +2,19 @@
 //!
 //! # Example for the 1.54 in E-Ink Display
 //!
-//! ```ignore
+//! ```rust,ignore
 //! use epd_waveshare::{
-//!     epd1in54::{EPD1in54, Buffer1in54},
+//!     epd1in54::{EPD1in54, Display1in54},
 //!     graphics::{Display, DisplayRotation},
 //!     prelude::*,
 //! };
+//! use embedded_graphics::Drawing;
 //!
 //! // Setup EPD
-//! let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//! let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
 //!
 //! // Use display graphics
-//! let mut buffer = Buffer1in54::default();
-//! let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+//! let mut display = Display1in54::default();
 //!
 //! // Write some hello world in the screenbuffer
 //! display.draw(
@@ -37,6 +37,7 @@ pub const WIDTH: u32 = 200;
 pub const HEIGHT: u32 = 200;
 //const DPI: u16 = 184;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
@@ -54,8 +55,10 @@ use crate::traits::{RefreshLUT, WaveshareDisplay};
 
 use crate::interface::DisplayInterface;
 
+#[cfg(feature = "graphics")]
 mod graphics;
-pub use crate::epd1in54::graphics::Buffer1in54BlackWhite as Buffer1in54;
+#[cfg(feature = "graphics")]
+pub use crate::epd1in54::graphics::Display1in54;
 
 /// EPD1in54 driver
 ///
@@ -248,6 +251,10 @@ where
             RefreshLUT::QUICK => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
         }
     }
+
+    fn is_busy(&self) -> bool {
+        self.interface.is_busy(IS_BUSY_LOW)
+    }
 }
 
 impl<SPI, CS, BUSY, DC, RST> EPD1in54<SPI, CS, BUSY, DC, RST>
@@ -259,7 +266,7 @@ where
     RST: OutputPin,
 {
     fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(false);
+        self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     pub(crate) fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {

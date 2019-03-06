@@ -1,29 +1,17 @@
-// the library for the embedded linux device
-extern crate linux_embedded_hal as lin_hal;
-use lin_hal::spidev::{self, SpidevOptions};
-use lin_hal::sysfs_gpio::Direction;
-use lin_hal::Delay;
-use lin_hal::{Pin, Spidev};
+#![deny(warnings)]
 
-// the eink library
-extern crate epd_waveshare;
+use embedded_graphics::{coord::Coord, fonts::Font6x8, prelude::*, Drawing};
+use embedded_hal::prelude::*;
 use epd_waveshare::{
-    epd2in9::{Buffer2in9, EPD2in9},
+    epd2in9::{Display2in9, EPD2in9},
     graphics::{Display, DisplayRotation},
     prelude::*,
 };
-
-// Graphics
-extern crate embedded_graphics;
-use embedded_graphics::coord::Coord;
-use embedded_graphics::fonts::Font6x8;
-use embedded_graphics::prelude::*;
-//use embedded_graphics::primitives::{Circle, Line};
-use embedded_graphics::Drawing;
-
-// HAL (Traits)
-extern crate embedded_hal;
-use embedded_hal::prelude::*;
+use linux_embedded_hal::{
+    spidev::{self, SpidevOptions},
+    sysfs_gpio::Direction,
+    Delay, Pin, Spidev,
+};
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
@@ -31,7 +19,9 @@ use embedded_hal::prelude::*;
 
 //TODO: Test this implemenation with a new display
 fn main() {
-    run().unwrap();
+    if let Err(e) = run() {
+        eprintln!("Program exited early with error: {}", e);
+    }
 }
 
 fn run() -> Result<(), std::io::Error> {
@@ -87,8 +77,7 @@ fn run() -> Result<(), std::io::Error> {
     epd.display_frame(&mut spi).expect("disp 1");
 
     println!("Test all the rotations");
-    let mut buffer = Buffer2in9::default();
-    let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+    let mut display = Display2in9::default();
     epd.update_frame(&mut spi, display.buffer()).unwrap();
     epd.display_frame(&mut spi).expect("display frame x03");
 

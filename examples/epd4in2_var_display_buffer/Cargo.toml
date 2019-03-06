@@ -1,0 +1,15 @@
+[package]
+name = "embedded_linux_eink_example"
+version = "0.1.0"
+authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
+edition = "2018"
+
+[dependencies]
+
+## The Only difference between this one and the one without default features sizewise seems to be a different .d-file Size (dependencies-file)
+#epd_waveshare = { path = "../../"}
+epd-waveshare = { path = "../../", default-features = false, features = ["epd4in2", "graphics"]}
+
+linux-embedded-hal = "0.2.2"
+embedded-graphics = "0.4.5"
+embedded-hal = { version = "0.2.2", features = ["unproven"] }

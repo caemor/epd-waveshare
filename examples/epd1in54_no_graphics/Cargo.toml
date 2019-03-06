@@ -1,0 +1,12 @@
+[package]
+name = "embedded_linux_eink_example"
+version = "0.1.0"
+authors = ["Christoph Groß <christoph-gross@mailbox.org>"]
+edition = "2018"
+
+[dependencies]
+
+epd-waveshare = { path = "../../", default-features = false, features = ["epd1in54"]}
+
+linux-embedded-hal = "0.2.2"
+embedded-hal = { version = "0.2.2", features = ["unproven"] }

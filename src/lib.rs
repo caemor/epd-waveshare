@@ -20,22 +20,35 @@
 //!
 //! # Examples
 //!
-//! ```ignore
-//! use eink-waveshare-rs::epd4in2::EPD4in2;
+//! ```rust,ignore
+//! use epd_waveshare::{
+//!     epd2in9::{EPD2in9, Display2in9},
+//!     graphics::{Display, DisplayRotation},
+//!     prelude::*,
+//! };
+//! use embedded_graphics::Drawing;
 //!
-//! let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay).unwrap();
+//! // Setup EPD
+//! let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
 //!
-//! let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
+//! // Use display graphics
+//! let mut display = Display2in9::default();
 //!
-//! // draw something into the buffer
+//! // Write some hello world in the screenbuffer
+//! display.draw(
+//!     Font6x8::render_str("Hello World!")
+//!         .with_stroke(Some(Color::Black))
+//!         .with_fill(Some(Color::White))
+//!         .translate(Coord::new(5, 50))
+//!         .into_iter(),
+//! );
 //!
-//! epd4in2.display_and_transfer_buffer(buffer, None);
+//! // Display updated frame
+//! epd.update_frame(&mut spi, &display.buffer()).unwrap();
+//! epd.display_frame(&mut spi).expect("display frame new graphics");
 //!
-//! // wait and look at the image
-//!
-//! epd4in2.clear_frame(None);
-//!
-//! epd4in2.sleep();
+//! // Set the EPD to sleep
+//! epd.sleep(&mut spi).expect("sleep");
 //! ```
 //!
 //!
@@ -67,6 +80,9 @@ pub mod prelude {
     pub use crate::color::Color;
     pub use crate::traits::{RefreshLUT, WaveshareDisplay};
     pub use crate::SPI_MODE;
+
+    #[cfg(feature = "graphics")]
+    pub use crate::graphics::{Display, DisplayRotation};
 }
 
 use embedded_hal::spi::{Mode, Phase, Polarity};

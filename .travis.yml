@@ -1,7 +1,5 @@
 # Based on the "trust" template v0.1.2
 # https://github.com/japaric/trust/tree/v0.1.2
-
-dist: trusty
 language: rust
 rust:
   - stable
@@ -11,65 +9,21 @@ sudo: required
 
 # TODO Rust builds on stable by default, this can be
 # overridden on a case by case basis down below.
-
-
 matrix:
   allow_failures:
-  #  - nightly
+    - nightly
   # TODO These are all the build jobs. Adjust as necessary. Comment out what you
   # don't need
   include:
-    # Android
-    #- env: TARGET=aarch64-linux-android DISABLE_TESTS=1
-    #- env: TARGET=arm-linux-androideabi DISABLE_TESTS=1
-    #- env: TARGET=armv7-linux-androideabi DISABLE_TESTS=1
-    #- env: TARGET=i686-linux-android DISABLE_TESTS=1
-    #- env: TARGET=x86_64-linux-android DISABLE_TESTS=1
-
-    # iOS
-    #- env: TARGET=aarch64-apple-ios DISABLE_TESTS=1
-    #  os: osx
-    #- env: TARGET=armv7-apple-ios DISABLE_TESTS=1
-    #  os: osx
-    #- env: TARGET=armv7s-apple-ios DISABLE_TESTS=1
-    #  os: osx
-    #- env: TARGET=i386-apple-ios DISABLE_TESTS=1
-    #  os: osx
-    #- env: TARGET=x86_64-apple-ios DISABLE_TESTS=1
-    #  os: osx
-
     # Linux
     #- env: TARGET=aarch64-unknown-linux-gnu
     # Raspberry Pi
-    - env: TARGET=arm-unknown-linux-gnueabi DISABLE_EXAMPLES=1
+    - env: TARGET=arm-unknown-linux-gnueabi
     # Raspberry Pi 3...
-    - env: TARGET=armv7-unknown-linux-gnueabihf DISABLE_EXAMPLES=1
-    #- env: TARGET=i686-unknown-linux-gnu
-    #- env: TARGET=i686-unknown-linux-musl
-    #- env: TARGET=mips-unknown-linux-gnu
-    #- env: TARGET=mips64-unknown-linux-gnuabi64
-    #- env: TARGET=mips64el-unknown-linux-gnuabi64
-    #- env: TARGET=mipsel-unknown-linux-gnu
-    #- env: TARGET=powerpc-unknown-linux-gnu
-    #- env: TARGET=powerpc64-unknown-linux-gnu
-    #- env: TARGET=powerpc64le-unknown-linux-gnu
-    #- env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+
     - env: TARGET=x86_64-unknown-linux-gnu
     - env: TARGET=x86_64-unknown-linux-musl
-
-    # OSX
-    #- env: TARGET=i686-apple-darwin
-    #  os: osx
-    #- env: TARGET=x86_64-apple-darwin
-    #  os: osx
-
-    # *BSD
-    #- env: TARGET=i686-unknown-freebsd DISABLE_TESTS=1
-    #- env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
-    #- env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
-
-    # Windows
-    #- env: TARGET=x86_64-pc-windows-gnu
 
     # Bare metal
     # These targets don't support std and as such are likely not suitable for
@@ -79,27 +33,6 @@ matrix:
     - env: TARGET=thumbv7em-none-eabihf
     - env: TARGET=thumbv7m-none-eabi
 
-    # Testing other channels
-    #- env: TARGET=x86_64-unknown-linux-gnu
-    #  rust: nightly
-    #- env: TARGET=x86_64-apple-darwin
-    #  os: osx
-    #  rust: nightly
-
-    #- env: TEST_DIR=examples/embedded_linux
-    #- env: TEST_DIR=examples/f3_stm32f30x
-
-addons:
-  apt:
-    packages:
-      - libcurl4-openssl-dev
-      - libelf-dev
-      - libdw-dev
-      - cmake
-      - gcc
-      - binutils-dev
-      - libiberty-dev
-
 
 before_install:
   - set -e
@@ -108,9 +41,7 @@ before_install:
 
 install:
   - cargo install cargo-update || echo "cargo-update already installed"
-  - cargo install cargo-travis || echo "cargo-travis already installed"
   - cargo install-update -a # update outdated cached binaries
-  - rustup override set nightly
   - rustup target add thumbv7m-none-eabi
   - rustup component add clippy-preview
   - rustup component add rustfmt-preview
@@ -122,17 +53,11 @@ script:
   - cargo check  
   - cargo test --all-features --release
   - cargo doc --all-features --release
-  - cd examples/embedded_linux_epd4in2 && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/embedded_linux_epd1in54 && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/embedded_linux_epd2in9 && cargo fmt --all -- --check && cargo check && cd ../../
-  # - cd examples/stm32f3discovery && cargo check --target thumbv7m-none-eabi && cd ../../
-  #- cd ../f3_stm32f30x && cargo build
-
-after_success: 
-# measure code coverage and upload to coveralls.io
-  - cargo coveralls
-#- cargo doc-upload
-
+  - cd examples/epd4in2_full && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd2in9_full && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd1in54_full && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd4in2_var_display_buffer && cargo fmt --all -- --check && cargo check && cd ../../
 
 
 cache: cargo

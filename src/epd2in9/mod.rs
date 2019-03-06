@@ -4,19 +4,19 @@
 //!
 //! # Example for the 2.9 in E-Ink Display
 //!
-//! ```ignore
+//! ```rust,ignore
 //! use epd_waveshare::{
-//!     epd2in9::{EPD2in9, Buffer2in9},
+//!     epd2in9::{EPD2in9, Display2in9},
 //!     graphics::{Display, DisplayRotation},
 //!     prelude::*,
 //! };
+//! use embedded_graphics::Drawing;
 //!
 //! // Setup EPD
-//! let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//! let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
 //!
 //! // Use display graphics
-//! let mut buffer = Buffer2in9::default();
-//! let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+//! let mut display = Display2in9::default();
 //!
 //! // Write some hello world in the screenbuffer
 //! display.draw(
@@ -38,6 +38,7 @@
 pub const WIDTH: u32 = 128;
 pub const HEIGHT: u32 = 296;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
@@ -55,8 +56,10 @@ use crate::traits::*;
 
 use crate::interface::DisplayInterface;
 
+#[cfg(feature = "graphics")]
 mod graphics;
-pub use crate::epd2in9::graphics::Buffer2in9;
+#[cfg(feature = "graphics")]
+pub use crate::epd2in9::graphics::Display2in9;
 
 /// EPD2in9 driver
 ///
@@ -247,6 +250,10 @@ where
             RefreshLUT::QUICK => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
         }
     }
+
+    fn is_busy(&self) -> bool {
+        self.interface.is_busy(IS_BUSY_LOW)
+    }
 }
 
 impl<SPI, CS, BUSY, DC, RST> EPD2in9<SPI, CS, BUSY, DC, RST>
@@ -258,7 +265,7 @@ where
     RST: OutputPin,
 {
     fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(false);
+        self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {

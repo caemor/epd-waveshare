@@ -1,12 +1,20 @@
 # Examples:
 
-### embedded_linux_epd4in2
+All of these examples are projects of their own. 
 
-Basic example of using a Raspberry Pi with the 4in2 Waveshare E-Ink Display.
+A few notes:
+ - If not stated otherwise the example is for a Raspberry Pi running Linux.
+ - epdXinYY_full showcase most of what can be done with this crate. This means that they are using graphics feature and use the DisplayXinYY with its buffer. 
 
-It showcases most of what can be done with the crate.
+Special Examples:
 
-### embedded_linux_epd1in54
+### epd4in2_var_display_buffer
 
-This example doesn't use the graphics feature of the crate and shows the fast update rate of the 1in54 EPD.
+This examples used the graphics feature with VarDisplay and therefore a variable buffer(size).
+
+### epd1in54_no_graphics (Fastest Example)
+
+This example doesn't use the graphics feature and handles all the "drawing" by itself. It also has a speeddemonstration included.
+
+
 

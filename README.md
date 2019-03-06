@@ -10,7 +10,7 @@ Other similiar libraries with support for much more displays are [u8g2](https://
 
 ## Examples
 
-There are multiple examples in the examples folder. For more infos about the examples see the seperate Readme [there](/examples/Readme.md).
+There are multiple examples in the examples folder. For more infos about the examples see the seperate Readme [there](/examples/Readme.md). These examples are all rust projects of their own, so you need to go inside the project to execute it (cargo run --example doesn't work).
 
 ```Rust
 // Setup the epd
@@ -92,9 +92,6 @@ They are also called A and B, but you shouldn't get confused and mix it with the
 |            | 7.5in  (B) |
 |            | 7.5in  (C) |
 
-## TODO's
-
-- [ ] improve the partial drawing/check the timings/timing improvements/....
 
 
 

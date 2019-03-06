@@ -22,71 +22,131 @@ impl Default for DisplayRotation {
     }
 }
 
-pub struct Display<'a> {
+pub trait Display: Drawing<Color> {
+    /// Clears the buffer of the display with the chosen background color
+    fn clear_buffer(&mut self, background_color: Color) {
+        for elem in self.get_mut_buffer().iter_mut() {
+            *elem = background_color.get_byte_value();
+        }
+    }
+
+    /// Returns the buffer
+    fn buffer(&self) -> &[u8];
+
+    /// Returns a mutable buffer
+    fn get_mut_buffer(&mut self) -> &mut [u8];
+
+    /// Sets the rotation of the display
+    fn set_rotation(&mut self, rotation: DisplayRotation);
+
+    /// Get the current rotation of the display
+    fn rotation(&self) -> DisplayRotation;
+
+    /// Helperfunction for the Embedded Graphics draw trait
+    ///
+    /// Becomes uneccesary when const_generics become stablised
+    fn draw_helper<T>(&mut self, width: u32, height: u32, item_pixels: T)
+    where
+        T: Iterator<Item = Pixel<Color>>,
+    {
+        let rotation = self.rotation();
+        let buffer = self.get_mut_buffer();
+        for Pixel(UnsignedCoord(x, y), color) in item_pixels {
+            if outside_display(x, y, width, height, rotation) {
+                continue;
+            }
+
+            // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
+            let (index, bit) = find_position(x, y, width, height, rotation);
+            let index = index as usize;
+
+            // "Draw" the Pixel on that bit
+            match color {
+                Color::Black => {
+                    buffer[index] &= !bit;
+                }
+                Color::White => {
+                    buffer[index] |= bit;
+                }
+            }
+        }
+    }
+}
+
+/// A variable Display without a predefined buffer
+///
+/// The buffer can be created as following:
+/// buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]
+///
+/// Example:
+/// ```rust,no_run
+/// # use epd_waveshare::epd2in9::DEFAULT_BACKGROUND_COLOR;
+/// # use epd_waveshare::prelude::*;
+/// # use epd_waveshare::graphics::VarDisplay;
+/// # use embedded_graphics::prelude::*;
+/// # use embedded_graphics::primitives::{Circle, Line};
+/// let width = 128;
+/// let height = 296;
+///
+/// let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
+/// let mut display = VarDisplay::new(width, height, &mut buffer);
+///
+/// display.set_rotation(DisplayRotation::Rotate90);
+///
+/// display.draw(
+///     Line::new(Coord::new(0, 120), Coord::new(0, 295))
+///         .with_stroke(Some(Color::Black))
+///         .into_iter(),
+/// );
+/// ```
+pub struct VarDisplay<'a> {
     width: u32,
     height: u32,
     rotation: DisplayRotation,
     buffer: &'a mut [u8], //buffer: Box<u8>//[u8; 15000]
 }
 
-impl<'a> Display<'a> {
-    pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> Display<'a> {
+impl<'a> VarDisplay<'a> {
+    pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> VarDisplay<'a> {
         let len = buffer.len() as u32;
         assert!(width / 8 * height >= len);
-        Display {
+        VarDisplay {
             width,
             height,
             rotation: DisplayRotation::default(),
             buffer,
         }
     }
-
-    pub fn buffer(&self) -> &[u8] {
-        &self.buffer
-    }
-
-    pub fn clear_buffer(&mut self, background_color: Color) {
-        for elem in &mut self.buffer.iter_mut() {
-            *elem = background_color.get_byte_value();
-        }
-    }
-
-    pub fn set_rotation(&mut self, rotation: DisplayRotation) {
-        self.rotation = rotation;
-    }
-
-    pub fn rotation(&self) -> DisplayRotation {
-        self.rotation
-    }
 }
 
-impl<'a> Drawing<Color> for Display<'a> {
+impl<'a> Drawing<Color> for VarDisplay<'a> {
     fn draw<T>(&mut self, item_pixels: T)
     where
         T: Iterator<Item = Pixel<Color>>,
     {
-        for Pixel(UnsignedCoord(x, y), color) in item_pixels {
-            if outside_display(x, y, self.width, self.height, self.rotation) {
-                continue;
-            }
-
-            // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
-            let (index, bit) = rotation(x, y, self.width, self.height, self.rotation);
-            let index = index as usize;
-
-            // "Draw" the Pixel on that bit
-            match color {
-                Color::Black => {
-                    self.buffer[index] &= !bit;
-                }
-                Color::White => {
-                    self.buffer[index] |= bit;
-                }
-            }
-        }
+        self.draw_helper(self.width, self.height, item_pixels);
     }
 }
 
+impl<'a> Display for VarDisplay<'a> {
+    fn buffer(&self) -> &[u8] {
+        &self.buffer
+    }
+
+    fn get_mut_buffer(&mut self) -> &mut [u8] {
+        &mut self.buffer
+    }
+
+    fn set_rotation(&mut self, rotation: DisplayRotation) {
+        self.rotation = rotation;
+    }
+
+    fn rotation(&self) -> DisplayRotation {
+        self.rotation
+    }
+}
+
+// Checks if a pos is outside the defined display
 fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> bool {
     match rotation {
         DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
@@ -105,7 +165,7 @@ fn outside_display(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRot
 
 #[rustfmt::skip]
 //returns index position in the u8-slice and the bit-position inside that u8
-fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
+fn find_position(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
     match rotation {
         DisplayRotation::Rotate0 => (
             x / 8 + (width / 8) * y,
@@ -128,7 +188,7 @@ fn rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) 
 
 #[cfg(test)]
 mod tests {
-    use super::{outside_display, rotation, Display, DisplayRotation};
+    use super::{find_position, outside_display, Display, DisplayRotation, VarDisplay};
     use crate::color::Color;
     use embedded_graphics::coord::Coord;
     use embedded_graphics::prelude::*;
@@ -139,7 +199,7 @@ mod tests {
         use crate::epd4in2::{HEIGHT, WIDTH};
 
         let mut buffer = [Color::Black.get_byte_value(); WIDTH as usize / 8 * HEIGHT as usize];
-        let mut display = Display::new(WIDTH, HEIGHT, &mut buffer);
+        let mut display = VarDisplay::new(WIDTH, HEIGHT, &mut buffer);
 
         for &byte in display.buffer.iter() {
             assert_eq!(byte, Color::Black.get_byte_value());
@@ -171,7 +231,7 @@ mod tests {
                 if outside_display(x, y, width, height, rotation2) {
                     break;
                 } else {
-                    let (idx, _) = rotation(x, y, width, height, rotation2);
+                    let (idx, _) = find_position(x, y, width, height, rotation2);
                     assert!(idx < max_value);
                 }
             }
@@ -185,7 +245,7 @@ mod tests {
         let height = 296;
 
         let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
-        let mut display = Display::new(width, height, &mut buffer);
+        let mut display = VarDisplay::new(width, height, &mut buffer);
 
         display.draw(
             Line::new(Coord::new(0, 0), Coord::new(7, 0))
@@ -209,7 +269,7 @@ mod tests {
         let height = 296;
 
         let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 128 / 8 * 296];
-        let mut display = Display::new(width, height, &mut buffer);
+        let mut display = VarDisplay::new(width, height, &mut buffer);
 
         display.set_rotation(DisplayRotation::Rotate90);
 

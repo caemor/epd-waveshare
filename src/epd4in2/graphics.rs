@@ -1,19 +1,51 @@
-use crate::epd4in2::constants::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::epd4in2::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::graphics::{Display, DisplayRotation};
+use crate::prelude::*;
+use embedded_graphics::prelude::*;
 
 /// Full size buffer for use with the 4in2 EPD
 ///
 /// Can also be manuall constructed:
 /// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]`
-pub struct Buffer4in2 {
-    pub buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
+pub struct Display4in2 {
+    buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
+    rotation: DisplayRotation,
 }
 
-impl Default for Buffer4in2 {
+impl Default for Display4in2 {
     fn default() -> Self {
-        Buffer4in2 {
+        Display4in2 {
             buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value();
                 WIDTH as usize * HEIGHT as usize / 8],
+            rotation: DisplayRotation::default(),
         }
+    }
+}
+
+impl Drawing<Color> for Display4in2 {
+    fn draw<T>(&mut self, item_pixels: T)
+    where
+        T: Iterator<Item = Pixel<Color>>,
+    {
+        self.draw_helper(WIDTH, HEIGHT, item_pixels);
+    }
+}
+
+impl Display for Display4in2 {
+    fn buffer(&self) -> &[u8] {
+        &self.buffer
+    }
+
+    fn get_mut_buffer(&mut self) -> &mut [u8] {
+        &mut self.buffer
+    }
+
+    fn set_rotation(&mut self, rotation: DisplayRotation) {
+        self.rotation = rotation;
+    }
+
+    fn rotation(&self) -> DisplayRotation {
+        self.rotation
     }
 }
 
@@ -24,35 +56,27 @@ mod tests {
     use crate::epd4in2;
     use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::coord::Coord;
-    use embedded_graphics::prelude::*;
     use embedded_graphics::primitives::Line;
 
     // test buffer length
     #[test]
     fn graphics_size() {
-        let mut display4in2 = Buffer4in2::default();
-        let display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
+        let display = Display4in2::default();
         assert_eq!(display.buffer().len(), 15000);
     }
 
     // test default background color on all bytes
     #[test]
     fn graphics_default() {
-        let mut display4in2 = Buffer4in2::default();
-        let display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
-        use crate::epd4in2;
+        let display = Display4in2::default();
         for &byte in display.buffer() {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 
     #[test]
     fn graphics_rotation_0() {
-        let mut display4in2 = Buffer4in2::default();
-        let mut display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
+        let mut display = Display4in2::default();
         display.draw(
             Line::new(Coord::new(0, 0), Coord::new(7, 0))
                 .with_stroke(Some(Color::Black))
@@ -64,17 +88,13 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 
     #[test]
     fn graphics_rotation_90() {
-        let mut display4in2 = Buffer4in2::default();
-        let mut display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
+        let mut display = Display4in2::default();
         display.set_rotation(DisplayRotation::Rotate90);
         display.draw(
             Line::new(Coord::new(0, 392), Coord::new(0, 399))
@@ -87,17 +107,13 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 
     #[test]
     fn graphics_rotation_180() {
-        let mut display4in2 = Buffer4in2::default();
-        let mut display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
+        let mut display = Display4in2::default();
         display.set_rotation(DisplayRotation::Rotate180);
         display.draw(
             Line::new(Coord::new(392, 299), Coord::new(399, 299))
@@ -113,17 +129,13 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 
     #[test]
     fn graphics_rotation_270() {
-        let mut display4in2 = Buffer4in2::default();
-        let mut display = Display::new(WIDTH, HEIGHT, &mut display4in2.buffer);
+        let mut display = Display4in2::default();
         display.set_rotation(DisplayRotation::Rotate270);
         display.draw(
             Line::new(Coord::new(299, 0), Coord::new(299, 7))
@@ -139,10 +151,7 @@ mod tests {
         assert_eq!(buffer[0], Color::Black.get_byte_value());
 
         for &byte in buffer.iter().skip(1) {
-            assert_eq!(
-                byte,
-                epd4in2::constants::DEFAULT_BACKGROUND_COLOR.get_byte_value()
-            );
+            assert_eq!(byte, epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value());
         }
     }
 }
