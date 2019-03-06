@@ -126,7 +126,7 @@ script:
   - cd examples/epd2in9_full && cargo fmt --all -- --check && cargo check && cd ../../
   - cd examples/epd1in54_full && cargo fmt --all -- --check && cargo check && cd ../../
   - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd4in2_var_buffer && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd4in2_var_display_buffer && cargo fmt --all -- --check && cargo check && cd ../../
 
 after_success: 
 # measure code coverage and upload to coveralls.io
