@@ -243,6 +243,9 @@ where
         refresh_rate: Option<RefreshLUT>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
+            // if self.refresh == refresh_lut {
+            //     return Ok(())
+            // }
             self.refresh = refresh_lut;
         }
         match self.refresh {
@@ -325,7 +328,8 @@ where
         Ok(())
     }
 
-    fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+    /// Set your own LUT, this function is also used internally for set_lut
+    pub fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         assert!(buffer.len() == 30);
         self.interface
             .cmd_with_data(spi, Command::WRITE_LUT_REGISTER, buffer)
