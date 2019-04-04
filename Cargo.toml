@@ -25,6 +25,8 @@ graphics = ["embedded-graphics"]
 epd1in54 = []
 epd2in9 = []
 epd4in2 = []
+# offers an alternative fast full lut for type_a displays, but the refresh isnt as clean looking
+type_a_alternative_faster_lut = []
 
 [dependencies.embedded-graphics]
 optional = true

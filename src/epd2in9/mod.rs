@@ -325,6 +325,7 @@ where
         Ok(())
     }
 
+    /// Set your own LUT, this function is also used internally for set_lut
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         assert!(buffer.len() == 30);
         self.interface
