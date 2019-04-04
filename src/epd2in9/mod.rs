@@ -243,9 +243,6 @@ where
         refresh_rate: Option<RefreshLUT>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
-            // if self.refresh == refresh_lut {
-            //     return Ok(())
-            // }
             self.refresh = refresh_lut;
         }
         match self.refresh {
