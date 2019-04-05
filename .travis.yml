@@ -24,16 +24,22 @@ matrix:
     # Raspberry Pi 3...
     - env: TARGET=armv7-unknown-linux-gnueabihf
 
-    - env: TARGET=x86_64-unknown-linux-gnu
+    # is already included as global env
+    #- env: TARGET=x86_64-unknown-linux-gnu
     - env: TARGET=x86_64-unknown-linux-musl
 
     # Bare metal
     # These targets don't support std and as such are likely not suitable for
     # most crates.
     - env: TARGET=thumbv6m-none-eabi
+      script: cross check --verbose --target $TARGET
     - env: TARGET=thumbv7em-none-eabi
+      script: cross check --verbose --target $TARGET
     - env: TARGET=thumbv7em-none-eabihf
+      script: cross check --verbose --target $TARGET
     - env: TARGET=thumbv7m-none-eabi
+      script: cross check --verbose --target $TARGET
+      
     - name: "clippy und fmt"
       rust: stable
       env: RUN=FMT
@@ -69,11 +75,9 @@ before_install:
 install:
   - cargo install cargo-update || echo "cargo-update already installed"
   - cargo install-update -a # update outdated cached binaries
-  - cargo install cross
+  - cargo install cross || echo "cross already installed"
 
   #TODO: remove -A clippy::new_ret_no_self when new version of clippy gets released!
-before_script:
-  - rustup target add $TARGET
 script:
   - cross check --verbose --target $TARGET
   - cross test --all-features --release --verbose --target $TARGET
