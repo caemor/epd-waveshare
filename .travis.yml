@@ -32,14 +32,18 @@ matrix:
     # These targets don't support std and as such are likely not suitable for
     # most crates.
     - env: TARGET=thumbv6m-none-eabi
+      before_script: rustup target add thumbv7m-none-eabi
       script: cross check --verbose --target $TARGET
     - env: TARGET=thumbv7em-none-eabi
+      before_script: rustup target add thumbv7m-none-eabi
       script: cross check --verbose --target $TARGET
     - env: TARGET=thumbv7em-none-eabihf
+      before_script: rustup target add thumbv7m-none-eabi
       script: cross check --verbose --target $TARGET
     - env: TARGET=thumbv7m-none-eabi
+      before_script: rustup target add thumbv7m-none-eabi  
       script: cross check --verbose --target $TARGET
-      
+
     - name: "clippy und fmt"
       rust: stable
       env: RUN=FMT
@@ -61,7 +65,7 @@ matrix:
       before_script:
         - rustup target add thumbv7m-none-eabi  
       script: 
-        - cd examples/epd4in2_full_blue_pill && cargo check
+        - cd examples/epd4in2_full_blue_pill && cargo check && cd ../../
         - cd examples/epd4in2_full && cargo check && cd ../../
         - cd examples/epd2in9_full && cargo check && cd ../../
         - cd examples/epd1in54_full && cargo check && cd ../../
