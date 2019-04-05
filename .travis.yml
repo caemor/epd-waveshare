@@ -11,7 +11,7 @@ sudo: required
 # overridden on a case by case basis down below.
 matrix:
   allow_failures:
-    - nightly
+    - rust: nightly
   # TODO These are all the build jobs. Adjust as necessary. Comment out what you
   # don't need
   include:
@@ -32,27 +32,34 @@ matrix:
     - env: TARGET=thumbv7em-none-eabi
     - env: TARGET=thumbv7em-none-eabihf
     - env: TARGET=thumbv7m-none-eabi
+    - rust: stable
+      env: RUN=FMT
+      before_script: 
+        - rustup component add clippy-preview
+        - rustup component add rustfmt-preview
+      script:
+        - cargo fmt --all -- --check
+        - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
+        - cargo doc --all-features --release
+    - rust: stable
+      script: cd examples/epd4in2_full_blue_pill && cargo fmt --all -- --check && cargo check
+      
+
 
 
 before_install:
   - set -e
   - rustup self update
 
-
 install:
   - cargo install cargo-update || echo "cargo-update already installed"
   - cargo install-update -a # update outdated cached binaries
-  - rustup target add thumbv7m-none-eabi
-  - rustup component add clippy-preview
-  - rustup component add rustfmt-preview
+  - rustup target add thumbv7m-none-eabi  
 
   #TODO: remove -A clippy::new_ret_no_self when new version of clippy gets released!
 script:
-  - cargo fmt --all -- --check
-  - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
-  - cargo check  
-  - cargo test --all-features --release
-  - cargo doc --all-features --release
+  - cargo check --verbose
+  - cargo test --all-features --release --verbose
   - cd examples/epd4in2_full && cargo fmt --all -- --check && cargo check && cd ../../
   - cd examples/epd2in9_full && cargo fmt --all -- --check && cargo check && cd ../../
   - cd examples/epd1in54_full && cargo fmt --all -- --check && cargo check && cd ../../
