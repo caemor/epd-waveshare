@@ -33,16 +33,16 @@ matrix:
     # most crates.
     - env: TARGET=thumbv6m-none-eabi
       before_script: rustup target add thumbv7m-none-eabi
-      script: cross check --verbose --target $TARGET
+      script: cargo check --verbose --target $TARGET
     - env: TARGET=thumbv7em-none-eabi
       before_script: rustup target add thumbv7m-none-eabi
-      script: cross check --verbose --target $TARGET
+      script: cargo check --verbose --target $TARGET
     - env: TARGET=thumbv7em-none-eabihf
       before_script: rustup target add thumbv7m-none-eabi
-      script: cross check --verbose --target $TARGET
+      script: cargo check --verbose --target $TARGET
     - env: TARGET=thumbv7m-none-eabi
       before_script: rustup target add thumbv7m-none-eabi  
-      script: cross check --verbose --target $TARGET
+      script: cargo check --verbose --target $TARGET
 
     - name: "clippy und fmt"
       rust: stable
