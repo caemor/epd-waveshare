@@ -5,8 +5,7 @@
 #[allow(unused_imports)]
 use panic_semihosting;
 
-
-use cortex_m_rt::{entry};
+use cortex_m_rt::entry;
 use stm32f1xx_hal::prelude::*;
 use stm32f1xx_hal::{delay, spi};
 
@@ -18,7 +17,7 @@ use embedded_graphics::{
     Drawing,
 };
 use epd_waveshare::{
-    epd4in2::{Display4in2},
+    epd4in2::Display4in2,
     graphics::{Display, DisplayRotation},
     prelude::*,
 };
