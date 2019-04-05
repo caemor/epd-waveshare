@@ -32,7 +32,8 @@ matrix:
     - env: TARGET=thumbv7em-none-eabi
     - env: TARGET=thumbv7em-none-eabihf
     - env: TARGET=thumbv7m-none-eabi
-    - rust: stable
+    - name: "clippy und fmt"
+      rust: stable
       env: RUN=FMT
       before_script: 
         - rustup component add clippy-preview
@@ -41,8 +42,14 @@ matrix:
         - cargo fmt --all -- --check
         - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
         - cargo doc --all-features --release
+        - cd examples/epd4in2_full && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd2in9_full && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd1in54_full && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd4in2_var_display_buffer && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd4in2_full_blue_pill && cargo fmt --all -- --check && cd ../../
     - rust: stable
-      script: cd examples/epd4in2_full_blue_pill && cargo fmt --all -- --check && cargo check
+      script: cd examples/epd4in2_full_blue_pill && cargo check
       
 
 
@@ -60,11 +67,11 @@ install:
 script:
   - cargo check --verbose
   - cargo test --all-features --release --verbose
-  - cd examples/epd4in2_full && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd2in9_full && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd1in54_full && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd4in2_var_display_buffer && cargo fmt --all -- --check && cargo check && cd ../../
+  - cd examples/epd4in2_full && cargo check && cd ../../
+  - cd examples/epd2in9_full && cargo check && cd ../../
+  - cd examples/epd1in54_full && cargo check && cd ../../
+  - cd examples/epd1in54_no_graphics && cargo check && cd ../../
+  - cd examples/epd4in2_var_display_buffer && cargo check && cd ../../
 
 
 cache: cargo
