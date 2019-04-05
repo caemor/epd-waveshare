@@ -6,6 +6,7 @@ rust:
   - beta
   - nightly
 sudo: required
+env: TARGET=x86_64-unknown-linux-gnu
 
 # TODO Rust builds on stable by default, this can be
 # overridden on a case by case basis down below.
@@ -68,13 +69,14 @@ before_install:
 install:
   - cargo install cargo-update || echo "cargo-update already installed"
   - cargo install-update -a # update outdated cached binaries
+  - cargo install cross
 
   #TODO: remove -A clippy::new_ret_no_self when new version of clippy gets released!
 before_script:
   - rustup target add $TARGET
 script:
-  - cargo check --verbose --target $TARGET
-  - cargo test --all-features --release --verbose --target $TARGET
+  - cross check --verbose --target $TARGET
+  - cross test --all-features --release --verbose --target $TARGET
 
 cache: cargo
 before_cache:
