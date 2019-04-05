@@ -70,9 +70,11 @@ install:
   - cargo install-update -a # update outdated cached binaries
 
   #TODO: remove -A clippy::new_ret_no_self when new version of clippy gets released!
+before_script:
+  - rustup target add $TARGET
 script:
-  - cargo check --verbose
-  - cargo test --all-features --release --verbose
+  - cargo check --verbose --target $TARGET
+  - cargo test --all-features --release --verbose --target $TARGET
 
 cache: cargo
 before_cache:
