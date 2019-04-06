@@ -6,12 +6,14 @@ rust:
   - beta
   - nightly
 sudo: required
+env: TARGET=x86_64-unknown-linux-gnu
 
 # TODO Rust builds on stable by default, this can be
 # overridden on a case by case basis down below.
 matrix:
   allow_failures:
-    - nightly
+    - rust: nightly
+  fast_finish: true
   # TODO These are all the build jobs. Adjust as necessary. Comment out what you
   # don't need
   include:
@@ -22,43 +24,67 @@ matrix:
     # Raspberry Pi 3...
     - env: TARGET=armv7-unknown-linux-gnueabihf
 
-    - env: TARGET=x86_64-unknown-linux-gnu
+    # is already included as global env
+    #- env: TARGET=x86_64-unknown-linux-gnu
     - env: TARGET=x86_64-unknown-linux-musl
 
     # Bare metal
     # These targets don't support std and as such are likely not suitable for
     # most crates.
     - env: TARGET=thumbv6m-none-eabi
+      before_script: rustup target add $TARGET
+      script: cargo check --verbose --target $TARGET
     - env: TARGET=thumbv7em-none-eabi
+      before_script: rustup target add $TARGET
+      script: cargo check --verbose --target $TARGET
     - env: TARGET=thumbv7em-none-eabihf
+      before_script: rustup target add $TARGET
+      script: cargo check --verbose --target $TARGET
     - env: TARGET=thumbv7m-none-eabi
+      before_script: rustup target add $TARGET
+      script: cargo check --verbose --target $TARGET
 
-
+    - name: "clippy und fmt"
+      rust: stable
+      env: RUN=FMT
+      before_script: 
+        - rustup component add clippy-preview
+        - rustup component add rustfmt-preview
+      script:
+        - cargo fmt --all -- --check
+        - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
+        - cargo doc --all-features --release
+        - cd examples/epd4in2_full && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd2in9_full && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd1in54_full && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd4in2_var_display_buffer && cargo fmt --all -- --check && cd ../../
+        - cd examples/epd4in2_full_blue_pill && cargo fmt --all -- --check && cd ../../
+    - name: "check examples"
+      rust: stable
+      before_script:
+        - rustup target add thumbv7m-none-eabi  
+      script: 
+        - cd examples/epd4in2_full_blue_pill && cargo check && cd ../../
+        - cd examples/epd4in2_full && cargo check && cd ../../
+        - cd examples/epd2in9_full && cargo check && cd ../../
+        - cd examples/epd1in54_full && cargo check && cd ../../
+        - cd examples/epd1in54_no_graphics && cargo check && cd ../../
+        - cd examples/epd4in2_var_display_buffer && cargo check && cd ../../
+      
 before_install:
   - set -e
   - rustup self update
 
-
 install:
   - cargo install cargo-update || echo "cargo-update already installed"
   - cargo install-update -a # update outdated cached binaries
-  - rustup target add thumbv7m-none-eabi
-  - rustup component add clippy-preview
-  - rustup component add rustfmt-preview
+  - cargo install cross || echo "cross already installed"
 
   #TODO: remove -A clippy::new_ret_no_self when new version of clippy gets released!
 script:
-  - cargo fmt --all -- --check
-  - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
-  - cargo check  
-  - cargo test --all-features --release
-  - cargo doc --all-features --release
-  - cd examples/epd4in2_full && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd2in9_full && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd1in54_full && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cargo check && cd ../../
-  - cd examples/epd4in2_var_display_buffer && cargo fmt --all -- --check && cargo check && cd ../../
-
+  - cross check --verbose --target $TARGET
+  - cross test --all-features --release --verbose --target $TARGET
 
 cache: cargo
 before_cache:
