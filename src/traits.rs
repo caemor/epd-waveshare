@@ -123,7 +123,7 @@ where
     ) -> Result<(), SPI::Error>;
 
     /// Displays the frame data from SRAM
-    /// 
+    ///
     /// This function waits until the device isn`t busy anymore
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
