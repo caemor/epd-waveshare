@@ -217,7 +217,10 @@ where
         self.interface.cmd(spi, Command::MASTER_ACTIVATION)?;
         // MASTER Activation should not be interupted to avoid currption of panel images
         // therefore a terminate command is send
-        self.interface.cmd(spi, Command::NOP)
+        self.interface.cmd(spi, Command::NOP)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {

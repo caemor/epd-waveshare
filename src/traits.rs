@@ -123,6 +123,8 @@ where
     ) -> Result<(), SPI::Error>;
 
     /// Displays the frame data from SRAM
+    /// 
+    /// This function waits until the device isn`t busy anymore
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Clears the frame buffer on the EPD with the declared background color
