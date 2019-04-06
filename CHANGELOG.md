@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 <!-- ## [v0.3.1] - 2019-04-04 -->
 
+## [v0.3.1] - 2019-04-06
+
+### Fixed
+- Timing issues in display_frame function: epd1in54 and epd2in9 were both missing a necessary wait_until_idle call at the end of their display_frame function which sometimes caused invalid/ignored commands/inputs afterwards
+
 ## [v0.3.0] - 2019-04-04
 
 ### Added
@@ -49,5 +54,6 @@ Initial release with Changelog
 - Renamed to `epd-waveshare`
 
 
-[Unreleased]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.1...HEAD
+[v0.3.1]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.0...v0.3.1
 [v0.3.0]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.2.0...v0.3.0
