@@ -11,8 +11,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [v0.3.1] - 2019-04-06
 
+### Added
+ - Example for epd4in2 and BluePill-Board
+
+### Changed
+ - Improved CI
+
 ### Fixed
-- Timing issues in display_frame function: epd1in54 and epd2in9 were both missing a necessary wait_until_idle call at the end of their display_frame function which sometimes caused invalid/ignored commands/inputs afterwards
+ - Timing issues in display_frame function: epd1in54 and epd2in9 were both missing a necessary wait_until_idle call at the end of their display_frame function which sometimes caused invalid/ignored commands/inputs afterwards
+ - Some CI Targets were not tested correctly before
 
 ## [v0.3.0] - 2019-04-04
 
