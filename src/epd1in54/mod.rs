@@ -125,7 +125,10 @@ where
         self.interface
             .cmd_with_data(spi, Command::DATA_ENTRY_MODE_SETTING, &[0x03])?;
 
-        self.set_lut(spi, None)
+        self.set_lut(spi, None)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 }
 
@@ -188,7 +191,10 @@ where
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.use_full_frame(spi)?;
         self.interface
-            .cmd_with_data(spi, Command::WRITE_RAM, buffer)
+            .cmd_with_data(spi, Command::WRITE_RAM, buffer)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     //TODO: update description: last 3 bits will be ignored for width and x_pos
@@ -205,7 +211,10 @@ where
         self.set_ram_counter(spi, x, y)?;
 
         self.interface
-            .cmd_with_data(spi, Command::WRITE_RAM, buffer)
+            .cmd_with_data(spi, Command::WRITE_RAM, buffer)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
@@ -230,7 +239,11 @@ where
         let color = self.background_color.get_byte_value();
 
         self.interface.cmd(spi, Command::WRITE_RAM)?;
-        self.interface.data_x_times(spi, color, WIDTH / 8 * HEIGHT)
+        self.interface
+            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn set_background_color(&mut self, background_color: Color) {
@@ -309,7 +322,10 @@ where
                 end_y as u8,
                 (end_y >> 8) as u8,
             ],
-        )
+        )?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     pub(crate) fn set_ram_counter(
@@ -336,8 +352,12 @@ where
 
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         assert!(buffer.len() == 30);
+
         self.interface
-            .cmd_with_data(spi, Command::WRITE_LUT_REGISTER, buffer)
+            .cmd_with_data(spi, Command::WRITE_LUT_REGISTER, buffer)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 }
 

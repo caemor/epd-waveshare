@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-<!-- ## [v0.3.1] - 2019-04-04 -->
+<!-- ## [v0.3.2] - 2019-04-04 -->
+
+## [v0.3.2] - 2019-06-17
+
+### Fixed
+ - Added some more missing wait_until_idle calls
 
 ## [v0.3.1] - 2019-04-06
 
@@ -61,6 +66,7 @@ Initial release with Changelog
 - Renamed to `epd-waveshare`
 
 
-[Unreleased]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.2...HEAD
+[v0.3.2]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.1...v0.3.2
 [v0.3.1]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.0...v0.3.1
 [v0.3.0]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.2.0...v0.3.0

@@ -128,6 +128,7 @@ where
 
         self.set_lut(spi, None)?;
 
+        self.wait_until_idle();
         Ok(())
     }
 }
@@ -200,7 +201,10 @@ where
         self.command(spi, Command::POWER_OFF)?;
         self.wait_until_idle();
         self.interface
-            .cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])
+            .cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
@@ -221,7 +225,10 @@ where
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
         self.interface
-            .cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)
+            .cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn update_partial_frame(
@@ -265,7 +272,10 @@ where
 
         self.send_data(spi, buffer)?;
 
-        self.command(spi, Command::PARTIAL_OUT)
+        self.command(spi, Command::PARTIAL_OUT)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
@@ -288,7 +298,10 @@ where
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
         self.interface
-            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)
+            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn set_background_color(&mut self, color: Color) {
@@ -397,7 +410,10 @@ where
         self.cmd_with_data(spi, Command::LUT_WHITE_TO_BLACK, lut_wb)?;
 
         // LUT BLACK to BLACK
-        self.cmd_with_data(spi, Command::LUT_BLACK_TO_BLACK, lut_bb)
+        self.cmd_with_data(spi, Command::LUT_BLACK_TO_BLACK, lut_bb)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 }
 

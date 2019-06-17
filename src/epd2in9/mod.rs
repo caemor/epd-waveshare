@@ -180,14 +180,20 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.init(spi, delay)
+        self.init(spi, delay)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.use_full_frame(spi)?;
 
         self.interface
-            .cmd_with_data(spi, Command::WRITE_RAM, buffer)
+            .cmd_with_data(spi, Command::WRITE_RAM, buffer)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     //TODO: update description: last 3 bits will be ignored for width and x_pos
@@ -204,7 +210,10 @@ where
         self.set_ram_counter(spi, x, y)?;
 
         self.interface
-            .cmd_with_data(spi, Command::WRITE_RAM, buffer)
+            .cmd_with_data(spi, Command::WRITE_RAM, buffer)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
@@ -229,7 +238,11 @@ where
         let color = self.background_color.get_byte_value();
 
         self.interface.cmd(spi, Command::WRITE_RAM)?;
-        self.interface.data_x_times(spi, color, WIDTH / 8 * HEIGHT)
+        self.interface
+            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 
     fn set_background_color(&mut self, background_color: Color) {
@@ -332,7 +345,9 @@ where
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         assert!(buffer.len() == 30);
         self.interface
-            .cmd_with_data(spi, Command::WRITE_LUT_REGISTER, buffer)
+            .cmd_with_data(spi, Command::WRITE_LUT_REGISTER, buffer)?;
+        self.wait_until_idle();
+        Ok(())
     }
 }
 
