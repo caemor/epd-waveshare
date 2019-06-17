@@ -238,7 +238,8 @@ where
         let color = self.background_color.get_byte_value();
 
         self.interface.cmd(spi, Command::WRITE_RAM)?;
-        self.interface.data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
+        self.interface
+            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
 
         self.wait_until_idle();
         Ok(())

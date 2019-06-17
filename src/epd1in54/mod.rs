@@ -239,7 +239,8 @@ where
         let color = self.background_color.get_byte_value();
 
         self.interface.cmd(spi, Command::WRITE_RAM)?;
-        self.interface.data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
+        self.interface
+            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
 
         self.wait_until_idle();
         Ok(())
@@ -351,7 +352,7 @@ where
 
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         assert!(buffer.len() == 30);
-        
+
         self.interface
             .cmd_with_data(spi, Command::WRITE_LUT_REGISTER, buffer)?;
 
