@@ -122,9 +122,9 @@ impl<'a> VarDisplay<'a> {
 impl<'a> Drawing<Color> for VarDisplay<'a> {
     fn draw<T>(&mut self, item_pixels: T)
     where
-        T: Iterator<Item = Pixel<Color>>,
+        T: IntoIterator<Item = Pixel<Color>>,
     {
-        self.draw_helper(self.width, self.height, item_pixels);
+        self.draw_helper(self.width, self.height, item_pixels.into_iter());
     }
 }
 
