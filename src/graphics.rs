@@ -47,7 +47,7 @@ pub trait Display: Drawing<Color> {
     /// Becomes uneccesary when const_generics become stablised
     fn draw_helper<T>(&mut self, width: u32, height: u32, item_pixels: T)
     where
-        T: Iterator<Item = Pixel<Color>>,
+        T: IntoIterator<Item = Pixel<Color>>,
     {
         let rotation = self.rotation();
         let buffer = self.get_mut_buffer();
@@ -124,7 +124,7 @@ impl<'a> Drawing<Color> for VarDisplay<'a> {
     where
         T: IntoIterator<Item = Pixel<Color>>,
     {
-        self.draw_helper(self.width, self.height, item_pixels.into_iter());
+        self.draw_helper(self.width, self.height, item_pixels);
     }
 }
 

@@ -27,7 +27,7 @@ impl Drawing<Color> for Display4in2 {
     where
         T: IntoIterator<Item = Pixel<Color>>,
     {
-        self.draw_helper(WIDTH, HEIGHT, item_pixels.into_iter());
+        self.draw_helper(WIDTH, HEIGHT, item_pixels);
     }
 }
 
