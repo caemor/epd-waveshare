@@ -84,8 +84,8 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
         Font6x8::render_str("Rotate 0!")
-            .with_stroke(Some(Color::Black))
-            .with_fill(Some(Color::White))
+            .stroke(Some(Color::Black))
+            .fill(Some(Color::White))
             .translate(Coord::new(5, 50))
             .into_iter(),
     );
@@ -93,8 +93,8 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate90);
     display.draw(
         Font6x8::render_str("Rotate 90!")
-            .with_stroke(Some(Color::Black))
-            .with_fill(Some(Color::White))
+            .stroke(Some(Color::Black))
+            .fill(Some(Color::White))
             .translate(Coord::new(5, 50))
             .into_iter(),
     );
@@ -102,8 +102,8 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate180);
     display.draw(
         Font6x8::render_str("Rotate 180!")
-            .with_stroke(Some(Color::Black))
-            .with_fill(Some(Color::White))
+            .stroke(Some(Color::Black))
+            .fill(Some(Color::White))
             .translate(Coord::new(5, 50))
             .into_iter(),
     );
@@ -111,8 +111,8 @@ fn run() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     display.draw(
         Font6x8::render_str("Rotate 270!")
-            .with_stroke(Some(Color::Black))
-            .with_fill(Some(Color::White))
+            .stroke(Some(Color::Black))
+            .fill(Some(Color::White))
             .translate(Coord::new(5, 50))
             .into_iter(),
     );
@@ -133,7 +133,7 @@ fn run() -> Result<(), std::io::Error> {
 
         display.draw(
             Font6x8::render_str("  Hello World! ")
-                .with_style(Style {
+                .style(Style {
                     fill_color: Some(Color::White),
                     stroke_color: Some(Color::Black),
                     stroke_width: 0u8, // Has no effect on fonts

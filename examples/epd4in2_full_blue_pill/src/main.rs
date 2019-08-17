@@ -71,8 +71,8 @@ fn main() -> ! {
     display.set_rotation(DisplayRotation::Rotate0);
     display.draw(
         Font6x8::render_str("Rotate 0!")
-            .with_stroke(Some(Color::Black))
-            .with_fill(Some(Color::White))
+            .stroke(Some(Color::Black))
+            .fill(Some(Color::White))
             .translate(Coord::new(5, 50))
             .into_iter(),
     );
@@ -80,8 +80,8 @@ fn main() -> ! {
     display.set_rotation(DisplayRotation::Rotate90);
     display.draw(
         Font6x8::render_str("Rotate 90!")
-            .with_stroke(Some(Color::Black))
-            .with_fill(Some(Color::White))
+            .stroke(Some(Color::Black))
+            .fill(Some(Color::White))
             .translate(Coord::new(5, 50))
             .into_iter(),
     );
@@ -89,8 +89,8 @@ fn main() -> ! {
     display.set_rotation(DisplayRotation::Rotate180);
     display.draw(
         Font6x8::render_str("Rotate 180!")
-            .with_stroke(Some(Color::Black))
-            .with_fill(Some(Color::White))
+            .stroke(Some(Color::Black))
+            .fill(Some(Color::White))
             .translate(Coord::new(5, 50))
             .into_iter(),
     );
@@ -98,8 +98,8 @@ fn main() -> ! {
     display.set_rotation(DisplayRotation::Rotate270);
     display.draw(
         Font6x8::render_str("Rotate 270!")
-            .with_stroke(Some(Color::Black))
-            .with_fill(Some(Color::White))
+            .stroke(Some(Color::Black))
+            .fill(Some(Color::White))
             .translate(Coord::new(5, 50))
             .into_iter(),
     );
@@ -116,17 +116,17 @@ fn main() -> ! {
     // draw a analog clock
     display.draw(
         Circle::new(Coord::new(64, 64), 64)
-            .with_stroke(Some(Color::Black))
+            .stroke(Some(Color::Black))
             .into_iter(),
     );
     display.draw(
         Line::new(Coord::new(64, 64), Coord::new(0, 64))
-            .with_stroke(Some(Color::Black))
+            .stroke(Some(Color::Black))
             .into_iter(),
     );
     display.draw(
         Line::new(Coord::new(64, 64), Coord::new(80, 80))
-            .with_stroke(Some(Color::Black))
+            .stroke(Some(Color::Black))
             .into_iter(),
     );
 
@@ -134,7 +134,7 @@ fn main() -> ! {
     display.draw(
         Font6x8::render_str("It's working-WoB!")
             // Using Style here
-            .with_style(Style {
+            .style(Style {
                 fill_color: Some(Color::Black),
                 stroke_color: Some(Color::White),
                 stroke_width: 0u8, // Has no effect on fonts
@@ -147,7 +147,7 @@ fn main() -> ! {
     display.draw(
         Font12x16::render_str("It's working-BoW!")
             // Using Style here
-            .with_style(Style {
+            .style(Style {
                 fill_color: Some(Color::White),
                 stroke_color: Some(Color::Black),
                 stroke_width: 0u8, // Has no effect on fonts
@@ -165,7 +165,7 @@ fn main() -> ! {
 
         display.draw(
             Font6x8::render_str("  Hello World! ")
-                .with_style(Style {
+                .style(Style {
                     fill_color: Some(Color::White),
                     stroke_color: Some(Color::Black),
                     stroke_width: 0u8, // Has no effect on fonts

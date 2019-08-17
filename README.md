@@ -23,8 +23,8 @@ let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
 // Draw some text
 display.draw(
     Font12x16::render_str("Hello Rust!")
-        .with_stroke(Some(Color::Black))
-        .with_fill(Some(Color::White))
+        .stroke(Some(Color::Black))
+        .fill(Some(Color::White))
         .translate(Coord::new(5, 50))
         .into_iter(),
 );

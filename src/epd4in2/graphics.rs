@@ -79,7 +79,7 @@ mod tests {
         let mut display = Display4in2::default();
         display.draw(
             Line::new(Coord::new(0, 0), Coord::new(7, 0))
-                .with_stroke(Some(Color::Black))
+                .stroke(Some(Color::Black))
                 .into_iter(),
         );
 
@@ -98,7 +98,7 @@ mod tests {
         display.set_rotation(DisplayRotation::Rotate90);
         display.draw(
             Line::new(Coord::new(0, 392), Coord::new(0, 399))
-                .with_stroke(Some(Color::Black))
+                .stroke(Some(Color::Black))
                 .into_iter(),
         );
 
@@ -117,7 +117,7 @@ mod tests {
         display.set_rotation(DisplayRotation::Rotate180);
         display.draw(
             Line::new(Coord::new(392, 299), Coord::new(399, 299))
-                .with_stroke(Some(Color::Black))
+                .stroke(Some(Color::Black))
                 .into_iter(),
         );
 
@@ -139,7 +139,7 @@ mod tests {
         display.set_rotation(DisplayRotation::Rotate270);
         display.draw(
             Line::new(Coord::new(299, 0), Coord::new(299, 7))
-                .with_stroke(Some(Color::Black))
+                .stroke(Some(Color::Black))
                 .into_iter(),
         );
 

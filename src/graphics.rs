@@ -95,7 +95,7 @@ pub trait Display: Drawing<Color> {
 ///
 /// display.draw(
 ///     Line::new(Coord::new(0, 120), Coord::new(0, 295))
-///         .with_stroke(Some(Color::Black))
+///         .stroke(Some(Color::Black))
 ///         .into_iter(),
 /// );
 /// ```
@@ -249,7 +249,7 @@ mod tests {
 
         display.draw(
             Line::new(Coord::new(0, 0), Coord::new(7, 0))
-                .with_stroke(Some(Color::Black))
+                .stroke(Some(Color::Black))
                 .into_iter(),
         );
 
@@ -275,7 +275,7 @@ mod tests {
 
         display.draw(
             Line::new(Coord::new(0, 120), Coord::new(0, 295))
-                .with_stroke(Some(Color::Black))
+                .stroke(Some(Color::Black))
                 .into_iter(),
         );
 
