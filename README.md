@@ -91,10 +91,3 @@ They are also called A and B, but you shouldn't get confused and mix it with the
 |            | 7.5in  (A) |
 |            | 7.5in  (B) |
 |            | 7.5in  (C) |
-
-
-
-
-
-
-
