@@ -8,5 +8,5 @@ edition = "2018"
 
 epd-waveshare = { path = "../../", default-features = false, features = ["epd1in54"]}
 
-linux-embedded-hal = "0.2.2"
+linux-embedded-hal = "0.5.2"
 embedded-hal = { version = "0.2.2", features = ["unproven"] }
