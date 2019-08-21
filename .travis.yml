@@ -71,6 +71,7 @@ matrix:
         - cd examples/epd1in54_full && cargo check && cd ../../
         - cd examples/epd1in54_no_graphics && cargo check && cd ../../
         - cd examples/epd4in2_var_display_buffer && cargo check && cd ../../
+    - name 
       
 before_install:
   - set -e
@@ -90,6 +91,21 @@ cache: cargo
 before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $HOME/.cargo
+  - | 
+    if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+      cargo install cargo-tarpaulin -f
+    fi
+
+after_success: |
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+    # Uncomment the following line for coveralls.io
+    # cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+
+    # Uncomment the following two lines create and upload a report for codecov.io
+    cargo tarpaulin --out Xml
+    bash <(curl -s https://codecov.io/bash)
+  fi
+
 
 branches:
   only:
