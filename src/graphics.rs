@@ -47,7 +47,7 @@ pub trait Display: Drawing<Color> {
     /// Becomes uneccesary when const_generics become stablised
     fn draw_helper<T>(&mut self, width: u32, height: u32, item_pixels: T)
     where
-        T: Iterator<Item = Pixel<Color>>,
+        T: IntoIterator<Item = Pixel<Color>>,
     {
         let rotation = self.rotation();
         let buffer = self.get_mut_buffer();
@@ -95,7 +95,7 @@ pub trait Display: Drawing<Color> {
 ///
 /// display.draw(
 ///     Line::new(Coord::new(0, 120), Coord::new(0, 295))
-///         .with_stroke(Some(Color::Black))
+///         .stroke(Some(Color::Black))
 ///         .into_iter(),
 /// );
 /// ```
@@ -122,7 +122,7 @@ impl<'a> VarDisplay<'a> {
 impl<'a> Drawing<Color> for VarDisplay<'a> {
     fn draw<T>(&mut self, item_pixels: T)
     where
-        T: Iterator<Item = Pixel<Color>>,
+        T: IntoIterator<Item = Pixel<Color>>,
     {
         self.draw_helper(self.width, self.height, item_pixels);
     }
@@ -249,7 +249,7 @@ mod tests {
 
         display.draw(
             Line::new(Coord::new(0, 0), Coord::new(7, 0))
-                .with_stroke(Some(Color::Black))
+                .stroke(Some(Color::Black))
                 .into_iter(),
         );
 
@@ -275,7 +275,7 @@ mod tests {
 
         display.draw(
             Line::new(Coord::new(0, 120), Coord::new(0, 295))
-                .with_stroke(Some(Color::Black))
+                .stroke(Some(Color::Black))
                 .into_iter(),
         );
 

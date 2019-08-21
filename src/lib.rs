@@ -37,8 +37,8 @@
 //! // Write some hello world in the screenbuffer
 //! display.draw(
 //!     Font6x8::render_str("Hello World!")
-//!         .with_stroke(Some(Color::Black))
-//!         .with_fill(Some(Color::White))
+//!         .stroke(Some(Color::Black))
+//!         .fill(Some(Color::White))
 //!         .translate(Coord::new(5, 50))
 //!         .into_iter(),
 //! );

@@ -30,7 +30,7 @@ type_a_alternative_faster_lut = []
 
 [dependencies.embedded-graphics]
 optional = true
-version = "0.4.3"
+version = "0.5.2"
 
 [dependencies.embedded-hal]
 features = ["unproven"]

@@ -9,5 +9,5 @@ edition = "2018"
 epd-waveshare = { path = "../../", default-features = false, features = ["epd2in9", "graphics"]}
 
 linux-embedded-hal = "0.2.2"
-embedded-graphics = "0.4.5"
+embedded-graphics = "0.5.2"
 embedded-hal = { version = "0.2.2", features = ["unproven"] }

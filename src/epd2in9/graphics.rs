@@ -25,7 +25,7 @@ impl Default for Display2in9 {
 impl Drawing<Color> for Display2in9 {
     fn draw<T>(&mut self, item_pixels: T)
     where
-        T: Iterator<Item = Pixel<Color>>,
+        T: IntoIterator<Item = Pixel<Color>>,
     {
         self.draw_helper(WIDTH, HEIGHT, item_pixels);
     }
