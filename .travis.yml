@@ -110,7 +110,7 @@ after_success: |
 
     # Uncomment the following two lines create and upload a report for codecov.io
     cargo tarpaulin --out Xml
-    bash <(curl -s https://codecov.io/bash)
+    bash <(curl -s https://codecov.io/bash) -t "$CODECOV_TOKEN"
   fi
 
 
