@@ -13,6 +13,7 @@ env: TARGET=x86_64-unknown-linux-gnu
 matrix:
   allow_failures:
     - rust: nightly
+    - name: clippy
   fast_finish: true
   # TODO These are all the build jobs. Adjust as necessary. Comment out what you
   # don't need
@@ -44,15 +45,13 @@ matrix:
       before_script: rustup target add $TARGET
       script: cargo check --verbose --target $TARGET
 
-    - name: "clippy und fmt"
+    - name: "fmt"
       rust: stable
       env: RUN=FMT
       before_script: 
-        - rustup component add clippy-preview
-        - rustup component add rustfmt-preview
+        - rustup component add rustfmt
       script:
         - cargo fmt --all -- --check
-        - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
         - cargo doc --all-features --release
         - cd examples/epd4in2_full && cargo fmt --all -- --check && cd ../../
         - cd examples/epd2in9_full && cargo fmt --all -- --check && cd ../../
@@ -60,6 +59,14 @@ matrix:
         - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cd ../../
         - cd examples/epd4in2_var_display_buffer && cargo fmt --all -- --check && cd ../../
         - cd examples/epd4in2_full_blue_pill && cargo fmt --all -- --check && cd ../../
+    - name: "clippy"
+      rust: stable
+      env: RUN=FMT
+      before_script: 
+        - rustup component add clippy
+      script:        
+        - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
+        
     - name: "check examples"
       rust: stable
       before_script:
@@ -71,6 +78,7 @@ matrix:
         - cd examples/epd1in54_full && cargo check && cd ../../
         - cd examples/epd1in54_no_graphics && cargo check && cd ../../
         - cd examples/epd4in2_var_display_buffer && cargo check && cd ../../
+    - name 
       
 before_install:
   - set -e
@@ -90,6 +98,21 @@ cache: cargo
 before_cache:
   # Travis can't cache files that are not readable by "others"
   - chmod -R a+r $HOME/.cargo
+  - | 
+    if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+      cargo install cargo-tarpaulin -f
+    fi
+
+after_success: |
+  if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
+    # Uncomment the following line for coveralls.io
+    # cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
+
+    # Uncomment the following two lines create and upload a report for codecov.io
+    cargo tarpaulin --out Xml
+    bash <(curl -s https://codecov.io/bash) -t "$CODECOV_TOKEN"
+  fi
+
 
 branches:
   only:
