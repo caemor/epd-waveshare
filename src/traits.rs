@@ -52,6 +52,23 @@ where
     ) -> Result<(), SPI::Error>;
 }
 
+pub trait WaveshareTwoColorDisplay<SPI, CS, BUSY, DC, RST>:
+    WaveshareDisplay<SPI, CS, BUSY, DC, RST>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+{
+    fn update_both_planes(
+        &mut self,
+        spi: &mut SPI,
+        black: &[u8],
+        color1: &[u8],
+    ) -> Result<(), SPI::Error>;
+}
+
 /// All the functions to interact with the EPDs
 ///
 /// This trait includes all public functions to use the EPDS
