@@ -64,6 +64,9 @@ pub mod color;
 /// Interface for the physical connection between display and the controlling device
 mod interface;
 
+#[cfg(feature = "epd7in5")]
+pub mod epd7in5;
+
 #[cfg(feature = "epd4in2")]
 pub mod epd4in2;
 
