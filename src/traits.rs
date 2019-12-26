@@ -52,6 +52,8 @@ where
     ) -> Result<(), SPI::Error>;
 }
 
+
+/// Functions to interact with two color panels
 pub trait WaveshareTwoColorDisplay<SPI, CS, BUSY, DC, RST>:
     WaveshareDisplay<SPI, CS, BUSY, DC, RST>
 where
@@ -61,6 +63,7 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
+    /// Update both color planes
     fn update_both_planes(
         &mut self,
         spi: &mut SPI,

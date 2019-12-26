@@ -1,3 +1,5 @@
+//! A simple Driver for the Waveshare 1.54" (B) E-Ink Display via SPI
+
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::*,
