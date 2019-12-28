@@ -52,7 +52,6 @@ where
     ) -> Result<(), SPI::Error>;
 }
 
-
 /// Functions to interact with three color panels
 pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>:
     WaveshareDisplay<SPI, CS, BUSY, DC, RST>

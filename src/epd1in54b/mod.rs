@@ -6,7 +6,9 @@ use embedded_hal::{
 };
 
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
+use crate::traits::{
+    InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
+};
 
 //The Lookup Tables for the Display
 mod constants;
