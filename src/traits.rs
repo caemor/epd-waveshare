@@ -52,6 +52,27 @@ where
     ) -> Result<(), SPI::Error>;
 }
 
+/// Functions to interact with three color panels
+pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>:
+    WaveshareDisplay<SPI, CS, BUSY, DC, RST>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+{
+    /// Transmit data to the SRAM of the EPD
+    ///
+    /// Updates both the black and the secondary color layers
+    fn update_color_frame(
+        &mut self,
+        spi: &mut SPI,
+        black: &[u8],
+        color: &[u8],
+    ) -> Result<(), SPI::Error>;
+}
+
 /// All the functions to interact with the EPDs
 ///
 /// This trait includes all public functions to use the EPDS
