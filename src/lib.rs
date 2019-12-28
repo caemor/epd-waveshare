@@ -84,7 +84,7 @@ pub(crate) mod type_a;
 
 pub mod prelude {
     pub use crate::color::Color;
-    pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareTwoColorDisplay};
+    pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
     pub use crate::SPI_MODE;
 
     #[cfg(feature = "graphics")]

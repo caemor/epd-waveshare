@@ -53,8 +53,8 @@ where
 }
 
 
-/// Functions to interact with two color panels
-pub trait WaveshareTwoColorDisplay<SPI, CS, BUSY, DC, RST>:
+/// Functions to interact with three color panels
+pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>:
     WaveshareDisplay<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -63,12 +63,14 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    /// Update both color planes
-    fn update_both_planes(
+    /// Transmit data to the SRAM of the EPD
+    ///
+    /// Updates both the black and the secondary color layers
+    fn update_color_frame(
         &mut self,
         spi: &mut SPI,
         black: &[u8],
-        color1: &[u8],
+        color: &[u8],
     ) -> Result<(), SPI::Error>;
 }
 

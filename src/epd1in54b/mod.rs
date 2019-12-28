@@ -6,7 +6,7 @@ use embedded_hal::{
 };
 
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareTwoColorDisplay};
+use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
 
 //The Lookup Tables for the Display
 mod constants;
@@ -83,7 +83,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> WaveshareTwoColorDisplay<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>
     for EPD1in54b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -92,7 +92,7 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    fn update_both_planes(
+    fn update_color_frame(
         &mut self,
         spi: &mut SPI,
         black: &[u8],
