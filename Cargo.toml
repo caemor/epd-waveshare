@@ -17,9 +17,8 @@ edition = "2018"
 # `branch` is optional; default is `master`
 travis-ci = { repository = "caemor/epd-waveshare" }
 
-
 [features]
-default = ["epd1in54", "epd1in54b", "epd2in9", "epd4in2", "epd7in5", "graphics"]
+default = ["epd1in54", "epd1in54b", "epd2in9", "epd4in2", "epd7in5", "epd7in5_v2", "graphics"]
 
 graphics = ["embedded-graphics"]
 epd1in54 = []
@@ -27,6 +26,7 @@ epd1in54b = []
 epd2in9 = []
 epd4in2 = []
 epd7in5 = []
+epd7in5_v2 = []
 # offers an alternative fast full lut for type_a displays, but the refresh isnt as clean looking
 type_a_alternative_faster_lut = []
 
