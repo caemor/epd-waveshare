@@ -8,7 +8,7 @@
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
-    digital::v1::{InputPin, OutputPin},
+    digital::v2::{InputPin, OutputPin},
 };
 
 use crate::color::Color;

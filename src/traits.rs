@@ -2,7 +2,7 @@ use crate::color::Color;
 use core::marker::Sized;
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
-    digital::*,
+    digital::v2::*,
 };
 
 /// All commands need to have this trait which gives the address of the command
