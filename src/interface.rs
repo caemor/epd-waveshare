@@ -151,7 +151,8 @@ where
     /// Most likely there was a mistake with the 2in9 busy connection
     /// //TODO: use the #cfg feature to make this compile the right way for the certain types
     pub(crate) fn is_busy(&self, is_busy_low: bool) -> bool {
-        (is_busy_low && self.busy.is_low().unwrap_or(false)) || (!is_busy_low && self.busy.is_high().unwrap_or(false))
+        (is_busy_low && self.busy.is_low().unwrap_or(false))
+            || (!is_busy_low && self.busy.is_high().unwrap_or(false))
     }
 
     /// Resets the device.

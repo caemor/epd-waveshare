@@ -217,7 +217,9 @@ where
 {
     fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
-        for b in buffer { self.send_data(spi, &[255 - b])?; }
+        for b in buffer {
+            self.send_data(spi, &[255 - b])?;
+        }
         self.command(spi, Command::DISPLAY_REFRESH)?;
         self.wait_until_idle();
         Ok(())

@@ -129,7 +129,6 @@ pub(crate) enum Command {
     READ_VCOM_VALUE = 0x81,
     /// This command sets `VCOM_DC` value.
     VCM_DC_SETTING = 0x82,
-
     // /// This is in all the Waveshare controllers for EPD7in5, but it's not documented
     // /// anywhere in the datasheet `¯\_(ツ)_/¯`
     // FLASH_MODE = 0xE5,
