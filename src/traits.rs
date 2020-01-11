@@ -174,3 +174,15 @@ where
     /// if the device is still busy
     fn is_busy(&self) -> bool;
 }
+/// Tiny optional extension trait
+pub trait WaveshareDisplayExt<SPI, CS, BUSY, DC, RST>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+{
+    // provide a combined update&display and save some time (skipping a busy check in between)
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+}
