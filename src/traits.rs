@@ -2,7 +2,7 @@ use crate::color::Color;
 use core::marker::Sized;
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
-    digital::*,
+    digital::v2::*,
 };
 
 /// All commands need to have this trait which gives the address of the command
@@ -173,4 +173,16 @@ where
     /// but in the case you send data and commands directly you might need to check
     /// if the device is still busy
     fn is_busy(&self) -> bool;
+}
+/// Tiny optional extension trait
+pub trait WaveshareDisplayExt<SPI, CS, BUSY, DC, RST>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+{
+    // provide a combined update&display and save some time (skipping a busy check in between)
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
 }

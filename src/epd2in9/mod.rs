@@ -42,7 +42,7 @@ const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
-    digital::*,
+    digital::v2::*,
 };
 
 use crate::type_a::{

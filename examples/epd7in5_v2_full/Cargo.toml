@@ -1,0 +1,15 @@
+[package]
+name = "embedded_linux_eink_example"
+version = "0.1.0"
+authors = [
+    "Christoph Groß <christoph-gross@mailbox.org>",
+    "Jack Grigg <thestr4d@gmail.com>",
+    "Christoph Grabo <asaaki@mannaz.cc>",
+]
+edition = "2018"
+
+[dependencies]
+embedded-graphics = "0.5.2"
+embedded-hal = { version = "0.2.3", features = ["unproven"] }
+epd-waveshare = { path = "../../", default-features = false, features = ["epd7in5_v2", "graphics"]}
+linux-embedded-hal = "0.3.0"

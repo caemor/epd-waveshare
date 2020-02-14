@@ -48,7 +48,7 @@
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
-    digital::*,
+    digital::v2::*,
 };
 
 use crate::interface::DisplayInterface;

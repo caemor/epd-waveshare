@@ -1,10 +1,14 @@
-//! A simple Driver for the Waveshare 7.5" E-Ink Display via SPI
+//! A simple Driver for the Waveshare 7.5" E-Ink Display (V2) via SPI
 //!
 //! # References
 //!
 //! - [Datasheet](https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT)
-//! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/702def06bcb75983c98b0f9d25d43c552c248eb0/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_7in5.c)
-//! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/702def06bcb75983c98b0f9d25d43c552c248eb0/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5.py)
+//! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/702def0/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_7in5_V2.c)
+//! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/702def0/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5_V2.py)
+//!
+//! Important note for V2:
+//! Revision V2 has been released on 2019.11, the resolution is upgraded to 800×480, from 640×384 of V1.
+//! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
@@ -13,7 +17,7 @@ use embedded_hal::{
 
 use crate::color::Color;
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareDisplayExt};
 
 pub(crate) mod command;
 use self::command::Command;
@@ -23,12 +27,12 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display7in5;
 
-pub const WIDTH: u32 = 640;
-pub const HEIGHT: u32 = 384;
+pub const WIDTH: u32 = 800;
+pub const HEIGHT: u32 = 480;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
-/// EPD7in5 driver
+/// EPD7in5 (V2) driver
 ///
 pub struct EPD7in5<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
@@ -54,43 +58,21 @@ where
         // Reset the device
         self.interface.reset(delay);
 
-        // Set the power settings
-        self.cmd_with_data(spi, Command::POWER_SETTING, &[0x37, 0x00])?;
+        // V2 procedure as described here:
+        // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5bc_V2.py
+        // and as per specs:
+        // https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
 
-        // Set the panel settings:
-        // - 600 x 448
-        // - Using LUT from external flash
-        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0xCF, 0x08])?;
-
-        // Start the booster
-        self.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0xC7, 0xCC, 0x28])?;
-
-        // Power on
+        self.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x27, 0x17])?;
+        self.cmd_with_data(spi, Command::POWER_SETTING, &[0x07, 0x17, 0x3F, 0x3F])?;
         self.command(spi, Command::POWER_ON)?;
-        delay.delay_ms(5);
         self.wait_until_idle();
-
-        // Set the clock frequency to 50Hz (default)
-        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3C])?;
-
-        // Select internal temperature sensor (default)
-        self.cmd_with_data(spi, Command::TEMPERATURE_CALIBRATION, &[0x00])?;
-
-        // Set Vcom and data interval to 10 (default), border output to white
-        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x77])?;
-
-        // Set S2G and G2S non-overlap periods to 12 (default)
+        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0x1F])?;
+        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x06])?;
+        self.cmd_with_data(spi, Command::TCON_RESOLUTION, &[0x03, 0x20, 0x01, 0xE0])?;
+        self.cmd_with_data(spi, Command::DUAL_SPI, &[0x00])?;
         self.cmd_with_data(spi, Command::TCON_SETTING, &[0x22])?;
-
-        // Set the real resolution
-        self.send_resolution(spi)?;
-
-        // Set VCOM_DC to -1.5V
-        self.cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x1E])?;
-
-        // This is in all the Waveshare controllers for EPD7in5
-        self.cmd_with_data(spi, Command::FLASH_MODE, &[0x03])?;
-
+        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x10, 0x07])?;
         self.wait_until_idle();
         Ok(())
     }
@@ -114,12 +96,12 @@ where
     ///
     /// # Example
     ///
-    /// ```ignore
+    /// ```rust,ignore
     /// //buffer = some image data;
     ///
     /// let mut epd7in5 = EPD7in5::new(spi, cs, busy, dc, rst, delay);
     ///
-    /// epd7in5.display_and_transfer_frame(buffer, None);
+    /// epd7in5.update_and_display_frame(&mut spi, &buffer);
     ///
     /// epd7in5.sleep();
     /// ```
@@ -153,25 +135,12 @@ where
         self.command(spi, Command::POWER_OFF)?;
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
-        for byte in buffer {
-            let mut temp = *byte;
-            for _ in 0..4 {
-                let mut data = if temp & 0x80 == 0 { 0x00 } else { 0x03 };
-                data <<= 4;
-                temp <<= 1;
-                data |= if temp & 0x80 == 0 { 0x00 } else { 0x03 };
-                temp <<= 1;
-                self.send_data(spi, &[data])?;
-            }
-        }
-
+        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.send_data(spi, buffer)?;
         self.wait_until_idle();
         Ok(())
     }
@@ -190,7 +159,6 @@ where
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.command(spi, Command::DISPLAY_REFRESH)?;
-
         self.wait_until_idle();
         Ok(())
     }
@@ -198,11 +166,13 @@ where
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.send_resolution(spi)?;
 
-        // The Waveshare controllers all implement clear using 0x33
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.interface
-            .data_x_times(spi, 0x33, WIDTH / 8 * HEIGHT * 4)?;
+        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
 
+        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+
+        self.command(spi, Command::DISPLAY_REFRESH)?;
         self.wait_until_idle();
         Ok(())
     }
@@ -233,6 +203,26 @@ where
 
     fn is_busy(&self) -> bool {
         self.interface.is_busy(IS_BUSY_LOW)
+    }
+}
+
+impl<SPI, CS, BUSY, DC, RST> WaveshareDisplayExt<SPI, CS, BUSY, DC, RST>
+    for EPD7in5<SPI, CS, BUSY, DC, RST>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+{
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
+        for b in buffer {
+            self.send_data(spi, &[255 - b])?;
+        }
+        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.wait_until_idle();
+        Ok(())
     }
 }
 
@@ -283,8 +273,8 @@ mod tests {
 
     #[test]
     fn epd_size() {
-        assert_eq!(WIDTH, 640);
-        assert_eq!(HEIGHT, 384);
+        assert_eq!(WIDTH, 800);
+        assert_eq!(HEIGHT, 480);
         assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

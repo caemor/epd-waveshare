@@ -66,6 +66,8 @@ mod interface;
 
 #[cfg(feature = "epd7in5")]
 pub mod epd7in5;
+#[cfg(feature = "epd7in5_v2")]
+pub mod epd7in5_v2;
 
 #[cfg(feature = "epd4in2")]
 pub mod epd4in2;
@@ -85,6 +87,10 @@ pub(crate) mod type_a;
 pub mod prelude {
     pub use crate::color::Color;
     pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
+
+    #[cfg(feature = "epd7in5_v2")]
+    pub use crate::traits::WaveshareDisplayExt;
+
     pub use crate::SPI_MODE;
 
     #[cfg(feature = "graphics")]

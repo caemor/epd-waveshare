@@ -40,22 +40,29 @@ epd.display_frame(&mut spi)?;
 
 | Device (with Link) | Colors | Flexible Display | Partial Refresh | Supported | Tested |
 | :---: | --- | :---: | :---: | :---: | :---: |
+| [7.5 Inch B/W V2 (A)](https://www.waveshare.com/product/7.5inch-e-paper-hat.htm) [[1](#1-75-inch-bw-v2-a)] | Black, White | ✕ | ✕ | ✔ | ✔ |
 | [7.5 Inch B/W (A)](https://www.waveshare.com/product/7.5inch-e-paper-hat.htm) | Black, White | ✕ | ✕ | ✔ | ✔ |
-| [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[1](#42-inch-e-ink-blackwhite)] | ✔ | ✔ |
+| [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[2](#2-42-inch-e-ink-blackwhite---partial-refresh)] | ✔ | ✔ |
 | [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.13 Inch B/W (A)](https://www.waveshare.com/product/2.13inch-e-paper-hat.htm) | Black, White | ✕ | ✔ |  |  |
-| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ [[2](#2-29-inch-e-ink-blackwhite---tests)] |
+| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ [[3](#3-29-inch-e-ink-blackwhite---tests)] |
 | [1.54 Inch B/W/R (B)](https://www.waveshare.com/product/modules/oleds-lcds/e-paper/1.54inch-e-paper-module-b.htm) | Black, White, Red | ✕ | ✕ | ✔ | ✔ |
 
+### [1]: 7.5 Inch B/W V2 (A)
 
-### [1]: 4.2 Inch E-Ink Black/White - Partial Refresh
+Since November 2019 Waveshare sells their updated version of these displays.
+They should have a "V2" marking sticker on the backside of the panel.
 
-Out of the Box the original driver from Waveshare only supports full updates. 
+Use `epd7in5_v2` instead of `epd7in5`, because the protocol changed.
+
+### [2]: 4.2 Inch E-Ink Black/White - Partial Refresh
+
+Out of the Box the original driver from Waveshare only supports full updates.
 
 That means: Be careful with the quick refresh updates: <br>
 It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
 
-### [2]: 2.9 Inch E-Ink Black/White - Tests
+### [3]: 2.9 Inch E-Ink Black/White - Tests
 
 Since my 2.9 Inch Display has some blurring issues I am not absolutly sure if everything was working correctly as it should :-)
 
@@ -75,7 +82,7 @@ Since my 2.9 Inch Display has some blurring issues I am not absolutly sure if ev
 ### Display Configs
 
 There are two types of Display Configurations used in Wavedshare EPDs, which also needs to be set on the "new" E-Paper Driver HAT.
-They are also called A and B, but you shouldn't get confused and mix it with the Type A,B,C and D of the various Displays, which just describe different types (colored variants) or new versions. In the Display Config the seperation is most likely due to included fast partial refresh of the displays. In a Tabular form: 
+They are also called A and B, but you shouldn't get confused and mix it with the Type A,B,C and D of the various Displays, which just describe different types (colored variants) or new versions. In the Display Config the seperation is most likely due to included fast partial refresh of the displays. In a Tabular form:
 
 | Type A | Tybe B |
 | :---: |  :---: |
