@@ -1,11 +1,11 @@
 #![deny(warnings)]
 
 use embedded_graphics::{
-    coord::Coord,
     fonts::{Font12x16, Font6x8},
     prelude::*,
     primitives::{Circle, Line},
     Drawing,
+    Point::Point,
 };
 use embedded_hal::prelude::*;
 use epd_waveshare::{
@@ -81,7 +81,7 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("Rotate 0!")
             .stroke(Some(Color::Black))
             .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
+            .translate(Point::new(5, 50))
             .into_iter(),
     );
 
@@ -90,7 +90,7 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("Rotate 90!")
             .stroke(Some(Color::Black))
             .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
+            .translate(Point::new(5, 50))
             .into_iter(),
     );
 
@@ -99,7 +99,7 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("Rotate 180!")
             .stroke(Some(Color::Black))
             .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
+            .translate(Point::new(5, 50))
             .into_iter(),
     );
 
@@ -108,7 +108,7 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("Rotate 270!")
             .stroke(Some(Color::Black))
             .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
+            .translate(Point::new(5, 50))
             .into_iter(),
     );
 
@@ -125,17 +125,17 @@ fn run() -> Result<(), std::io::Error> {
 
     // draw a analog clock
     display.draw(
-        Circle::new(Coord::new(64, 64), 64)
+        Circle::new(Point::new(64, 64), 64)
             .stroke(Some(Color::Black))
             .into_iter(),
     );
     display.draw(
-        Line::new(Coord::new(64, 64), Coord::new(0, 64))
+        let _ = Line::new(Point::new(64, 64), Point::new(0, 64))
             .stroke(Some(Color::Black))
             .into_iter(),
     );
     display.draw(
-        Line::new(Coord::new(64, 64), Coord::new(80, 80))
+        let _ = Line::new(Point::new(64, 64), Point::new(80, 80))
             .stroke(Some(Color::Black))
             .into_iter(),
     );
@@ -149,7 +149,7 @@ fn run() -> Result<(), std::io::Error> {
                 stroke_color: Some(Color::White),
                 stroke_width: 0u8, // Has no effect on fonts
             })
-            .translate(Coord::new(175, 250))
+            .translate(Point::new(175, 250))
             .into_iter(),
     );
 
@@ -162,7 +162,7 @@ fn run() -> Result<(), std::io::Error> {
                 stroke_color: Some(Color::Black),
                 stroke_width: 0u8, // Has no effect on fonts
             })
-            .translate(Coord::new(50, 200))
+            .translate(Point::new(50, 200))
             .into_iter(),
     );
 
@@ -178,7 +178,7 @@ fn run() -> Result<(), std::io::Error> {
                     stroke_color: Some(Color::Black),
                     stroke_width: 0u8, // Has no effect on fonts
                 })
-                .translate(Coord::new(5 + i * 12, 50))
+                .translate(Point::new(5 + i * 12, 50))
                 .into_iter(),
         );
 

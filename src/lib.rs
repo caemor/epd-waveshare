@@ -39,7 +39,7 @@
 //!     Font6x8::render_str("Hello World!")
 //!         .stroke(Some(Color::Black))
 //!         .fill(Some(Color::White))
-//!         .translate(Coord::new(5, 50))
+//!         .translate(Point::new(5, 50))
 //!         .into_iter(),
 //! );
 //!

@@ -10,13 +10,15 @@ use stm32f1xx_hal::prelude::*;
 use stm32f1xx_hal::{delay, spi};
 
 use embedded_graphics::{
-    coord::Coord,
-    fonts::{Font12x16, Font6x8},
+    fonts::{Font12x16, Font6x8, Text},
+    pixelcolor::BinaryColor,
     prelude::*,
     primitives::{Circle, Line},
-    Drawing,
+    style::{PrimitiveStyle, Styled},
+    text_style, DrawTarget,
 };
 use epd_waveshare::{
+    color::*,
     epd4in2::Display4in2,
     graphics::{Display, DisplayRotation},
     prelude::*,
@@ -68,41 +70,18 @@ fn main() -> ! {
 
     //println!("Test all the rotations");
     let mut display = Display4in2::default();
+
     display.set_rotation(DisplayRotation::Rotate0);
-    display.draw(
-        Font6x8::render_str("Rotate 0!")
-            .stroke(Some(Color::Black))
-            .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
-            .into_iter(),
-    );
+    draw_text(&mut display, "Rotate 0!", 5, 50);
 
     display.set_rotation(DisplayRotation::Rotate90);
-    display.draw(
-        Font6x8::render_str("Rotate 90!")
-            .stroke(Some(Color::Black))
-            .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
-            .into_iter(),
-    );
+    draw_text(&mut display, "Rotate 90!", 5, 50);
 
     display.set_rotation(DisplayRotation::Rotate180);
-    display.draw(
-        Font6x8::render_str("Rotate 180!")
-            .stroke(Some(Color::Black))
-            .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
-            .into_iter(),
-    );
+    draw_text(&mut display, "Rotate 180!", 5, 50);
 
     display.set_rotation(DisplayRotation::Rotate270);
-    display.draw(
-        Font6x8::render_str("Rotate 270!")
-            .stroke(Some(Color::Black))
-            .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
-            .into_iter(),
-    );
+    draw_text(&mut display, "Rotate 270!", 5, 50);
 
     epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
     epd4in2
@@ -114,47 +93,33 @@ fn main() -> ! {
     display.clear_buffer(Color::White);
 
     // draw a analog clock
-    display.draw(
-        Circle::new(Coord::new(64, 64), 64)
-            .stroke(Some(Color::Black))
-            .into_iter(),
-    );
-    display.draw(
-        Line::new(Coord::new(64, 64), Coord::new(0, 64))
-            .stroke(Some(Color::Black))
-            .into_iter(),
-    );
-    display.draw(
-        Line::new(Coord::new(64, 64), Coord::new(80, 80))
-            .stroke(Some(Color::Black))
-            .into_iter(),
-    );
+    Circle::new(Point::new(64, 64), 64)
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .draw(&mut display);
+    Line::new(Point::new(64, 64), Point::new(0, 64))
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .draw(&mut display);
+    Line::new(Point::new(64, 64), Point::new(80, 80))
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .draw(&mut display);
 
     // draw white on black background
-    display.draw(
-        Font6x8::render_str("It's working-WoB!")
-            // Using Style here
-            .style(Style {
-                fill_color: Some(Color::Black),
-                stroke_color: Some(Color::White),
-                stroke_width: 0u8, // Has no effect on fonts
-            })
-            .translate(Coord::new(175, 250))
-            .into_iter(),
-    );
+    let _ = Text::new("It's working-WoB!", Point::new(175, 250))
+        .into_styled(text_style!(
+            font = Font6x8,
+            text_color = White,
+            background_color = Black
+        ))
+        .draw(&mut display);
 
     // use bigger/different font
-    display.draw(
-        Font12x16::render_str("It's working-BoW!")
-            // Using Style here
-            .style(Style {
-                fill_color: Some(Color::White),
-                stroke_color: Some(Color::Black),
-                stroke_width: 0u8, // Has no effect on fonts
-            })
-            .translate(Coord::new(50, 200))
-            .into_iter(),
-    );
+    let _ = Text::new("It's working-WoB!", Point::new(50, 200))
+        .into_styled(text_style!(
+            font = Font12x16,
+            text_color = White,
+            background_color = Black
+        ))
+        .draw(&mut display);
 
     // a moving `Hello World!`
     let limit = 10;
@@ -163,16 +128,7 @@ fn main() -> ! {
     for i in 0..limit {
         //println!("Moving Hello World. Loop {} from {}", (i + 1), limit);
 
-        display.draw(
-            Font6x8::render_str("  Hello World! ")
-                .style(Style {
-                    fill_color: Some(Color::White),
-                    stroke_color: Some(Color::Black),
-                    stroke_width: 0u8, // Has no effect on fonts
-                })
-                .translate(Coord::new(5 + i * 12, 50))
-                .into_iter(),
-        );
+        draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
         epd4in2
@@ -189,4 +145,14 @@ fn main() -> ! {
         // sleep
         cortex_m::asm::wfi();
     }
+}
+
+fn draw_text(display: &mut Display4in2, text: &str, x: i32, y: i32) {
+    let _ = Text::new(text, Point::new(x, y))
+        .into_styled(text_style!(
+            font = Font6x8,
+            text_color = Black,
+            background_color = White
+        ))
+        .draw(display);
 }

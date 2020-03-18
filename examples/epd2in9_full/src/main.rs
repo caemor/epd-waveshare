@@ -1,6 +1,6 @@
 #![deny(warnings)]
 
-use embedded_graphics::{coord::Coord, fonts::Font6x8, prelude::*, Drawing};
+use embedded_graphics::{fonts::Font6x8, prelude::*, Drawing, Point::Point};
 use embedded_hal::prelude::*;
 use epd_waveshare::{
     epd2in9::{Display2in9, EPD2in9},
@@ -86,7 +86,7 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("Rotate 0!")
             .stroke(Some(Color::Black))
             .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
+            .translate(Point::new(5, 50))
             .into_iter(),
     );
 
@@ -95,7 +95,7 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("Rotate 90!")
             .stroke(Some(Color::Black))
             .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
+            .translate(Point::new(5, 50))
             .into_iter(),
     );
 
@@ -104,7 +104,7 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("Rotate 180!")
             .stroke(Some(Color::Black))
             .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
+            .translate(Point::new(5, 50))
             .into_iter(),
     );
 
@@ -113,7 +113,7 @@ fn run() -> Result<(), std::io::Error> {
         Font6x8::render_str("Rotate 270!")
             .stroke(Some(Color::Black))
             .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
+            .translate(Point::new(5, 50))
             .into_iter(),
     );
 
@@ -138,7 +138,7 @@ fn run() -> Result<(), std::io::Error> {
                     stroke_color: Some(Color::Black),
                     stroke_width: 0u8, // Has no effect on fonts
                 })
-                .translate(Coord::new(5 + i * 6, 50))
+                .translate(Point::new(5 + i * 6, 50))
                 .into_iter(),
         );
 

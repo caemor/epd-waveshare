@@ -1,5 +1,9 @@
 //! B/W Color for EPDs
 
+use embedded_graphics::pixelcolor::BinaryColor;
+
+pub use BinaryColor::Off as White;
+pub use BinaryColor::On as Black;
 /// Only for the Black/White-Displays
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
@@ -50,11 +54,6 @@ impl Color {
         }
     }
 }
-
-#[cfg(feature = "graphics")]
-use embedded_graphics::prelude::*;
-#[cfg(feature = "graphics")]
-impl PixelColor for Color {}
 
 impl From<u8> for Color {
     fn from(value: u8) -> Self {

@@ -1,6 +1,6 @@
 use crate::epd1in54b::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
-use crate::prelude::*;
+use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 
 pub struct Display1in54b {
@@ -18,12 +18,15 @@ impl Default for Display1in54b {
     }
 }
 
-impl Drawing<Color> for Display1in54b {
-    fn draw<T>(&mut self, item_pixels: T)
-    where
-        T: IntoIterator<Item = Pixel<Color>>,
-    {
-        self.draw_helper(WIDTH, HEIGHT, item_pixels);
+impl DrawTarget<BinaryColor> for Display1in54b {
+    type Error = core::convert::Infallible;
+
+    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
+        self.draw_helper(WIDTH, HEIGHT, pixel)
+    }
+
+    fn size(&self) -> Size {
+        Size::new(WIDTH, HEIGHT)
     }
 }
 
