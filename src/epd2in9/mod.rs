@@ -87,6 +87,8 @@ where
     ) -> Result<(), SPI::Error> {
         self.interface.reset(delay);
 
+        self.wait_until_idle();
+
         // 3 Databytes:
         // A[7:0]
         // 0.. A[8]
@@ -166,12 +168,11 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         //TODO: is 0x00 needed here? (see also epd1in54)
         self.interface
             .cmd_with_data(spi, Command::DEEP_SLEEP_MODE, &[0x00])?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -180,19 +181,17 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.init(spi, delay)?;
-
         self.wait_until_idle();
+        self.init(spi, delay)?;
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.use_full_frame(spi)?;
 
         self.interface
             .cmd_with_data(spi, Command::WRITE_RAM, buffer)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -206,17 +205,17 @@ where
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.set_ram_area(spi, x, y, x + width, y + height)?;
         self.set_ram_counter(spi, x, y)?;
 
         self.interface
             .cmd_with_data(spi, Command::WRITE_RAM, buffer)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
         //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
         self.interface
@@ -226,12 +225,17 @@ where
         // MASTER Activation should not be interupted to avoid currption of panel images
         // therefore a terminate command is send
         self.interface.cmd(spi, Command::NOP)?;
+        Ok(())
+    }
 
-        self.wait_until_idle();
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer)?;
+        self.display_frame(spi)?;
         Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.use_full_frame(spi)?;
 
         // clear the ram with the background color
@@ -240,8 +244,6 @@ where
         self.interface.cmd(spi, Command::WRITE_RAM)?;
         self.interface
             .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -325,6 +327,7 @@ where
     }
 
     fn set_ram_counter(&mut self, spi: &mut SPI, x: u32, y: u32) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface
@@ -336,17 +339,15 @@ where
             Command::SET_RAM_Y_ADDRESS_COUNTER,
             &[y as u8, (y >> 8) as u8],
         )?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     /// Set your own LUT, this function is also used internally for set_lut
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         assert!(buffer.len() == 30);
         self.interface
             .cmd_with_data(spi, Command::WRITE_LUT_REGISTER, buffer)?;
-        self.wait_until_idle();
         Ok(())
     }
 }

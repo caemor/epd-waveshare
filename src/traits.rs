@@ -148,6 +148,9 @@ where
     /// This function waits until the device isn`t busy anymore
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
+    /// Provide a combined update&display and save some time (skipping a busy check in between)
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+
     /// Clears the frame buffer on the EPD with the declared background color
     ///
     /// The background color can be changed with [`set_background_color`]
@@ -173,16 +176,4 @@ where
     /// but in the case you send data and commands directly you might need to check
     /// if the device is still busy
     fn is_busy(&self) -> bool;
-}
-/// Tiny optional extension trait
-pub trait WaveshareDisplayExt<SPI, CS, BUSY, DC, RST>
-where
-    SPI: Write<u8>,
-    CS: OutputPin,
-    BUSY: InputPin,
-    DC: OutputPin,
-    RST: OutputPin,
-{
-    // provide a combined update&display and save some time (skipping a busy check in between)
-    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
 }

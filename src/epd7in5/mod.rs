@@ -150,15 +150,15 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.command(spi, Command::POWER_OFF)?;
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
         for byte in buffer {
             let mut temp = *byte;
@@ -171,8 +171,6 @@ where
                 self.send_data(spi, &[data])?;
             }
         }
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -189,21 +187,25 @@ where
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DISPLAY_REFRESH)?;
-
         self.wait_until_idle();
+        self.command(spi, Command::DISPLAY_REFRESH)?;
+        Ok(())
+    }
+
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer)?;
+        self.command(spi, Command::DISPLAY_REFRESH)?;
         Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.send_resolution(spi)?;
 
         // The Waveshare controllers all implement clear using 0x33
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
         self.interface
             .data_x_times(spi, 0x33, WIDTH / 8 * HEIGHT * 4)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 

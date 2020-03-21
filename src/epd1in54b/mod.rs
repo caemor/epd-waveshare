@@ -100,6 +100,7 @@ where
         black: &[u8],
         red: &[u8],
     ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.send_resolution(spi)?;
 
         self.interface
@@ -113,8 +114,6 @@ where
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
         self.interface.data(spi, red)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 }
@@ -147,6 +146,7 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
 
@@ -190,6 +190,7 @@ where
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.send_resolution(spi)?;
 
         self.interface
@@ -212,8 +213,6 @@ where
         self.interface.data_x_times(spi, color, nbits)?;
 
         //NOTE: Example code has a delay here
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -227,17 +226,23 @@ where
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        Ok(())
+        unimplemented!()
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DISPLAY_REFRESH)?;
-
         self.wait_until_idle();
+        self.command(spi, Command::DISPLAY_REFRESH)?;
+        Ok(())
+    }
+
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer)?;
+        self.display_frame(spi)?;
         Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.send_resolution(spi)?;
 
         let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
@@ -255,8 +260,6 @@ where
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
         self.interface
             .data_x_times(spi, color, WIDTH * HEIGHT / 8)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
