@@ -53,12 +53,9 @@ matrix:
       script:
         - cargo fmt --all -- --check
         - cargo doc --all-features --release
-        - cd examples/epd4in2_full && cargo fmt --all -- --check && cd ../../
-        - cd examples/epd2in9_full && cargo fmt --all -- --check && cd ../../
-        - cd examples/epd1in54_full && cargo fmt --all -- --check && cd ../../
-        - cd examples/epd1in54_no_graphics && cargo fmt --all -- --check && cd ../../
-        - cd examples/epd4in2_var_display_buffer && cargo fmt --all -- --check && cd ../../
-        - cd examples/epd4in2_full_blue_pill && cargo fmt --all -- --check && cd ../../
+    - name: "check"
+      script:
+        - cargo check --examples --all-features
     - name: "clippy"
       rust: stable
       env: RUN=FMT
@@ -66,19 +63,6 @@ matrix:
         - rustup component add clippy
       script:        
         - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
-        
-    - name: "check examples"
-      rust: stable
-      before_script:
-        - rustup target add thumbv7m-none-eabi  
-      script: 
-        - cd examples/epd4in2_full_blue_pill && cargo check && cd ../../
-        - cd examples/epd4in2_full && cargo check && cd ../../
-        - cd examples/epd2in9_full && cargo check && cd ../../
-        - cd examples/epd1in54_full && cargo check && cd ../../
-        - cd examples/epd1in54_no_graphics && cargo check && cd ../../
-        - cd examples/epd4in2_var_display_buffer && cargo check && cd ../../
-    - name 
       
 before_install:
   - set -e

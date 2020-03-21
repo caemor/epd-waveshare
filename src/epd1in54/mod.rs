@@ -2,7 +2,7 @@
 //!
 //! # Example for the 1.54 in E-Ink Display
 //!
-//! ```rust,ignore
+//! ```rust,no_run
 //! use epd_waveshare::{
 //!     epd1in54::{EPD1in54, Display1in54},
 //!     graphics::{Display, DisplayRotation},
@@ -17,13 +17,9 @@
 //! let mut display = Display1in54::default();
 //!
 //! // Write some hello world in the screenbuffer
-//! display.draw(
-//!     Font6x8::render_str("Hello World!")
-//!         .stroke(Some(Color::Black))
-//!         .fill(Some(Color::White))
-//!         .translate(Point::new(5, 50))
-//!         .into_iter(),
-//! );
+//! let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
+//!         .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
+//!         .draw(&mut display);
 //!
 //! // Display updated frame
 //! epd.update_frame(&mut spi, &display.buffer()).unwrap();

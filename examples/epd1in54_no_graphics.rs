@@ -12,20 +12,14 @@ use linux_embedded_hal::{
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-fn main() {
-    if let Err(e) = run() {
-        eprintln!("Program exited early with error: {}", e);
-    }
-}
-
-fn run() -> Result<(), std::io::Error> {
+fn main() -> Result<(), std::io::Error> {
     // Configure SPI
     // SPI settings are from eink-waveshare-rs documenation
     let mut spi = Spidev::open("/dev/spidev0.0")?;
     let options = SpidevOptions::new()
         .bits_per_word(8)
         .max_speed_hz(4_000_000)
-        .mode(spidev::SPI_MODE_0)
+        .mode(spidev::SpiModeFlags::SPI_MODE_0)
         .build();
     spi.configure(&options).expect("spi configuration");
 

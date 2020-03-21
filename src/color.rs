@@ -1,9 +1,13 @@
 //! B/W Color for EPDs
 
+#[cfg(feature = "graphics")]
 use embedded_graphics::pixelcolor::BinaryColor;
 
+#[cfg(feature = "graphics")]
 pub use BinaryColor::Off as White;
+#[cfg(feature = "graphics")]
 pub use BinaryColor::On as Black;
+
 /// Only for the Black/White-Displays
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
