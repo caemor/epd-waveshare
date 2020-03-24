@@ -81,11 +81,14 @@ pub mod epd1in54b;
 #[cfg(feature = "epd2in9")]
 pub mod epd2in9;
 
+#[cfg(feature = "epd2in9b")]
+pub mod epd2in9b;
+
 #[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
 pub(crate) mod type_a;
 
 pub mod prelude {
-    pub use crate::color::Color;
+    pub use crate::color::{Color, TriColor};
     pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
 
     #[cfg(feature = "epd7in5_v2")]

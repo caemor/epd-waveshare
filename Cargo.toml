@@ -18,12 +18,13 @@ edition = "2018"
 travis-ci = { repository = "caemor/epd-waveshare" }
 
 [features]
-default = ["epd1in54", "epd1in54b", "epd2in9", "epd4in2", "epd7in5", "epd7in5_v2", "graphics"]
+default = ["epd1in54", "epd1in54b", "epd2in9", "epd2in9b", "epd4in2", "epd7in5", "epd7in5_v2", "graphics"]
 
 graphics = ["embedded-graphics"]
 epd1in54 = []
 epd1in54b = []
 epd2in9 = []
+epd2in9b = []
 epd4in2 = []
 epd7in5 = []
 epd7in5_v2 = []
