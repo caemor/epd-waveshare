@@ -22,11 +22,13 @@ let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
 
 // Draw some text
 display.draw(
-    Font12x16::render_str("Hello Rust!")
-        .stroke(Some(Color::Black))
-        .fill(Some(Color::White))
-        .translate(Point::new(5, 50))
-        .into_iter(),
+    let _ = Text::new("Hello Rust!", Point::new(x, y))
+        .into_styled(text_style!(
+            font = Font12x16,
+            text_color = Black,
+            background_color = White
+        ))
+        .draw(display);
 );
 
 // Transfer the frame data to the epd
