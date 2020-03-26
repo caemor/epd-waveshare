@@ -24,7 +24,7 @@ before_cache:
   - chmod -R a+r $HOME/.cargo
   - | 
     if [[ "$TRAVIS_RUST_VERSION" == stable ]]; then
-      cargo install cargo-tarpaulin -f
+      cargo install cargo-tarpaulin
     fi
 
 after_success: |
