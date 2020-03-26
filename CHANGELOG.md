@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+ -  Update embedded-graphics,
+ - Remove useless Featuregates (Doesn't change size)
+ - Update and integrate a few important examples and remove the others
+ - Add update_and_display_frame to the main trait, fixes #38
+ - Also improve position of busy_wait (#30) once more
 
 <!-- ## [v0.3.2] - 2019-04-04 -->
 
