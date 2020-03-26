@@ -1,46 +1,49 @@
 //! A simple Driver for the Waveshare 4.2" E-Ink Display via SPI
 //!
-//! The other Waveshare E-Ink Displays should be added later on
 //!
 //! Build with the help of documentation/code from [Waveshare](https://www.waveshare.com/wiki/4.2inch_e-Paper_Module),
 //! [Ben Krasnows partial Refresh tips](https://benkrasnow.blogspot.de/2017/10/fast-partial-refresh-on-42-e-paper.html) and
 //! the driver documents in the `pdfs`-folder as orientation.
 //!
-//! This driver was built using [`embedded-hal`] traits.
-//!
-//! [`embedded-hal`]: https://docs.rs/embedded-hal/~0.1
-//!
-//! # Requirements
-//!
-//! ### SPI
-//!
-//! - MISO is not connected/available
-//! - SPI_MODE_0 is used (CPHL = 0, CPOL = 0)
-//! - 8 bits per word, MSB first
-//! - Max. Speed tested was 8Mhz but more should be possible
-//!
-//! ### Other....
-//!
-//! - Buffersize: Wherever a buffer is used it always needs to be of the size: `width / 8 * length`,
-//!   where width and length being either the full e-ink size or the partial update window size
-//!
 //! # Examples
 //!
-//! ```ignore
-//! let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay).unwrap();
+//!```rust, no_run
+//!# use embedded_hal_mock::*;
+//!# fn main() -> Result<(), MockError> {
+//!use embedded_graphics::{
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!};
+//!use epd_waveshare::{epd4in2::*, prelude::*};
+//!#
+//!# let expectations = [];
+//!# let mut spi = spi::Mock::new(&expectations);
+//!# let expectations = [];
+//!# let cs_pin = pin::Mock::new(&expectations);
+//!# let busy_in = pin::Mock::new(&expectations);
+//!# let dc = pin::Mock::new(&expectations);
+//!# let rst = pin::Mock::new(&expectations);
+//!# let mut delay = delay::MockNoop::new();
 //!
-//! let mut buffer =  [0u8, epd4in2.get_width() / 8 * epd4in2.get_height()];
+//!// Setup EPD
+//!let mut epd = EPD4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
-//! // draw something into the buffer
+//!// Use display graphics from embedded-graphics
+//!let mut display = Display4in2::default();
 //!
-//! epd4in2.display_and_transfer_buffer(buffer, None);
+//!// Use embedded graphics for drawing a line
+//!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
+//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .draw(&mut display);
 //!
-//! // wait and look at the image
+//!    // Display updated frame
+//!epd.update_frame(&mut spi, &display.buffer())?;
+//!epd.display_frame(&mut spi)?;
 //!
-//! epd4in2.clear_frame(None);
-//!
-//! epd4in2.sleep();
-//! ```
+//!// Set the EPD to sleep
+//!epd.sleep(&mut spi)?;
+//!# Ok(())
+//!# }
+//!```
 //!
 //!
 //!
@@ -58,8 +61,11 @@ use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
 mod constants;
 use crate::epd4in2::constants::*;
 
+/// Width of the display
 pub const WIDTH: u32 = 400;
+/// Height of the display
 pub const HEIGHT: u32 = 300;
+/// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
@@ -142,21 +148,6 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
-    ///
-    /// This already initialises the device. That means [init()](init()) isn't needed directly afterwards
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// //buffer = some image data;
-    ///
-    /// let mut epd4in2 = EPD4in2::new(spi, cs, busy, dc, rst, delay);
-    ///
-    /// epd4in2.display_and_transfer_frame(buffer, None);
-    ///
-    /// epd4in2.sleep();
-    /// ```
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,
@@ -188,6 +179,7 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
         self.command(spi, Command::VCM_DC_SETTING)?; // VCOM to 0V
@@ -202,12 +194,11 @@ where
         self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         let color_value = self.color.get_byte_value();
 
         self.send_resolution(spi)?;
@@ -226,8 +217,6 @@ where
 
         self.interface
             .cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -240,6 +229,7 @@ where
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
@@ -273,19 +263,23 @@ where
         self.send_data(spi, buffer)?;
 
         self.command(spi, Command::PARTIAL_OUT)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DISPLAY_REFRESH)?;
-
         self.wait_until_idle();
+        self.command(spi, Command::DISPLAY_REFRESH)?;
+        Ok(())
+    }
+
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer)?;
+        self.command(spi, Command::DISPLAY_REFRESH)?;
         Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.send_resolution(spi)?;
 
         let color_value = self.color.get_byte_value();
@@ -299,8 +293,6 @@ where
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -397,6 +389,7 @@ where
         lut_wb: &[u8],
         lut_bb: &[u8],
     ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         // LUT VCOM
         self.cmd_with_data(spi, Command::LUT_FOR_VCOM, lut_vcom)?;
 
@@ -411,8 +404,6 @@ where
 
         // LUT BLACK to BLACK
         self.cmd_with_data(spi, Command::LUT_BLACK_TO_BLACK, lut_bb)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 }

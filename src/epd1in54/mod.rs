@@ -2,41 +2,51 @@
 //!
 //! # Example for the 1.54 in E-Ink Display
 //!
-//! ```rust,ignore
-//! use epd_waveshare::{
-//!     epd1in54::{EPD1in54, Display1in54},
-//!     graphics::{Display, DisplayRotation},
-//!     prelude::*,
-//! };
-//! use embedded_graphics::Drawing;
+//!```rust, no_run
+//!# use embedded_hal_mock::*;
+//!# fn main() -> Result<(), MockError> {
+//!use embedded_graphics::{
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!};
+//!use epd_waveshare::{epd1in54::*, prelude::*};
+//!#
+//!# let expectations = [];
+//!# let mut spi = spi::Mock::new(&expectations);
+//!# let expectations = [];
+//!# let cs_pin = pin::Mock::new(&expectations);
+//!# let busy_in = pin::Mock::new(&expectations);
+//!# let dc = pin::Mock::new(&expectations);
+//!# let rst = pin::Mock::new(&expectations);
+//!# let mut delay = delay::MockNoop::new();
 //!
-//! // Setup EPD
-//! let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
+//!// Setup EPD
+//!let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
-//! // Use display graphics
-//! let mut display = Display1in54::default();
+//!// Use display graphics from embedded-graphics
+//!let mut display = Display1in54::default();
 //!
-//! // Write some hello world in the screenbuffer
-//! display.draw(
-//!     Font6x8::render_str("Hello World!")
-//!         .stroke(Some(Color::Black))
-//!         .fill(Some(Color::White))
-//!         .translate(Coord::new(5, 50))
-//!         .into_iter(),
-//! );
+//!// Use embedded graphics for drawing a line
+//!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
+//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .draw(&mut display);
 //!
-//! // Display updated frame
-//! epd.update_frame(&mut spi, &display.buffer()).unwrap();
-//! epd.display_frame(&mut spi).expect("display frame new graphics");
+//!    // Display updated frame
+//!epd.update_frame(&mut spi, &display.buffer())?;
+//!epd.display_frame(&mut spi)?;
 //!
-//! // Set the EPD to sleep
-//! epd.sleep(&mut spi).expect("sleep");
-//! ```
+//!// Set the EPD to sleep
+//!epd.sleep(&mut spi)?;
+//!# Ok(())
+//!# }
+//!```
 
+/// Width of the display
 pub const WIDTH: u32 = 200;
+/// Height of the display
 pub const HEIGHT: u32 = 200;
-//const DPI: u16 = 184;
+/// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+//const DPI: u16 = 184;
 const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
@@ -179,21 +189,19 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         //TODO: is 0x00 needed here or would 0x01 be even more efficient?
         self.interface
             .cmd_with_data(spi, Command::DEEP_SLEEP_MODE, &[0x00])?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.use_full_frame(spi)?;
         self.interface
             .cmd_with_data(spi, Command::WRITE_RAM, buffer)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -207,17 +215,17 @@ where
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.set_ram_area(spi, x, y, x + width, y + height)?;
         self.set_ram_counter(spi, x, y)?;
 
         self.interface
             .cmd_with_data(spi, Command::WRITE_RAM, buffer)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
         //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
         self.interface
@@ -227,12 +235,17 @@ where
         // MASTER Activation should not be interupted to avoid currption of panel images
         // therefore a terminate command is send
         self.interface.cmd(spi, Command::NOP)?;
+        Ok(())
+    }
 
-        self.wait_until_idle();
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer)?;
+        self.display_frame(spi)?;
         Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.use_full_frame(spi)?;
 
         // clear the ram with the background color
@@ -241,8 +254,6 @@ where
         self.interface.cmd(spi, Command::WRITE_RAM)?;
         self.interface
             .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -301,6 +312,7 @@ where
         end_x: u32,
         end_y: u32,
     ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         assert!(start_x < end_x);
         assert!(start_y < end_y);
 
@@ -323,8 +335,6 @@ where
                 (end_y >> 8) as u8,
             ],
         )?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -334,6 +344,7 @@ where
         x: u32,
         y: u32,
     ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface
@@ -345,18 +356,15 @@ where
             Command::SET_RAM_Y_ADDRESS_COUNTER,
             &[y as u8, (y >> 8) as u8],
         )?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         assert!(buffer.len() == 30);
 
         self.interface
             .cmd_with_data(spi, Command::WRITE_LUT_REGISTER, buffer)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 }

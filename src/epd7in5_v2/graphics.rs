@@ -1,6 +1,6 @@
 use crate::epd7in5_v2::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
-use crate::prelude::*;
+use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 
 /// Full size buffer for use with the 7in5 EPD
@@ -22,12 +22,15 @@ impl Default for Display7in5 {
     }
 }
 
-impl Drawing<Color> for Display7in5 {
-    fn draw<T>(&mut self, item_pixels: T)
-    where
-        T: IntoIterator<Item = Pixel<Color>>,
-    {
-        self.draw_helper(WIDTH, HEIGHT, item_pixels);
+impl DrawTarget<BinaryColor> for Display7in5 {
+    type Error = core::convert::Infallible;
+
+    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
+        self.draw_helper(WIDTH, HEIGHT, pixel)
+    }
+
+    fn size(&self) -> Size {
+        Size::new(WIDTH, HEIGHT)
     }
 }
 
@@ -52,11 +55,10 @@ impl Display for Display7in5 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::color::Color;
+    use crate::color::{Black, Color};
     use crate::epd7in5_v2;
     use crate::graphics::{Display, DisplayRotation};
-    use embedded_graphics::coord::Coord;
-    use embedded_graphics::primitives::Line;
+    use embedded_graphics::{primitives::Line, style::PrimitiveStyle};
 
     // test buffer length
     #[test]
@@ -77,11 +79,10 @@ mod tests {
     #[test]
     fn graphics_rotation_0() {
         let mut display = Display7in5::default();
-        display.draw(
-            Line::new(Coord::new(0, 0), Coord::new(7, 0))
-                .stroke(Some(Color::Black))
-                .into_iter(),
-        );
+
+        let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .draw(&mut display);
 
         let buffer = display.buffer();
 
@@ -96,11 +97,10 @@ mod tests {
     fn graphics_rotation_90() {
         let mut display = Display7in5::default();
         display.set_rotation(DisplayRotation::Rotate90);
-        display.draw(
-            Line::new(Coord::new(0, 792), Coord::new(0, 799))
-                .stroke(Some(Color::Black))
-                .into_iter(),
-        );
+
+        let _ = Line::new(Point::new(0, 792), Point::new(0, 799))
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .draw(&mut display);
 
         let buffer = display.buffer();
 
@@ -115,11 +115,10 @@ mod tests {
     fn graphics_rotation_180() {
         let mut display = Display7in5::default();
         display.set_rotation(DisplayRotation::Rotate180);
-        display.draw(
-            Line::new(Coord::new(792, 479), Coord::new(799, 479))
-                .stroke(Some(Color::Black))
-                .into_iter(),
-        );
+
+        let _ = Line::new(Point::new(792, 479), Point::new(799, 479))
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .draw(&mut display);
 
         let buffer = display.buffer();
 
@@ -134,11 +133,10 @@ mod tests {
     fn graphics_rotation_270() {
         let mut display = Display7in5::default();
         display.set_rotation(DisplayRotation::Rotate270);
-        display.draw(
-            Line::new(Coord::new(479, 0), Coord::new(479, 7))
-                .stroke(Some(Color::Black))
-                .into_iter(),
-        );
+
+        let _ = Line::new(Point::new(479, 0), Point::new(479, 7))
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .draw(&mut display);
 
         let buffer = display.buffer();
 

@@ -13,27 +13,20 @@ version = "0.3.2"
 edition = "2018"
 
 [badges]
-# Travis CI: `repository` in format "<user>/<project>" is required.
-# `branch` is optional; default is `master`
-travis-ci = { repository = "caemor/epd-waveshare" }
+# travis-ci = { repository = "caemor/epd-waveshare" }
+
+[dependencies]
+embedded-graphics = { version = "0.6.0", optional = true}
+embedded-hal = {version = "0.2.3", features = ["unproven"]}
+
+[dev-dependencies]
+linux-embedded-hal = "0.3"
+embedded-hal-mock = "0.7"
 
 [features]
-default = ["epd1in54", "epd1in54b", "epd2in9", "epd4in2", "epd7in5", "epd7in5_v2", "graphics"]
+default = ["graphics"]
 
 graphics = ["embedded-graphics"]
-epd1in54 = []
-epd1in54b = []
-epd2in9 = []
-epd4in2 = []
-epd7in5 = []
-epd7in5_v2 = []
-# offers an alternative fast full lut for type_a displays, but the refresh isnt as clean looking
+
+# Offers an alternative fast full lut for type_a displays, but the refreshed screen isnt as clean looking
 type_a_alternative_faster_lut = []
-
-[dependencies.embedded-graphics]
-optional = true
-version = "0.5.2"
-
-[dependencies.embedded-hal]
-features = ["unproven"]
-version = "0.2.3"

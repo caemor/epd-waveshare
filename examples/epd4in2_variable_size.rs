@@ -1,14 +1,16 @@
 #![deny(warnings)]
+#![deny(warnings)]
 
 use embedded_graphics::{
-    coord::Coord,
-    fonts::{Font12x16, Font6x8},
+    fonts::{Font12x16, Font6x8, Text},
     prelude::*,
     primitives::{Circle, Line},
-    Drawing,
+    style::PrimitiveStyle,
+    text_style,
 };
 use embedded_hal::prelude::*;
 use epd_waveshare::{
+    color::*,
     epd4in2::{self, EPD4in2},
     graphics::{Display, DisplayRotation, VarDisplay},
     prelude::*,
@@ -23,20 +25,14 @@ use linux_embedded_hal::{
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-fn main() {
-    if let Err(e) = run() {
-        eprintln!("Program exited early with error: {}", e);
-    }
-}
-
-fn run() -> Result<(), std::io::Error> {
+fn main() -> Result<(), std::io::Error> {
     // Configure SPI
     // Settings are taken from
     let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
     let options = SpidevOptions::new()
         .bits_per_word(8)
         .max_speed_hz(4_000_000)
-        .mode(spidev::SPI_MODE_0)
+        .mode(spidev::SpiModeFlags::SPI_MODE_0)
         .build();
     spi.configure(&options).expect("spi configuration");
 
@@ -77,40 +73,16 @@ fn run() -> Result<(), std::io::Error> {
     let mut buffer = [epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value(); 62500]; //250*250
     let mut display = VarDisplay::new(width, height, &mut buffer);
     display.set_rotation(DisplayRotation::Rotate0);
-    display.draw(
-        Font6x8::render_str("Rotate 0!")
-            .stroke(Some(Color::Black))
-            .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
-            .into_iter(),
-    );
+    draw_text(&mut display, "Rotate 0!", 5, 50);
 
     display.set_rotation(DisplayRotation::Rotate90);
-    display.draw(
-        Font6x8::render_str("Rotate 90!")
-            .stroke(Some(Color::Black))
-            .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
-            .into_iter(),
-    );
+    draw_text(&mut display, "Rotate 90!", 5, 50);
 
     display.set_rotation(DisplayRotation::Rotate180);
-    display.draw(
-        Font6x8::render_str("Rotate 180!")
-            .stroke(Some(Color::Black))
-            .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
-            .into_iter(),
-    );
+    draw_text(&mut display, "Rotate 180!", 5, 50);
 
     display.set_rotation(DisplayRotation::Rotate270);
-    display.draw(
-        Font6x8::render_str("Rotate 270!")
-            .stroke(Some(Color::Black))
-            .fill(Some(Color::White))
-            .translate(Coord::new(5, 50))
-            .into_iter(),
-    );
+    draw_text(&mut display, "Rotate 270!", 5, 50);
 
     epd4in2
         .update_partial_frame(&mut spi, &display.buffer(), x, y, width, height)
@@ -121,68 +93,49 @@ fn run() -> Result<(), std::io::Error> {
     delay.delay_ms(5000u16);
 
     println!("Now test new graphics with default rotation and some special stuff:");
+    display.set_rotation(DisplayRotation::Rotate0);
     display.clear_buffer(Color::White);
 
     // draw a analog clock
-    display.draw(
-        Circle::new(Coord::new(64, 64), 64)
-            .stroke(Some(Color::Black))
-            .into_iter(),
-    );
-    display.draw(
-        Line::new(Coord::new(64, 64), Coord::new(0, 64))
-            .stroke(Some(Color::Black))
-            .into_iter(),
-    );
-    display.draw(
-        Line::new(Coord::new(64, 64), Coord::new(80, 80))
-            .stroke(Some(Color::Black))
-            .into_iter(),
-    );
+    // draw a analog clock
+    let _ = Circle::new(Point::new(64, 64), 64)
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .draw(&mut display);
+    let _ = Line::new(Point::new(64, 64), Point::new(0, 64))
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .draw(&mut display);
+    let _ = Line::new(Point::new(64, 64), Point::new(80, 80))
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .draw(&mut display);
 
     // draw white on black background
-    display.draw(
-        Font6x8::render_str("It's working-WoB!")
-            // Using Style here
-            .style(Style {
-                fill_color: Some(Color::Black),
-                stroke_color: Some(Color::White),
-                stroke_width: 0u8, // Has no effect on fonts
-            })
-            .translate(Coord::new(175, 250))
-            .into_iter(),
-    );
+    let _ = Text::new("It's working-WoB!", Point::new(175, 250))
+        .into_styled(text_style!(
+            font = Font6x8,
+            text_color = White,
+            background_color = Black
+        ))
+        .draw(&mut display);
 
     // use bigger/different font
-    display.draw(
-        Font12x16::render_str("It's working-BoW!")
-            // Using Style here
-            .style(Style {
-                fill_color: Some(Color::White),
-                stroke_color: Some(Color::Black),
-                stroke_width: 0u8, // Has no effect on fonts
-            })
-            .translate(Coord::new(50, 200))
-            .into_iter(),
-    );
+    let _ = Text::new("It's working-WoB!", Point::new(50, 200))
+        .into_styled(text_style!(
+            font = Font12x16,
+            text_color = White,
+            background_color = Black
+        ))
+        .draw(&mut display);
 
     // a moving `Hello World!`
     let limit = 10;
     for i in 0..limit {
         println!("Moving Hello World. Loop {} from {}", (i + 1), limit);
 
-        display.draw(
-            Font6x8::render_str("  Hello World! ")
-                .style(Style {
-                    fill_color: Some(Color::White),
-                    stroke_color: Some(Color::Black),
-                    stroke_width: 0u8, // Has no effect on fonts
-                })
-                .translate(Coord::new(5 + i * 12, 50))
-                .into_iter(),
-        );
+        draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
-        epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
+        epd4in2
+            .update_partial_frame(&mut spi, &display.buffer(), x, y, width, height)
+            .unwrap();
         epd4in2
             .display_frame(&mut spi)
             .expect("display frame new graphics");
@@ -192,4 +145,14 @@ fn run() -> Result<(), std::io::Error> {
 
     println!("Finished tests - going to sleep");
     epd4in2.sleep(&mut spi)
+}
+
+fn draw_text(display: &mut VarDisplay, text: &str, x: i32, y: i32) {
+    let _ = Text::new(text, Point::new(x, y))
+        .into_styled(text_style!(
+            font = Font6x8,
+            text_color = Black,
+            background_color = White
+        ))
+        .draw(display);
 }

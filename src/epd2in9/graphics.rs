@@ -1,6 +1,6 @@
 use crate::epd2in9::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
-use crate::prelude::*;
+use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 
 /// Display with Fullsize buffer for use with the 2in9 EPD
@@ -22,12 +22,15 @@ impl Default for Display2in9 {
     }
 }
 
-impl Drawing<Color> for Display2in9 {
-    fn draw<T>(&mut self, item_pixels: T)
-    where
-        T: IntoIterator<Item = Pixel<Color>>,
-    {
-        self.draw_helper(WIDTH, HEIGHT, item_pixels);
+impl DrawTarget<BinaryColor> for Display2in9 {
+    type Error = core::convert::Infallible;
+
+    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
+        self.draw_helper(WIDTH, HEIGHT, pixel)
+    }
+
+    fn size(&self) -> Size {
+        Size::new(WIDTH, HEIGHT)
     }
 }
 

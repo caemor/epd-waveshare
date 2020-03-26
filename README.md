@@ -25,7 +25,7 @@ display.draw(
     Font12x16::render_str("Hello Rust!")
         .stroke(Some(Color::Black))
         .fill(Some(Color::White))
-        .translate(Coord::new(5, 50))
+        .translate(Point::new(5, 50))
         .into_iter(),
 );
 
@@ -45,7 +45,7 @@ epd.display_frame(&mut spi)?;
 | [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[2](#2-42-inch-e-ink-blackwhite---partial-refresh)] | ✔ | ✔ |
 | [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.13 Inch B/W (A)](https://www.waveshare.com/product/2.13inch-e-paper-hat.htm) | Black, White | ✕ | ✔ |  |  |
-| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ [[3](#3-29-inch-e-ink-blackwhite---tests)] |
+| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [1.54 Inch B/W/R (B)](https://www.waveshare.com/product/modules/oleds-lcds/e-paper/1.54inch-e-paper-module-b.htm) | Black, White, Red | ✕ | ✕ | ✔ | ✔ |
 
 ### [1]: 7.5 Inch B/W V2 (A)
@@ -61,10 +61,6 @@ Out of the Box the original driver from Waveshare only supports full updates.
 
 That means: Be careful with the quick refresh updates: <br>
 It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
-
-### [3]: 2.9 Inch E-Ink Black/White - Tests
-
-Since my 2.9 Inch Display has some blurring issues I am not absolutly sure if everything was working correctly as it should :-)
 
 ### Interface
 
