@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
- -  Update embedded-graphics,
+ - Update embedded-graphics to 0.6,
  - Remove useless Featuregates (Doesn't change size)
  - Update and integrate a few important examples and remove the others
  - Add update_and_display_frame to the main trait, fixes #38
