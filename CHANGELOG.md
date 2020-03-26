@@ -6,13 +6,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
- - Update embedded-graphics to 0.6,
+
+### Added
+ - New supported epds: epd7in5 (thanks to @str4d), epd7in5 v2 (thanks to @asaaki), epd1in54b (thanks to @jkristell)
+ - Added update_and_display_frame to WaveshareDisplay trait (fixes #38)
+ - also improve position of busy_wait (#30) once more
+ - More Documenation
+
+### Changed
+ - Update embedded-graphics to 0.6 (changes Display Trait) (and to 0.5 before thanks to @dbr)
  - Remove useless Featuregates (Doesn't change size)
  - Update and integrate a few important examples and remove the others
- - Add update_and_display_frame to the main trait, fixes #38
- - Also improve position of busy_wait (#30) once more
- - Fixed all doc tests
- - Some more documentation improvements
+ - Use Embedded_hal:digital::v2
+
+
+### Fixed
+ - Doc Tests
 
 <!-- ## [v0.3.2] - 2019-04-04 -->
 
