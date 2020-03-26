@@ -15,68 +15,21 @@ matrix:
     - rust: nightly
     - name: clippy
   fast_finish: true
-  # TODO These are all the build jobs. Adjust as necessary. Comment out what you
-  # don't need
-  include:
-    # Linux
-    #- env: TARGET=aarch64-unknown-linux-gnu
-    # Raspberry Pi
-    - env: TARGET=arm-unknown-linux-gnueabi
-    # Raspberry Pi 3...
-    - env: TARGET=armv7-unknown-linux-gnueabihf
 
-    # is already included as global env
-    #- env: TARGET=x86_64-unknown-linux-gnu
-    - env: TARGET=x86_64-unknown-linux-musl
 
-    # Bare metal
-    # These targets don't support std and as such are likely not suitable for
-    # most crates.
-    - env: TARGET=thumbv6m-none-eabi
-      before_script: rustup target add $TARGET
-      script: cargo check --verbose --target $TARGET
-    - env: TARGET=thumbv7em-none-eabi
-      before_script: rustup target add $TARGET
-      script: cargo check --verbose --target $TARGET
-    - env: TARGET=thumbv7em-none-eabihf
-      before_script: rustup target add $TARGET
-      script: cargo check --verbose --target $TARGET
-    - env: TARGET=thumbv7m-none-eabi
-      before_script: rustup target add $TARGET
-      script: cargo check --verbose --target $TARGET
-
-    - name: "fmt"
-      rust: stable
-      env: RUN=FMT
-      before_script: 
-        - rustup component add rustfmt
-      script:
-        - cargo fmt --all -- --check
-        - cargo doc --all-features --release
-    - name: "check"
-      script:
-        - cargo check --examples --all-features
-    - name: "clippy"
-      rust: stable
-      env: RUN=FMT
-      before_script: 
-        - rustup component add clippy
-      script:        
-        - cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
-      
 before_install:
   - set -e
   - rustup self update
 
-install:
-  - cargo install cargo-update || echo "cargo-update already installed"
-  - cargo install-update -a # update outdated cached binaries
-  - cargo install cross || echo "cross already installed"
+# install:
+#   - cargo install cargo-update || echo "cargo-update already installed"
+#   - cargo install-update -a # update outdated cached binaries
+#   - cargo install cross || echo "cross already installed"
 
   #TODO: remove -A clippy::new_ret_no_self when new version of clippy gets released!
 script:
-  - cross check --verbose --target $TARGET
-  - cross test --all-features --release --verbose --target $TARGET
+  - cross check --verbose
+  - cross test --all-features --release --verbose
 
 cache: cargo
 before_cache:
@@ -93,7 +46,7 @@ after_success: |
     # cargo tarpaulin --ciserver travis-ci --coveralls $TRAVIS_JOB_ID
 
     # Uncomment the following two lines create and upload a report for codecov.io
-    cargo tarpaulin --out Xml
+    cargo tarpaulin --all-features --out Xml
     bash <(curl -s https://codecov.io/bash) -t "$CODECOV_TOKEN"
   fi
 
