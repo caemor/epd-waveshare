@@ -23,8 +23,11 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display7in5;
 
+/// Width of the display
 pub const WIDTH: u32 = 640;
+/// Height of the display
 pub const HEIGHT: u32 = 384;
+/// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
@@ -105,24 +108,6 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
-    ///
-    /// This already initialises the device. That means [init()] isn't needed
-    /// directly afterwards.
-    ///
-    /// [init()]: InternalWiAdditions::init
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// //buffer = some image data;
-    ///
-    /// let mut epd7in5 = EPD7in5::new(spi, cs, busy, dc, rst, delay);
-    ///
-    /// epd7in5.display_and_transfer_frame(buffer, None);
-    ///
-    /// epd7in5.sleep();
-    /// ```
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,

@@ -22,6 +22,12 @@ impl Default for DisplayRotation {
     }
 }
 
+/// Necessary traits for all displays to implement for drawing
+///
+/// Adds support for:
+/// - Drawing (With the help of DrawTarget/Embedded Graphics)
+/// - Rotations
+/// - Clearing
 pub trait Display: DrawTarget<BinaryColor> {
     /// Clears the buffer of the display with the chosen background color
     fn clear_buffer(&mut self, background_color: Color) {
@@ -112,6 +118,9 @@ pub struct VarDisplay<'a> {
 }
 
 impl<'a> VarDisplay<'a> {
+    /// Create a new variable sized display.
+    ///
+    /// Buffersize must be at least width / 8 * height bytes.
     pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> VarDisplay<'a> {
         let len = buffer.len() as u32;
         assert!(width / 8 * height >= len);

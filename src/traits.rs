@@ -38,11 +38,11 @@ where
     /// This initialises the EPD and powers it up
     ///
     /// This function is already called from
-    ///  - [new()](WaveshareInterface::new())
+    ///  - [new()](WaveshareDisplay::new())
     ///  - [`wake_up`]
     ///
     ///
-    /// This function calls [reset()](WaveshareInterface::reset()),
+    /// This function calls [reset](WaveshareDisplay::reset),
     /// so you don't need to call reset your self when trying to wake your device up
     /// after setting it to sleep.
     fn init<DELAY: DelayMs<u8>>(
@@ -75,7 +75,47 @@ where
 
 /// All the functions to interact with the EPDs
 ///
-/// This trait includes all public functions to use the EPDS
+/// This trait includes all public functions to use the EPDs
+///
+/// # Example
+///
+///```rust, no_run
+///# use embedded_hal_mock::*;
+///# fn main() -> Result<(), MockError> {
+///use embedded_graphics::{
+///    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+///};
+///use epd_waveshare::{epd4in2::*, prelude::*};
+///#
+///# let expectations = [];
+///# let mut spi = spi::Mock::new(&expectations);
+///# let expectations = [];
+///# let cs_pin = pin::Mock::new(&expectations);
+///# let busy_in = pin::Mock::new(&expectations);
+///# let dc = pin::Mock::new(&expectations);
+///# let rst = pin::Mock::new(&expectations);
+///# let mut delay = delay::MockNoop::new();
+///
+///// Setup EPD
+///let mut epd = EPD4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+///
+///// Use display graphics from embedded-graphics
+///let mut display = Display4in2::default();
+///
+///// Use embedded graphics for drawing a line
+///let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
+///    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+///    .draw(&mut display);
+///
+///    // Display updated frame
+///epd.update_frame(&mut spi, &display.buffer())?;
+///epd.display_frame(&mut spi)?;
+///
+///// Set the EPD to sleep
+///epd.sleep(&mut spi)?;
+///# Ok(())
+///# }
+///```
 pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
@@ -86,7 +126,7 @@ where
 {
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
-    /// This already initialises the device. That means [init()](WaveshareInterface::init()) isn't needed directly afterwards
+    /// This already initialises the device.
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,
@@ -101,19 +141,18 @@ where
     /// Let the device enter deep-sleep mode to save power.
     ///
     /// The deep sleep mode returns to standby with a hardware reset.
-    /// But you can also use [wake_up()](WaveshareInterface::wake_up()) to awaken.
-    /// But as you need to power it up once more anyway you can also just directly use [new()](WaveshareInterface::new()) for resetting
-    /// and initialising which already contains the reset
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Wakes the device up from sleep
+    ///
+    /// Also reintialises the device if necessary.
     fn wake_up<DELAY: DelayMs<u8>>(
         &mut self,
         spi: &mut SPI,
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
-    /// Sets the backgroundcolor for various commands like [clear_frame()](WaveshareInterface::clear_frame())
+    /// Sets the backgroundcolor for various commands like [clear_frame](WaveshareDisplay::clear_frame)
     fn set_background_color(&mut self, color: Color);
 
     /// Get current background color
@@ -153,7 +192,7 @@ where
 
     /// Clears the frame buffer on the EPD with the declared background color
     ///
-    /// The background color can be changed with [`set_background_color`]
+    /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Trait for using various Waveforms from different LUTs

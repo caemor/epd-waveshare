@@ -1,42 +1,51 @@
 //! A simple Driver for the Waveshare 2.9" E-Ink Display via SPI
 //!
-//! Untested!
 //!
 //! # Example for the 2.9 in E-Ink Display
 //!
-//! ```rust,ignore
-//! use epd_waveshare::{
-//!     epd2in9::{EPD2in9, Display2in9},
-//!     graphics::{Display, DisplayRotation},
-//!     prelude::*,
-//! };
-//! use embedded_graphics::Drawing;
+//!```rust, no_run
+//!# use embedded_hal_mock::*;
+//!# fn main() -> Result<(), MockError> {
+//!use embedded_graphics::{
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!};
+//!use epd_waveshare::{epd2in9::*, prelude::*};
+//!#
+//!# let expectations = [];
+//!# let mut spi = spi::Mock::new(&expectations);
+//!# let expectations = [];
+//!# let cs_pin = pin::Mock::new(&expectations);
+//!# let busy_in = pin::Mock::new(&expectations);
+//!# let dc = pin::Mock::new(&expectations);
+//!# let rst = pin::Mock::new(&expectations);
+//!# let mut delay = delay::MockNoop::new();
 //!
-//! // Setup EPD
-//! let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
+//!// Setup EPD
+//!let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
-//! // Use display graphics
-//! let mut display = Display2in9::default();
+//!// Use display graphics from embedded-graphics
+//!let mut display = Display2in9::default();
 //!
-//! // Write some hello world in the screenbuffer
-//! display.draw(
-//!     Font6x8::render_str("Hello World!")
-//!         .stroke(Some(Color::Black))
-//!         .fill(Some(Color::White))
-//!         .translate(Point::new(5, 50))
-//!         .into_iter(),
-//! );
+//!// Use embedded graphics for drawing a line
+//!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
+//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .draw(&mut display);
 //!
-//! // Display updated frame
-//! epd.update_frame(&mut spi, &display.buffer()).unwrap();
-//! epd.display_frame(&mut spi).expect("display frame new graphics");
+//!    // Display updated frame
+//!epd.update_frame(&mut spi, &display.buffer())?;
+//!epd.display_frame(&mut spi)?;
 //!
-//! // Set the EPD to sleep
-//! epd.sleep(&mut spi).expect("sleep");
-//! ```
+//!// Set the EPD to sleep
+//!epd.sleep(&mut spi)?;
+//!# Ok(())
+//!# }
+//!```
 
+/// Width of epd2in9 in pixels
 pub const WIDTH: u32 = 128;
+/// Height of epd2in9 in pixels
 pub const HEIGHT: u32 = 296;
+/// Default Background Color (white)
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 

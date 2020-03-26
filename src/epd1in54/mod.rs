@@ -2,37 +2,51 @@
 //!
 //! # Example for the 1.54 in E-Ink Display
 //!
-//! ```rust,no_run
-//! use epd_waveshare::{
-//!     epd1in54::{EPD1in54, Display1in54},
-//!     graphics::{Display, DisplayRotation},
-//!     prelude::*,
-//! };
-//! use embedded_graphics::Drawing;
+//!```rust, no_run
+//!# use embedded_hal_mock::*;
+//!# fn main() -> Result<(), MockError> {
+//!use embedded_graphics::{
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!};
+//!use epd_waveshare::{epd1in54::*, prelude::*};
+//!#
+//!# let expectations = [];
+//!# let mut spi = spi::Mock::new(&expectations);
+//!# let expectations = [];
+//!# let cs_pin = pin::Mock::new(&expectations);
+//!# let busy_in = pin::Mock::new(&expectations);
+//!# let dc = pin::Mock::new(&expectations);
+//!# let rst = pin::Mock::new(&expectations);
+//!# let mut delay = delay::MockNoop::new();
 //!
-//! // Setup EPD
-//! let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
+//!// Setup EPD
+//!let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
-//! // Use display graphics
-//! let mut display = Display1in54::default();
+//!// Use display graphics from embedded-graphics
+//!let mut display = Display1in54::default();
 //!
-//! // Write some hello world in the screenbuffer
-//! let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-//!         .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
-//!         .draw(&mut display);
+//!// Use embedded graphics for drawing a line
+//!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
+//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .draw(&mut display);
 //!
-//! // Display updated frame
-//! epd.update_frame(&mut spi, &display.buffer()).unwrap();
-//! epd.display_frame(&mut spi).expect("display frame new graphics");
+//!    // Display updated frame
+//!epd.update_frame(&mut spi, &display.buffer())?;
+//!epd.display_frame(&mut spi)?;
 //!
-//! // Set the EPD to sleep
-//! epd.sleep(&mut spi).expect("sleep");
-//! ```
+//!// Set the EPD to sleep
+//!epd.sleep(&mut spi)?;
+//!# Ok(())
+//!# }
+//!```
 
+/// Width of the display
 pub const WIDTH: u32 = 200;
+/// Height of the display
 pub const HEIGHT: u32 = 200;
-//const DPI: u16 = 184;
+/// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+//const DPI: u16 = 184;
 const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{

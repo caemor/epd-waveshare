@@ -14,8 +14,11 @@ use crate::traits::{
 mod constants;
 use crate::epd1in54b::constants::*;
 
+/// Width of epd1in54 in pixels
 pub const WIDTH: u32 = 200;
+/// Height of epd1in54 in pixels
 pub const HEIGHT: u32 = 200;
+/// Default Background Color (white)
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
