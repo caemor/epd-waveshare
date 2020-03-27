@@ -30,7 +30,7 @@
 //!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
 //!    .draw(&mut display);
 //!
-//!    // Display updated frame
+//!// Display updated frame
 //!epd.update_frame(&mut spi, &display.buffer())?;
 //!epd.display_frame(&mut spi)?;
 //!
