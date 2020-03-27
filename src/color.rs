@@ -17,6 +17,17 @@ pub enum Color {
     White,
 }
 
+/// Only for the Black/White/Color-Displays
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum TriColor {
+    /// Black color
+    Black,
+    /// White color
+    White,
+    /// Chromatic color
+    Chromatic,
+}
+
 //TODO: Rename get_bit_value to bit() and get_byte_value to byte() ?
 
 impl Color {

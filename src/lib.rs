@@ -75,6 +75,7 @@ mod interface;
 pub mod epd1in54;
 pub mod epd1in54b;
 pub mod epd2in9;
+pub mod epd2in9bc;
 pub mod epd4in2;
 pub mod epd7in5;
 pub mod epd7in5_v2;
@@ -82,7 +83,7 @@ pub(crate) mod type_a;
 
 /// Includes everything important besides the chosen Display
 pub mod prelude {
-    pub use crate::color::Color;
+    pub use crate::color::{Color, TriColor};
     pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
 
     pub use crate::SPI_MODE;
