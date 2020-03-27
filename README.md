@@ -10,30 +10,28 @@ Other similiar libraries with support for much more displays are [u8g2](https://
 
 ## Examples
 
-There are multiple examples in the examples folder. For more infos about the examples see the seperate Readme [there](/examples/Readme.md). These examples are all rust projects of their own, so you need to go inside the project to execute it (cargo run --example doesn't work).
+There are multiple examples in the examples folder. Use `cargo run --example example_name` to try them.
 
 ```Rust
 // Setup the epd
 let mut epd = EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay)?;
 
 // Setup the graphics
-let mut buffer = Buffer4in2::default();
-let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+let mut display = Display4in2::default();
 
 // Draw some text
 display.draw(
-    Font12x16::render_str("Hello Rust!")
-        .stroke(Some(Color::Black))
-        .fill(Some(Color::White))
-        .translate(Coord::new(5, 50))
-        .into_iter(),
+    let _ = Text::new("Hello Rust!", Point::new(x, y))
+        .into_styled(text_style!(
+            font = Font12x16,
+            text_color = Black,
+            background_color = White
+        ))
+        .draw(display);
 );
 
-// Transfer the frame data to the epd
-epd.update_frame(&mut spi, &display.buffer())?;
-
-// Display the frame on the epd
-epd.display_frame(&mut spi)?;
+// Transfer the frame data to the epd and display it
+epd.update_and_display_frame(&mut spi, &display.buffer())?;
 ```
 
 ## (Supported) Devices
@@ -45,7 +43,7 @@ epd.display_frame(&mut spi)?;
 | [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[2](#2-42-inch-e-ink-blackwhite---partial-refresh)] | ✔ | ✔ |
 | [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.13 Inch B/W (A)](https://www.waveshare.com/product/2.13inch-e-paper-hat.htm) | Black, White | ✕ | ✔ |  |  |
-| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ [[3](#3-29-inch-e-ink-blackwhite---tests)] |
+| [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [1.54 Inch B/W/R (B)](https://www.waveshare.com/product/modules/oleds-lcds/e-paper/1.54inch-e-paper-module-b.htm) | Black, White, Red | ✕ | ✕ | ✔ | ✔ |
 
 ### [1]: 7.5 Inch B/W V2 (A)
@@ -61,10 +59,6 @@ Out of the Box the original driver from Waveshare only supports full updates.
 
 That means: Be careful with the quick refresh updates: <br>
 It's possible with this driver but might lead to ghosting / burn-in effects therefore it's hidden behind a feature.
-
-### [3]: 2.9 Inch E-Ink Black/White - Tests
-
-Since my 2.9 Inch Display has some blurring issues I am not absolutly sure if everything was working correctly as it should :-)
 
 ### Interface
 

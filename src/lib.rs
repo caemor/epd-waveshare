@@ -1,58 +1,66 @@
-//! A simple Driver for the Waveshare E-Ink Displays via SPI
+//! A simple Driver for the [Waveshare](https://github.com/waveshare/e-Paper) E-Ink Displays via SPI
 //!
-//! This driver was built using [`embedded-hal`] traits.
+//! - Built using [`embedded-hal`] traits.
+//! - Graphics support is added through [`embedded-graphics`]
 //!
-//! [`embedded-hal`]: https://docs.rs/embedded-hal/~0.1
+//! [`embedded-graphics`]: https://docs.rs/embedded-graphics/
+//! [`embedded-hal`]: https://docs.rs/embedded-hal
 //!
-//! # Requirements
+
 //!
-//! ### SPI
+//! # Example
 //!
-//! - MISO is not connected/available
-//! - SPI_MODE_0 is used (CPHL = 0, CPOL = 0)
-//! - 8 bits per word, MSB first
-//! - Max. Speed tested by myself was 8Mhz but more should be possible (Ben Krasnow used 18Mhz with his implemenation)
+//!```rust, no_run
+//!# use embedded_hal_mock::*;
+//!# fn main() -> Result<(), MockError> {
+//!use embedded_graphics::{
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!};
+//!use epd_waveshare::{epd1in54::*, prelude::*};
+//!#
+//!# let expectations = [];
+//!# let mut spi = spi::Mock::new(&expectations);
+//!# let expectations = [];
+//!# let cs_pin = pin::Mock::new(&expectations);
+//!# let busy_in = pin::Mock::new(&expectations);
+//!# let dc = pin::Mock::new(&expectations);
+//!# let rst = pin::Mock::new(&expectations);
+//!# let mut delay = delay::MockNoop::new();
 //!
-//! ### Other....
+//!// Setup EPD
+//!let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!
+//!// Use display graphics from embedded-graphics
+//!let mut display = Display1in54::default();
+//!
+//!// Use embedded graphics for drawing a line
+//!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
+//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .draw(&mut display);
+//!
+//!    // Display updated frame
+//!epd.update_frame(&mut spi, &display.buffer())?;
+//!epd.display_frame(&mut spi)?;
+//!
+//!// Set the EPD to sleep
+//!epd.sleep(&mut spi)?;
+//!# Ok(())
+//!# }
+//!```
+//!
+//! # Other information and requirements
 //!
 //! - Buffersize: Wherever a buffer is used it always needs to be of the size: `width / 8 * length`,
 //!   where width and length being either the full e-ink size or the partial update window size
 //!
-//! # Examples
+//! ### SPI
 //!
-//! ```rust,ignore
-//! use epd_waveshare::{
-//!     epd2in9::{EPD2in9, Display2in9},
-//!     graphics::{Display, DisplayRotation},
-//!     prelude::*,
-//! };
-//! use embedded_graphics::Drawing;
+//! MISO is not connected/available. SPI_MODE_0 is used (CPHL = 0, CPOL = 0) with 8 bits per word, MSB first.
 //!
-//! // Setup EPD
-//! let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay).unwrap();
-//!
-//! // Use display graphics
-//! let mut display = Display2in9::default();
-//!
-//! // Write some hello world in the screenbuffer
-//! display.draw(
-//!     Font6x8::render_str("Hello World!")
-//!         .stroke(Some(Color::Black))
-//!         .fill(Some(Color::White))
-//!         .translate(Coord::new(5, 50))
-//!         .into_iter(),
-//! );
-//!
-//! // Display updated frame
-//! epd.update_frame(&mut spi, &display.buffer()).unwrap();
-//! epd.display_frame(&mut spi).expect("display frame new graphics");
-//!
-//! // Set the EPD to sleep
-//! epd.sleep(&mut spi).expect("sleep");
-//! ```
-//!
+//! Maximum speed tested by myself was 8Mhz but more should be possible (Ben Krasnow used 18Mhz with his implemenation)
 //!
 #![no_std]
+#![deny(missing_docs)]
 
 #[cfg(feature = "graphics")]
 pub mod graphics;
@@ -64,35 +72,19 @@ pub mod color;
 /// Interface for the physical connection between display and the controlling device
 mod interface;
 
-#[cfg(feature = "epd7in5")]
-pub mod epd7in5;
-#[cfg(feature = "epd7in5_v2")]
-pub mod epd7in5_v2;
-
-#[cfg(feature = "epd4in2")]
-pub mod epd4in2;
-
-#[cfg(feature = "epd1in54")]
 pub mod epd1in54;
-
-#[cfg(feature = "epd1in54b")]
 pub mod epd1in54b;
-
-#[cfg(feature = "epd2in9")]
 pub mod epd2in9;
-
-#[cfg(feature = "epd2in9b")]
 pub mod epd2in9b;
-
-#[cfg(any(feature = "epd1in54", feature = "epd2in9"))]
+pub mod epd4in2;
+pub mod epd7in5;
+pub mod epd7in5_v2;
 pub(crate) mod type_a;
 
+/// Includes everything important besides the chosen Display
 pub mod prelude {
     pub use crate::color::{Color, TriColor};
     pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
-
-    #[cfg(feature = "epd7in5_v2")]
-    pub use crate::traits::WaveshareDisplayExt;
 
     pub use crate::SPI_MODE;
 

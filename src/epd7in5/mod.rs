@@ -23,8 +23,11 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display7in5;
 
+/// Width of the display
 pub const WIDTH: u32 = 640;
+/// Height of the display
 pub const HEIGHT: u32 = 384;
+/// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
@@ -105,24 +108,6 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
-    ///
-    /// This already initialises the device. That means [init()] isn't needed
-    /// directly afterwards.
-    ///
-    /// [init()]: InternalWiAdditions::init
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// //buffer = some image data;
-    ///
-    /// let mut epd7in5 = EPD7in5::new(spi, cs, busy, dc, rst, delay);
-    ///
-    /// epd7in5.display_and_transfer_frame(buffer, None);
-    ///
-    /// epd7in5.sleep();
-    /// ```
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,
@@ -150,15 +135,15 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.command(spi, Command::POWER_OFF)?;
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
-
-        self.wait_until_idle();
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
         for byte in buffer {
             let mut temp = *byte;
@@ -171,8 +156,6 @@ where
                 self.send_data(spi, &[data])?;
             }
         }
-
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -189,21 +172,25 @@ where
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DISPLAY_REFRESH)?;
-
         self.wait_until_idle();
+        self.command(spi, Command::DISPLAY_REFRESH)?;
+        Ok(())
+    }
+
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer)?;
+        self.command(spi, Command::DISPLAY_REFRESH)?;
         Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.send_resolution(spi)?;
 
         // The Waveshare controllers all implement clear using 0x33
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
         self.interface
             .data_x_times(spi, 0x33, WIDTH / 8 * HEIGHT * 4)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 

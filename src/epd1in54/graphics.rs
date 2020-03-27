@@ -1,6 +1,6 @@
 use crate::epd1in54::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
-use crate::prelude::*;
+use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 
 /// Full size buffer for use with the 1in54 EPD
@@ -22,12 +22,15 @@ impl Default for Display1in54 {
     }
 }
 
-impl Drawing<Color> for Display1in54 {
-    fn draw<T>(&mut self, item_pixels: T)
-    where
-        T: IntoIterator<Item = Pixel<Color>>,
-    {
-        self.draw_helper(WIDTH, HEIGHT, item_pixels);
+impl DrawTarget<BinaryColor> for Display1in54 {
+    type Error = core::convert::Infallible;
+
+    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
+        self.draw_helper(WIDTH, HEIGHT, pixel)
+    }
+
+    fn size(&self) -> Size {
+        Size::new(WIDTH, HEIGHT)
     }
 }
 
@@ -52,10 +55,9 @@ impl Display for Display1in54 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::color::Color;
+    use crate::color::{Black, Color};
     use crate::graphics::{Display, DisplayRotation};
-    use embedded_graphics::coord::Coord;
-    use embedded_graphics::primitives::Line;
+    use embedded_graphics::{primitives::Line, style::PrimitiveStyle};
 
     // test buffer length
     #[test]
@@ -76,11 +78,9 @@ mod tests {
     #[test]
     fn graphics_rotation_0() {
         let mut display = Display1in54::default();
-        display.draw(
-            Line::new(Coord::new(0, 0), Coord::new(7, 0))
-                .stroke(Some(Color::Black))
-                .into_iter(),
-        );
+        let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .draw(&mut display);
 
         let buffer = display.buffer();
 
@@ -95,11 +95,9 @@ mod tests {
     fn graphics_rotation_90() {
         let mut display = Display1in54::default();
         display.set_rotation(DisplayRotation::Rotate90);
-        display.draw(
-            Line::new(Coord::new(0, 192), Coord::new(0, 199))
-                .stroke(Some(Color::Black))
-                .into_iter(),
-        );
+        let _ = Line::new(Point::new(0, 192), Point::new(0, 199))
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .draw(&mut display);
 
         let buffer = display.buffer();
 
@@ -114,11 +112,9 @@ mod tests {
     fn graphics_rotation_180() {
         let mut display = Display1in54::default();
         display.set_rotation(DisplayRotation::Rotate180);
-        display.draw(
-            Line::new(Coord::new(192, 199), Coord::new(199, 199))
-                .stroke(Some(Color::Black))
-                .into_iter(),
-        );
+        let _ = Line::new(Point::new(192, 199), Point::new(199, 199))
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .draw(&mut display);
 
         let buffer = display.buffer();
 
@@ -136,11 +132,9 @@ mod tests {
     fn graphics_rotation_270() {
         let mut display = Display1in54::default();
         display.set_rotation(DisplayRotation::Rotate270);
-        display.draw(
-            Line::new(Coord::new(199, 0), Coord::new(199, 7))
-                .stroke(Some(Color::Black))
-                .into_iter(),
-        );
+        let _ = Line::new(Point::new(199, 0), Point::new(199, 7))
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .draw(&mut display);
 
         let buffer = display.buffer();
 

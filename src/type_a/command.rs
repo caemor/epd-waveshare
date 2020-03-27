@@ -12,28 +12,28 @@ use crate::traits;
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
     /// Driver Output control
-    /// 	3 Databytes:
-    /// 	A[7:0]
-    /// 	0.. A[8]
-    /// 	0.. B[2:0]
-    /// 	Default: Set A[8:0] = 0x127 and B[2:0] = 0x0
+    ///     3 Databytes:
+    ///     A[7:0]
+    ///     0.. A[8]
+    ///     0.. B[2:0]
+    ///     Default: Set A[8:0] = 0x127 and B[2:0] = 0x0
     DRIVER_OUTPUT_CONTROL = 0x01,
     /// Booster Soft start control
-    /// 	3 Databytes:
-    /// 	1.. A[6:0]
-    /// 	1.. B[6:0]
-    /// 	1.. C[6:0]
-    /// 	Default: A[7:0] = 0xCF, B[7:0] = 0xCE, C[7:0] = 0x8D
+    ///     3 Databytes:
+    ///     1.. A[6:0]
+    ///     1.. B[6:0]
+    ///     1.. C[6:0]
+    ///     Default: A[7:0] = 0xCF, B[7:0] = 0xCE, C[7:0] = 0x8D
     BOOSTER_SOFT_START_CONTROL = 0x0C,
     GATE_SCAN_START_POSITION = 0x0F,
     //TODO: useful?
     // GATE_SCAN_START_POSITION = 0x0F,
     /// Deep Sleep Mode Control
-    /// 	1 Databyte:
-    /// 	0.. A[0]
-    /// 	Values:
-    /// 		A[0] = 0: Normal Mode (POR)
-    /// 		A[0] = 1: Enter Deep Sleep Mode
+    ///     1 Databyte:
+    ///     0.. A[0]
+    ///     Values:
+    ///         A[0] = 0: Normal Mode (POR)
+    ///         A[0] = 1: Enter Deep Sleep Mode
     DEEP_SLEEP_MODE = 0x10,
     // /// Data Entry mode setting
     DATA_ENTRY_MODE_SETTING = 0x11,

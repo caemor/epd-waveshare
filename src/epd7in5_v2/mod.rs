@@ -17,7 +17,7 @@ use embedded_hal::{
 
 use crate::color::Color;
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareDisplayExt};
+use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
 
 pub(crate) mod command;
 use self::command::Command;
@@ -27,8 +27,11 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display7in5;
 
+/// Width of the display
 pub const WIDTH: u32 = 800;
+/// Height of the display
 pub const HEIGHT: u32 = 480;
+/// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
@@ -87,24 +90,6 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
-    ///
-    /// This already initialises the device. That means [init()] isn't needed
-    /// directly afterwards.
-    ///
-    /// [init()]: InternalWiAdditions::init
-    ///
-    /// # Example
-    ///
-    /// ```rust,ignore
-    /// //buffer = some image data;
-    ///
-    /// let mut epd7in5 = EPD7in5::new(spi, cs, busy, dc, rst, delay);
-    ///
-    /// epd7in5.update_and_display_frame(&mut spi, &buffer);
-    ///
-    /// epd7in5.sleep();
-    /// ```
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,
@@ -132,6 +117,7 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.command(spi, Command::POWER_OFF)?;
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
@@ -139,9 +125,8 @@ where
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
-        self.send_data(spi, buffer)?;
         self.wait_until_idle();
+        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)?;
         Ok(())
     }
 
@@ -158,12 +143,19 @@ where
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DISPLAY_REFRESH)?;
         self.wait_until_idle();
+        self.command(spi, Command::DISPLAY_REFRESH)?;
+        Ok(())
+    }
+
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer)?;
+        self.command(spi, Command::DISPLAY_REFRESH)?;
         Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
         self.send_resolution(spi)?;
 
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
@@ -173,7 +165,6 @@ where
         self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
 
         self.command(spi, Command::DISPLAY_REFRESH)?;
-        self.wait_until_idle();
         Ok(())
     }
 
@@ -203,26 +194,6 @@ where
 
     fn is_busy(&self) -> bool {
         self.interface.is_busy(IS_BUSY_LOW)
-    }
-}
-
-impl<SPI, CS, BUSY, DC, RST> WaveshareDisplayExt<SPI, CS, BUSY, DC, RST>
-    for EPD7in5<SPI, CS, BUSY, DC, RST>
-where
-    SPI: Write<u8>,
-    CS: OutputPin,
-    BUSY: InputPin,
-    DC: OutputPin,
-    RST: OutputPin,
-{
-    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
-        for b in buffer {
-            self.send_data(spi, &[255 - b])?;
-        }
-        self.command(spi, Command::DISPLAY_REFRESH)?;
-        self.wait_until_idle();
-        Ok(())
     }
 }
 
