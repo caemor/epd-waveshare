@@ -31,11 +31,8 @@ display.draw(
         .draw(display);
 );
 
-// Transfer the frame data to the epd
-epd.update_frame(&mut spi, &display.buffer())?;
-
-// Display the frame on the epd
-epd.display_frame(&mut spi)?;
+// Transfer the frame data to the epd and display it
+epd.update_and_display_frame(&mut spi, &display.buffer())?;
 ```
 
 ## (Supported) Devices
