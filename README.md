@@ -17,8 +17,7 @@ There are multiple examples in the examples folder. For more infos about the exa
 let mut epd = EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay)?;
 
 // Setup the graphics
-let mut buffer = Buffer4in2::default();
-let mut display = Display::new(epd.width(), epd.height(), &mut buffer.buffer);
+let mut display = Display4in2::default();
 
 // Draw some text
 display.draw(
