@@ -1,26 +1,26 @@
-use crate::epd2in9b::{DEFAULT_BACKGROUND_COLOR, HEIGHT, NUM_DISPLAY_BITS, WIDTH};
+use crate::epd2in9bc::{DEFAULT_BACKGROUND_COLOR, HEIGHT, NUM_DISPLAY_BITS, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 
-/// Full size buffer for use with the 2in9b EPD
+/// Full size buffer for use with the 2in9b/c EPD
 ///
 /// Can also be manually constructed and be used together with VarDisplay
-pub struct Display2in9b {
+pub struct Display2in9bc {
     buffer: [u8; NUM_DISPLAY_BITS as usize],
     rotation: DisplayRotation,
 }
 
-impl Default for Display2in9b {
+impl Default for Display2in9bc {
     fn default() -> Self {
-        Display2in9b {
+        Display2in9bc {
             buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); NUM_DISPLAY_BITS as usize],
             rotation: DisplayRotation::default(),
         }
     }
 }
 
-impl DrawTarget<BinaryColor> for Display2in9b {
+impl DrawTarget<BinaryColor> for Display2in9bc {
     type Error = core::convert::Infallible;
 
     fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
@@ -32,7 +32,7 @@ impl DrawTarget<BinaryColor> for Display2in9b {
     }
 }
 
-impl Display for Display2in9b {
+impl Display for Display2in9bc {
     fn buffer(&self) -> &[u8] {
         &self.buffer
     }

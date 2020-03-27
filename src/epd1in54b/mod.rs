@@ -101,8 +101,13 @@ where
         &mut self,
         spi: &mut SPI,
         black: &[u8],
-        red: &[u8],
+        chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
+        self.update_achromatic_frame(spi, black)?;
+        self.update_chromatic_frame(spi, chromatic)
+    }
+
+    fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.send_resolution(spi)?;
 
@@ -113,10 +118,17 @@ where
             let expanded = expand_bits(*b);
             self.interface.data(spi, &expanded)?;
         }
+        Ok(())
+    }
 
+    fn update_chromatic_frame(
+        &mut self,
+        spi: &mut SPI,
+        chromatic: &[u8],
+    ) -> Result<(), SPI::Error> {
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
-        self.interface.data(spi, red)?;
+        self.interface.data(spi, chromatic)?;
         Ok(())
     }
 }

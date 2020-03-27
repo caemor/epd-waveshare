@@ -24,8 +24,8 @@ pub enum TriColor {
     Black,
     /// White color
     White,
-    /// Red color
-    Red,
+    /// Chromatic color
+    Chromatic,
 }
 
 //TODO: Rename get_bit_value to bit() and get_byte_value to byte() ?

@@ -1,5 +1,4 @@
-//! A simple Driver for the Waveshare 2.9" (B) E-Ink Display via SPI
-
+//! A simple Driver for the Waveshare 2.9" (B/C) E-Ink Display via SPI
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::v2::*,
@@ -10,11 +9,11 @@ use crate::traits::{
     InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
 
-/// Width of epd2in9b in pixels
+/// Width of epd2in9bc in pixels
 pub const WIDTH: u32 = 128;
-/// Height of epd2in9b in pixels
+/// Height of epd2in9bc in pixels
 pub const HEIGHT: u32 = 296;
-/// Default background color (white) of epd2in9b display
+/// Default background color (white) of epd2in9bc display
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
@@ -23,7 +22,7 @@ const IS_BUSY_LOW: bool = true;
 const VCOM_DATA_INTERVAL: u8 = 0x07;
 const WHITE_BORDER: u8 = 0x70;
 const BLACK_BORDER: u8 = 0x30;
-const RED_BORDER: u8 = 0xb0;
+const CHROMATIC_BORDER: u8 = 0xb0;
 const FLOATING_BORDER: u8 = 0xF0;
 
 use crate::color::{Color, TriColor};
@@ -34,16 +33,16 @@ use self::command::Command;
 #[cfg(feature = "graphics")]
 mod graphics;
 #[cfg(feature = "graphics")]
-pub use self::graphics::Display2in9b;
+pub use self::graphics::Display2in9bc;
 
-/// EPD2in9b driver
-pub struct EPD2in9b<SPI, CS, BUSY, DC, RST> {
+/// EPD2in9bc driver
+pub struct EPD2in9bc<SPI, CS, BUSY, DC, RST> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD2in9b<SPI, CS, BUSY, DC, RST>
+    for EPD2in9bc<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -90,7 +89,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD2in9b<SPI, CS, BUSY, DC, RST>
+    for EPD2in9bc<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -102,15 +101,41 @@ where
         &mut self,
         spi: &mut SPI,
         black: &[u8],
-        red: &[u8],
+        chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.update_mono_frame(spi, black)?;
-        self.update_red_frame(spi, red)
+        self.update_achromatic_frame(spi, black)?;
+        self.update_chromatic_frame(spi, chromatic)
+    }
+
+    /// Update only the black/white data of the display.
+    ///
+    /// Finish by calling `update_chromatic_frame`.
+    fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface.data(spi, black)?;
+        Ok(())
+    }
+
+    /// Update only chromatic data of the display.
+    ///
+    /// This data takes precedence over the black/white data.
+    fn update_chromatic_frame(
+        &mut self,
+        spi: &mut SPI,
+        chromatic: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.interface.data(spi, chromatic)?;
+
+        self.wait_until_idle();
+        Ok(())
     }
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD2in9b<SPI, CS, BUSY, DC, RST>
+    for EPD2in9bc<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -129,7 +154,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD2in9b { interface, color };
+        let mut epd = EPD2in9bc { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -183,7 +208,7 @@ where
 
         self.interface.data(spi, &buffer)?;
 
-        // Clear the red layer
+        // Clear the chromatic layer
         let color = self.color.get_byte_value();
 
         self.interface
@@ -231,7 +256,7 @@ where
 
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
-        // Clear the red
+        // Clear the chromatic
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
@@ -253,7 +278,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD2in9b<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> EPD2in9bc<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -298,34 +323,12 @@ where
         let border = match color {
             TriColor::Black => BLACK_BORDER,
             TriColor::White => WHITE_BORDER,
-            TriColor::Red => RED_BORDER,
+            TriColor::Chromatic => CHROMATIC_BORDER,
         };
         self.cmd_with_data(
             spi,
             Command::VCOM_AND_DATA_INTERVAL_SETTING,
             &[border | VCOM_DATA_INTERVAL],
         )
-    }
-
-    /// Update only the black/white data of the display.
-    ///
-    /// Finish by calling `update_red_frame`.
-    pub fn update_mono_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data(spi, black)?;
-        Ok(())
-    }
-
-    /// Update only red data of the display.
-    ///
-    /// This data takes precedence over the black/white data.
-    pub fn update_red_frame(&mut self, spi: &mut SPI, red: &[u8]) -> Result<(), SPI::Error> {
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
-        self.interface.data(spi, red)?;
-
-        self.wait_until_idle();
-        Ok(())
     }
 }
