@@ -10,7 +10,7 @@ Other similiar libraries with support for much more displays are [u8g2](https://
 
 ## Examples
 
-There are multiple examples in the examples folder. For more infos about the examples see the seperate Readme [there](/examples/Readme.md). These examples are all rust projects of their own, so you need to go inside the project to execute it (cargo run --example doesn't work).
+There are multiple examples in the examples folder. Use `cargo run --example example_name` to try them.
 
 ```Rust
 // Setup the epd
