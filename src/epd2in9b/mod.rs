@@ -10,10 +10,14 @@ use crate::traits::{
     InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
 
+/// Width of epd2in9b in pixels
 pub const WIDTH: u32 = 128;
+/// Height of epd2in9b in pixels
 pub const HEIGHT: u32 = 296;
-pub const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
+/// Default background color (white) of epd2in9b display
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+
+const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 
 const IS_BUSY_LOW: bool = true;
 const VCOM_DATA_INTERVAL: u8 = 0x07;
@@ -31,7 +35,6 @@ use self::command::Command;
 mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display2in9b;
-
 
 /// EPD2in9b driver
 pub struct EPD2in9b<SPI, CS, BUSY, DC, RST> {
@@ -208,6 +211,12 @@ where
         self.command(spi, Command::DISPLAY_REFRESH)?;
 
         self.wait_until_idle();
+        Ok(())
+    }
+
+    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer)?;
+        self.display_frame(spi)?;
         Ok(())
     }
 
