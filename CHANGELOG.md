@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [v0.4.0] - 2020-04-06
+
 ### Added
  - New supported epds: epd7in5 (thanks to @str4d), epd7in5 v2 (thanks to @asaaki), epd1in54b (thanks to @jkristell)
  - Added update_and_display_frame to WaveshareDisplay trait (fixes #38)
@@ -23,7 +25,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
  - Doc Tests
 
-<!-- ## [v0.3.2] - 2019-04-04 -->
 
 ## [v0.3.2] - 2019-06-17
 
@@ -82,7 +83,8 @@ Initial release with Changelog
 - Renamed to `epd-waveshare`
 
 
-[Unreleased]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.4.0...HEAD
+[v0.4.0]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.2...v0.4.0
 [v0.3.2]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.1...v0.3.2
 [v0.3.1]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.3.0...v0.3.1
 [v0.3.0]: https://github.com/Caemor/eink-waveshare-rs/compare/v0.2.0...v0.3.0
