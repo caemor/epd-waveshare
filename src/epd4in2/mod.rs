@@ -132,6 +132,15 @@ where
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
         self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3A])?;
 
+        self.send_resolution(spi)?;
+
+        self.interface
+            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
+
+        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
+        self.interface
+            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+
         self.set_lut(spi, None)?;
 
         self.wait_until_idle();
@@ -200,15 +209,6 @@ where
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         let color_value = self.color.get_byte_value();
-
-        self.send_resolution(spi)?;
-
-        self.interface
-            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
-
-        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.interface
-            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
 
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
