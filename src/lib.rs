@@ -92,6 +92,19 @@ pub mod prelude {
     pub use crate::graphics::{Display, DisplayRotation};
 }
 
+/// Computes the needed buffer length. Takes care of rounding up in case width
+/// is not divisible by 8.
+///
+///  unused
+///  bits        width
+/// <----><------------------------>
+/// [XXXXX210][76543210]...[76543210] ^
+/// [XXXXX210][76543210]...[76543210] | height
+/// [XXXXX210][76543210]...[76543210] v
+pub const fn buffer_len(width: usize, height: usize) -> usize {
+    (width + 7) / 8 * height
+}
+
 use embedded_hal::spi::{Mode, Phase, Polarity};
 
 /// SPI mode -
