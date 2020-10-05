@@ -12,7 +12,7 @@ pub(crate) trait Command {
 }
 
 /// Seperates the different LUT for the Display Refresh process
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum RefreshLUT {
     /// The "normal" full Lookuptable for the Refresh-Sequence
     FULL,
