@@ -1,5 +1,6 @@
 //! Graphics Support for EPDs
 
+use crate::buffer_len;
 use crate::color::Color;
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
 
@@ -88,6 +89,7 @@ pub trait Display: DrawTarget<BinaryColor> {
 ///
 /// The buffer can be created as following:
 /// buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]
+/// If WIDTH is not a multiple of 8, don't forget to round it up (ie. (WIDTH + 7) / 8)
 ///
 /// Example:
 /// ```rust,no_run
@@ -120,10 +122,10 @@ pub struct VarDisplay<'a> {
 impl<'a> VarDisplay<'a> {
     /// Create a new variable sized display.
     ///
-    /// Buffersize must be at least width / 8 * height bytes.
+    /// Buffersize must be at least (width + 7) / 8 * height bytes.
     pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> VarDisplay<'a> {
         let len = buffer.len() as u32;
-        assert!(width / 8 * height >= len);
+        assert!(buffer_len(width as usize, height as usize) >= len as usize);
         VarDisplay {
             width,
             height,
@@ -187,29 +189,36 @@ fn outside_display(p: Point, width: u32, height: u32, rotation: DisplayRotation)
 #[rustfmt::skip]
 //returns index position in the u8-slice and the bit-position inside that u8
 fn find_position(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
+    let nx;
+    let ny;
     match rotation {
-        DisplayRotation::Rotate0 => (
-            x / 8 + (width / 8) * y,
-            0x80 >> (x % 8),
-        ),
-        DisplayRotation::Rotate90 => (
-            (width - 1 - y) / 8 + (width / 8) * x,
-            0x01 << (y % 8),
-        ),
-        DisplayRotation::Rotate180 => (
-            ((width / 8) * height - 1) - (x / 8 + (width / 8) * y),
-            0x01 << (x % 8),
-        ),
-        DisplayRotation::Rotate270 => (
-            y / 8 + (height - 1 - x) * (width / 8),
-            0x80 >> (y % 8),
-        ),
+        DisplayRotation::Rotate0 => {
+            nx = x;
+            ny = y;
+        },
+        DisplayRotation::Rotate90 => {
+            nx = width - 1 - y;
+            ny = x;
+        } ,
+        DisplayRotation::Rotate180 => {
+            nx = width - 1 - x;
+            ny = height - 1 - y;
+        },
+        DisplayRotation::Rotate270 => {
+            nx = y;
+            ny = height - 1 - x;
+        },
     }
+
+    (
+        nx / 8 + ((width + 7) / 8) * ny,
+        0x80 >> (nx % 8),
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{find_position, outside_display, Display, DisplayRotation, VarDisplay};
+    use super::{buffer_len, find_position, outside_display, Display, DisplayRotation, VarDisplay};
     use crate::color::Black;
     use crate::color::Color;
     use embedded_graphics::{prelude::*, primitives::Line, style::PrimitiveStyle};
@@ -218,7 +227,8 @@ mod tests {
     fn buffer_clear() {
         use crate::epd4in2::{HEIGHT, WIDTH};
 
-        let mut buffer = [Color::Black.get_byte_value(); WIDTH as usize / 8 * HEIGHT as usize];
+        let mut buffer =
+            [Color::Black.get_byte_value(); buffer_len(WIDTH as usize, HEIGHT as usize)];
         let mut display = VarDisplay::new(WIDTH, HEIGHT, &mut buffer);
 
         for &byte in display.buffer.iter() {
