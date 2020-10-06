@@ -227,4 +227,43 @@ where
     /// but in the case you send data and commands directly you might need to check
     /// if the device is still busy
     fn is_busy(&self) -> bool;
+
+    /// Updates the old frame.
+    fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+
+    /// Updates the new frame.
+    fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+
+    /// Updates the old frame for a portion of the display.
+    fn update_partial_old_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error>;
+
+    /// Updates the new frame for a portion of the display.
+    fn update_partial_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error>;
+
+    /// Clears the partial frame buffer on the EPD with the declared background color
+    /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
+    fn clear_partial_frame(
+        &mut self,
+        spi: &mut SPI,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error>;
 }

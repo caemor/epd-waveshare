@@ -132,6 +132,15 @@ where
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
         self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3A])?;
 
+        self.send_resolution(spi)?;
+
+        self.interface
+            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
+
+        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
+        self.interface
+            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+
         self.set_lut(spi, None)?;
 
         self.wait_until_idle();
@@ -197,6 +206,7 @@ where
         Ok(())
     }
 
+    /// Slow. todo: Figure out when this is requried
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         let color_value = self.color.get_byte_value();
@@ -235,22 +245,10 @@ where
             //return Err("Wrong buffersize");
         }
 
-        self.command(spi, Command::PARTIAL_IN)?;
-        self.command(spi, Command::PARTIAL_WINDOW)?;
-        self.send_data(spi, &[(x >> 8) as u8])?;
-        let tmp = x & 0xf8;
-        self.send_data(spi, &[tmp as u8])?; // x should be the multiple of 8, the last 3 bit will always be ignored
-        let tmp = tmp + width - 1;
-        self.send_data(spi, &[(tmp >> 8) as u8])?;
-        self.send_data(spi, &[(tmp | 0x07) as u8])?;
+        self.interface.cmd(spi, Command::PARTIAL_IN)?;
+        self.interface.cmd(spi, Command::PARTIAL_WINDOW)?;
 
-        self.send_data(spi, &[(y >> 8) as u8])?;
-        self.send_data(spi, &[y as u8])?;
-
-        self.send_data(spi, &[((y + height - 1) >> 8) as u8])?;
-        self.send_data(spi, &[(y + height - 1) as u8])?;
-
-        self.send_data(spi, &[0x01])?; // Gates scan both inside and outside of the partial window. (default)
+        self.shift_display(spi, x, y, width, height)?;
 
         //TODO: handle dtm somehow
         let is_dtm1 = false;
@@ -338,6 +336,126 @@ where
     fn is_busy(&self) -> bool {
         self.interface.is_busy(IS_BUSY_LOW)
     }
+
+    fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+
+        // todo: Eval if you need these 3 res setting items.
+        self.send_resolution(spi)?;
+        self.interface
+            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
+        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
+        self.interface
+            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+
+        self.interface.data(spi, buffer)?;
+
+        Ok(())
+    }
+
+    fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+
+        self.interface.data(spi, buffer)?;
+
+        Ok(())
+    }
+
+    /// Always call `update_partial_new_frame` after this, with buffer-updating code
+    /// between the calls.
+    fn update_partial_old_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+        if buffer.len() as u32 != width / 8 * height {
+            //TODO: panic!! or sth like that
+            //return Err("Wrong buffersize");
+        }
+
+        self.interface.cmd(spi, Command::PARTIAL_IN)?;
+        self.interface.cmd(spi, Command::PARTIAL_WINDOW)?;
+
+        self.shift_display(spi, x, y, width, height)?;
+
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+
+        self.interface.data(spi, buffer)?;
+
+        Ok(())
+    }
+
+    /// Always call `update_partial_old_frame` before this, with buffer-updating code
+    /// between the calls.
+    fn update_partial_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+        if buffer.len() as u32 != width / 8 * height {
+            //TODO: panic!! or sth like that
+            //return Err("Wrong buffersize");
+        }
+
+        self.shift_display(spi, x, y, width, height)?;
+
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+
+        self.interface.data(spi, buffer)?;
+
+        self.interface.cmd(spi, Command::PARTIAL_OUT)?;
+        Ok(())
+    }
+
+    fn clear_partial_frame(
+        &mut self,
+        spi: &mut SPI,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+        self.send_resolution(spi)?;
+
+        let color_value = self.color.get_byte_value();
+
+        self.interface.cmd(spi, Command::PARTIAL_IN)?;
+        self.interface.cmd(spi, Command::PARTIAL_WINDOW)?;
+
+        self.shift_display(spi, x, y, width, height)?;
+
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface
+            .data_x_times(spi, color_value, width / 8 * height)?;
+
+        self.interface
+            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.interface
+            .data_x_times(spi, color_value, width / 8 * height)?;
+
+        self.interface.cmd(spi, Command::PARTIAL_OUT)?;
+        Ok(())
+    }
 }
 
 impl<SPI, CS, BUSY, DC, RST> EPD4in2<SPI, CS, BUSY, DC, RST>
@@ -346,6 +464,7 @@ where
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
+
     RST: OutputPin,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
@@ -404,6 +523,34 @@ where
 
         // LUT BLACK to BLACK
         self.cmd_with_data(spi, Command::LUT_BLACK_TO_BLACK, lut_bb)?;
+        Ok(())
+    }
+
+    /// I think this sets up the display to send pixel data to a custom
+    /// starting point.
+    pub fn shift_display(
+        &mut self,
+        spi: &mut SPI,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error> {
+        self.send_data(spi, &[(x >> 8) as u8])?;
+        let tmp = x & 0xf8;
+        self.send_data(spi, &[tmp as u8])?; // x should be the multiple of 8, the last 3 bit will always be ignored
+        let tmp = tmp + width - 1;
+        self.send_data(spi, &[(tmp >> 8) as u8])?;
+        self.send_data(spi, &[(tmp | 0x07) as u8])?;
+
+        self.send_data(spi, &[(y >> 8) as u8])?;
+        self.send_data(spi, &[y as u8])?;
+
+        self.send_data(spi, &[((y + height - 1) >> 8) as u8])?;
+        self.send_data(spi, &[(y + height - 1) as u8])?;
+
+        self.send_data(spi, &[0x01])?; // Gates scan both inside and outside of the partial window. (default)
+
         Ok(())
     }
 }
