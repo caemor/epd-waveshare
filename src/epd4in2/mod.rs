@@ -330,6 +330,7 @@ where
         self.interface.is_busy(IS_BUSY_LOW)
     }
 
+    /// To be followed immediately after by `update_old_frame`.
     fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
 
@@ -349,9 +350,10 @@ where
         Ok(())
     }
 
+    /// To be used immediately after `update_old_frame`.
     fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.send_resolution(spi)?;
+        // self.wait_until_idle();
+        // self.send_resolution(spi)?;
 
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
@@ -361,8 +363,6 @@ where
         Ok(())
     }
 
-    /// Always call `update_partial_new_frame` after this, with buffer-updating code
-    /// between the calls.
     fn update_partial_old_frame(
         &mut self,
         spi: &mut SPI,
@@ -373,6 +373,16 @@ where
         height: u32,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
+
+        // todo: Eval if you need these 3 res setting items.
+        self.send_resolution(spi)?;
+        self.interface
+            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
+        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
+        self.interface
+            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+
+
         if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
