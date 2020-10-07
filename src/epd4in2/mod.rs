@@ -197,7 +197,6 @@ where
         Ok(())
     }
 
-    /// Slow. todo: Figure out when this is requried
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         let color_value = self.color.get_byte_value();
@@ -231,7 +230,7 @@ where
         height: u32,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.send_resolution(spi)?;
+        // self.send_resolution(spi)?;
 
         if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
@@ -481,6 +480,17 @@ where
 
     fn wait_until_idle(&mut self) {
         self.interface.wait_until_idle(IS_BUSY_LOW)
+    }
+
+        fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        let w = self.width();
+        let h = self.height();
+
+        self.command(spi, Command::RESOLUTION_SETTING)?;
+        self.send_data(spi, &[(w >> 8) as u8])?;
+        self.send_data(spi, &[w as u8])?;
+        self.send_data(spi, &[(h >> 8) as u8])?;
+        self.send_data(spi, &[h as u8])
     }
 
     fn set_lut_helper(
