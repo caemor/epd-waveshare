@@ -132,15 +132,6 @@ where
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
         self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3A])?;
 
-        self.send_resolution(spi)?;
-
-        self.interface
-            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
-
-        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.interface
-            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
-
         self.set_lut(spi, None)?;
 
         self.wait_until_idle();
@@ -240,10 +231,13 @@ where
         height: u32,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
+        self.send_resolution(spi)?;
+
         if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
         }
+        
 
         self.interface.cmd(spi, Command::PARTIAL_IN)?;
         self.interface.cmd(spi, Command::PARTIAL_WINDOW)?;
@@ -358,6 +352,7 @@ where
 
     fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
+        self.send_resolution(spi)?;
 
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
@@ -488,17 +483,6 @@ where
         self.interface.wait_until_idle(IS_BUSY_LOW)
     }
 
-    fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        let w = self.width();
-        let h = self.height();
-
-        self.command(spi, Command::RESOLUTION_SETTING)?;
-        self.send_data(spi, &[(w >> 8) as u8])?;
-        self.send_data(spi, &[w as u8])?;
-        self.send_data(spi, &[(h >> 8) as u8])?;
-        self.send_data(spi, &[h as u8])
-    }
-
     fn set_lut_helper(
         &mut self,
         spi: &mut SPI,
@@ -526,7 +510,7 @@ where
         Ok(())
     }
 
-    /// I think this sets up the display to send pixel data to a custom
+    /// Helper function. Sets up the display to send pixel data to a custom
     /// starting point.
     pub fn shift_display(
         &mut self,
