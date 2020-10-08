@@ -236,7 +236,6 @@ where
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
         }
-        
 
         self.interface.cmd(spi, Command::PARTIAL_IN)?;
         self.interface.cmd(spi, Command::PARTIAL_WINDOW)?;
@@ -382,7 +381,6 @@ where
         self.interface
             .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
 
-
         if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
@@ -492,7 +490,7 @@ where
         self.interface.wait_until_idle(IS_BUSY_LOW)
     }
 
-        fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
         let h = self.height();
 
