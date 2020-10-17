@@ -52,7 +52,7 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.interface.reset(delay);
+        self.interface.reset(delay, 10);
 
         // set the power settings
         self.interface
