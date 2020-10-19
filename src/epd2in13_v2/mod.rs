@@ -71,7 +71,7 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         // HW reset
-        self.interface.reset(delay);
+        self.interface.reset(delay, 10);
 
         if self.refresh == RefreshLUT::QUICK {
             self.set_vcom_register(spi, (-9).vcom())?;

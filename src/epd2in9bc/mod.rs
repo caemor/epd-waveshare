@@ -111,7 +111,7 @@ where
     ) -> Result<(), SPI::Error> {
         // Values taken from datasheet and sample code
 
-        self.interface.reset(delay);
+        self.interface.reset(delay, 10);
 
         // start the booster
         self.interface
