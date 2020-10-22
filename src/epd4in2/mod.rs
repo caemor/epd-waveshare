@@ -55,7 +55,7 @@ use embedded_hal::{
 };
 
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, QuickRefresh, RefreshLUT, WaveshareDisplay};
 
 //The Lookup Tables for the Display
 mod constants;
@@ -328,7 +328,17 @@ where
     fn is_busy(&self) -> bool {
         self.interface.is_busy(IS_BUSY_LOW)
     }
+}
 
+impl<SPI, CS, BUSY, DC, RST> QuickRefresh<SPI, CS, BUSY, DC, RST>
+    for EPD4in2<SPI, CS, BUSY, DC, RST>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+{
     /// To be followed immediately after by `update_old_frame`.
     fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();

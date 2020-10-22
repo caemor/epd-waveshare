@@ -227,7 +227,16 @@ where
     /// but in the case you send data and commands directly you might need to check
     /// if the device is still busy
     fn is_busy(&self) -> bool;
+}
 
+pub trait QuickRefresh<SPI, CS, BUSY, DC, RST>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+{
     /// Updates the old frame.
     fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
 

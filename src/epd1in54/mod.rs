@@ -49,8 +49,6 @@ pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 //const DPI: u16 = 184;
 const IS_BUSY_LOW: bool = false;
 
-use core::unimplemented;
-
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::v2::*,
@@ -283,48 +281,6 @@ where
 
     fn is_busy(&self) -> bool {
         self.interface.is_busy(IS_BUSY_LOW)
-    }
-    fn update_old_frame(&mut self, _spi: &mut SPI, _buffer: &[u8]) -> Result<(), SPI::Error> {
-        unimplemented!("Not yet implemented");
-    }
-
-    fn update_new_frame(&mut self, _spi: &mut SPI, _buffer: &[u8]) -> Result<(), SPI::Error> {
-        unimplemented!("Not yet implemented");
-    }
-
-    fn update_partial_old_frame(
-        &mut self,
-        _spi: &mut SPI,
-        _buffer: &[u8],
-        _x: u32,
-        _y: u32,
-        _width: u32,
-        _height: u32,
-    ) -> Result<(), SPI::Error> {
-        unimplemented!("Not yet implemented");
-    }
-
-    fn update_partial_new_frame(
-        &mut self,
-        _spi: &mut SPI,
-        _buffer: &[u8],
-        _x: u32,
-        _y: u32,
-        _width: u32,
-        _height: u32,
-    ) -> Result<(), SPI::Error> {
-        unimplemented!("Not yet implemented");
-    }
-
-    fn clear_partial_frame(
-        &mut self,
-        _spi: &mut SPI,
-        _x: u32,
-        _y: u32,
-        _width: u32,
-        _height: u32,
-    ) -> Result<(), SPI::Error> {
-        unimplemented!("Not yet implemented");
     }
 }
 
