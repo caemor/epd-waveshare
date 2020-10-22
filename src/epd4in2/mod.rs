@@ -351,7 +351,7 @@ where
 
     /// To be used immediately after `update_old_frame`.
     fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        // self.wait_until_idle();
+        self.wait_until_idle();
         // self.send_resolution(spi)?;
 
         self.interface
