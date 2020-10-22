@@ -10,8 +10,6 @@
 //! Revision V2 has been released on 2019.11, the resolution is upgraded to 800×480, from 640×384 of V1.
 //! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
-use core::unimplemented;
-
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::v2::{InputPin, OutputPin},
@@ -199,7 +197,6 @@ where
     }
 }
 
-// TODO: Why is this required?
 impl<SPI, CS, BUSY, DC, RST> EPD7in5<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,

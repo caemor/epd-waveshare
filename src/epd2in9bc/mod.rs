@@ -53,7 +53,6 @@
 //!# Ok(())
 //!# }
 //!```
-
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::v2::*,
