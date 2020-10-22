@@ -229,6 +229,8 @@ where
     fn is_busy(&self) -> bool;
 }
 
+/// Allows quick refresh support for displays that support it; lets you send both
+/// old and new frame data to support this.
 pub trait QuickRefresh<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
