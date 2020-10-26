@@ -8,7 +8,7 @@
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    digital::{InputPin, OutputPin},
 };
 
 use crate::color::Color;
@@ -70,7 +70,7 @@ where
 
         // Power on
         self.command(spi, Command::POWER_ON)?;
-        delay.delay_ms(5);
+        delay.try_delay_ms(5);
         self.wait_until_idle();
 
         // Set the clock frequency to 50Hz (default)

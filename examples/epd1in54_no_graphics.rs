@@ -1,6 +1,5 @@
 #![deny(warnings)]
 
-use embedded_hal::prelude::*;
 use epd_waveshare::{epd1in54::EPD1in54, prelude::*};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},

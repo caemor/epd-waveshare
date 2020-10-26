@@ -10,7 +10,7 @@
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    digital::{InputPin, OutputPin},
 };
 
 use crate::buffer_len;

@@ -2,7 +2,7 @@
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    digital::*,
 };
 
 use crate::interface::DisplayInterface;
@@ -64,7 +64,7 @@ where
 
         // power on
         self.command(spi, Command::POWER_ON)?;
-        delay.delay_ms(5);
+        delay.try_delay_ms(5);
         self.wait_until_idle();
 
         // set the panel settings

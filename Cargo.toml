@@ -17,7 +17,7 @@ edition = "2018"
 
 [dependencies]
 embedded-graphics = { version = "0.6.1", optional = true}
-embedded-hal = {version = "0.2.3", features = ["unproven"]}
+embedded-hal = "1.0.0-alpha.2"
 bit_field = "0.10.1"
 
 [dev-dependencies]
