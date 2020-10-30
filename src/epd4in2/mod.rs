@@ -475,7 +475,6 @@ where
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
-
     RST: OutputPin,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
