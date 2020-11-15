@@ -30,7 +30,7 @@ pub const WIDTH: u32 = 600;
 pub const HEIGHT: u32 = 448;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: OctColor = OctColor::White;
-const IS_BUSY_LOW: bool = false;
+const IS_BUSY_LOW: bool = true;
 
 /// EPD5in65f driver
 ///
@@ -119,6 +119,8 @@ where
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_busy_high();
+        self.send_resolution(spi)?;
         self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_1, buffer)?;
         Ok(())
     }
@@ -136,6 +138,7 @@ where
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_busy_high();
         self.command(spi, Command::POWER_ON)?;
         self.wait_busy_high();
         self.command(spi, Command::DISPLAY_REFRESH)?;
@@ -153,10 +156,10 @@ where
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let bg = 0x77; /*clear frame */ //OctColor::colors_byte(self.color, self.color);
-
+        self.wait_busy_high();
+        self.send_resolution(spi)?;
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;
-
+        self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;        
         self.display_frame(spi)?;
         Ok(())
     }
@@ -221,7 +224,6 @@ where
     fn wait_busy_low(&mut self) {
         self.interface.wait_until_idle(false)
     }
-    
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
         let h = self.height();
