@@ -1,4 +1,3 @@
-use crate::color::Color;
 use core::marker::Sized;
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
@@ -136,6 +135,8 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
+    /// The Color Type used by the Display    
+    type DisplayColor;
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
     /// This already initialises the device.
@@ -165,10 +166,10 @@ where
     ) -> Result<(), SPI::Error>;
 
     /// Sets the backgroundcolor for various commands like [clear_frame](WaveshareDisplay::clear_frame)
-    fn set_background_color(&mut self, color: Color);
+    fn set_background_color(&mut self, color: Self::DisplayColor);
 
     /// Get current background color
-    fn background_color(&self) -> &Color;
+    fn background_color(&self) -> &Self::DisplayColor;
 
     /// Get the width of the display
     fn width(&self) -> u32;
