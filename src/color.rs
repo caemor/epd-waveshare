@@ -30,7 +30,7 @@ pub enum TriColor {
     Chromatic,
 }
 
-/// For the 5in65 8 Color Display
+/// For the 5in65 7 Color Display
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum OctColor {
     /// Black Color
@@ -47,6 +47,8 @@ pub enum OctColor {
     Yellow = 0x05,
     /// Orange Color
     Orange = 0x06,
+    /// HiZ / Clean Color
+    HiZ = 0x07,
 }
 
 impl From<()> for OctColor {
@@ -80,6 +82,7 @@ impl OctColor {
             0x04 => Ok(OctColor::Red),
             0x05 => Ok(OctColor::Yellow),
             0x06 => Ok(OctColor::Orange),
+            0x07 => Ok(OctColor::HiZ),
             _ => Err(())
         }
     }
@@ -99,6 +102,7 @@ impl OctColor {
             OctColor::Red => (0xff, 0x00, 0x00),
             OctColor::Yellow => (0xff, 0xff, 0x00),
             OctColor::Orange => (0xff, 0x80, 0x00),
+            OctColor::HiZ => (0x80, 0x80, 0x80), /* looks greyish */
         }
     }
 }

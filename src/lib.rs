@@ -86,13 +86,13 @@ pub(crate) mod type_a;
 
 /// Includes everything important besides the chosen Display
 pub mod prelude {
-    pub use crate::color::{Color, TriColor};
+    pub use crate::color::{Color, TriColor, OctColor};
     pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
 
     pub use crate::SPI_MODE;
 
     #[cfg(feature = "graphics")]
-    pub use crate::graphics::{Display, DisplayRotation};
+    pub use crate::graphics::{OctDisplay, Display, DisplayRotation};
 }
 
 /// Computes the needed buffer length. Takes care of rounding up in case width

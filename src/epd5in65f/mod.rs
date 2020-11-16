@@ -155,7 +155,7 @@ where
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        let bg = 0x77; /*clear frame */ //OctColor::colors_byte(self.color, self.color);
+        let bg = OctColor::colors_byte(self.color, self.color);
         self.wait_busy_high();
         self.send_resolution(spi)?;
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
