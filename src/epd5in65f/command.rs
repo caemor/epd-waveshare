@@ -66,7 +66,7 @@ pub(crate) enum Command {
 
     /// Image Process Command
     IMAGE_PROCESS_COMMAND = 0x13,
-    
+
     /// This command builds the VCOM Look-Up Table (LUTC).
     LUT_FOR_VCOM = 0x20,
     /// This command builds the Black Look-Up Table (LUTB).

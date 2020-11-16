@@ -1,7 +1,7 @@
 //! Graphics Support for EPDs
 
 use crate::buffer_len;
-use crate::color::{OctColor, Color};
+use crate::color::{Color, OctColor};
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
 
 /// Displayrotation
@@ -129,7 +129,8 @@ pub trait OctDisplay: DrawTarget<OctColor> {
         }
 
         // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
-        let (index, upper) = find_oct_position(point.x as u32, point.y as u32, width, height, rotation);
+        let (index, upper) =
+            find_oct_position(point.x as u32, point.y as u32, width, height, rotation);
         let index = index as usize;
 
         // "Draw" the Pixel on that bit
@@ -251,19 +252,19 @@ fn find_rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotat
         DisplayRotation::Rotate0 => {
             nx = x;
             ny = y;
-        },
+        }
         DisplayRotation::Rotate90 => {
             nx = width - 1 - y;
             ny = x;
-        } ,
+        }
         DisplayRotation::Rotate180 => {
             nx = width - 1 - x;
             ny = height - 1 - y;
-        },
+        }
         DisplayRotation::Rotate270 => {
             nx = y;
             ny = height - 1 - x;
-        },
+        }
     }
     (nx, ny)
 }

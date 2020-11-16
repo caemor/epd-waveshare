@@ -6,7 +6,6 @@
 //! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_5in65f.c)
 //! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd5in65f.py)
 
-
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::v2::{InputPin, OutputPin},
@@ -69,9 +68,9 @@ where
         self.send_resolution(spi)?;
 
         self.cmd_with_data(spi, Command::FLASH_MODE, &[0xAA])?;
-       
+
         delay.delay_ms(100);
-        
+
         self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x37])?;
         Ok(())
     }
@@ -159,7 +158,7 @@ where
         self.wait_busy_high();
         self.send_resolution(spi)?;
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;        
+        self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;
         self.display_frame(spi)?;
         Ok(())
     }

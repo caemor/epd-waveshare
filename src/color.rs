@@ -2,7 +2,7 @@
 
 #[cfg(feature = "graphics")]
 use embedded_graphics::pixelcolor::BinaryColor;
-#[cfg(feature = "graphics")] 
+#[cfg(feature = "graphics")]
 use embedded_graphics::pixelcolor::PixelColor;
 
 #[cfg(feature = "graphics")]
@@ -83,7 +83,7 @@ impl OctColor {
             0x05 => Ok(OctColor::Yellow),
             0x06 => Ok(OctColor::Orange),
             0x07 => Ok(OctColor::HiZ),
-            _ => Err(())
+            _ => Err(()),
         }
     }
     ///Split the nibbles of a single byte and convert both to an OctColor if possible

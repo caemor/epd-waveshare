@@ -1,7 +1,7 @@
-use crate::epd5in65f::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
-use crate::graphics::{OctDisplay, DisplayRotation};
-use embedded_graphics::prelude::*;
 use crate::color::OctColor;
+use crate::epd5in65f::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::graphics::{DisplayRotation, OctDisplay};
+use embedded_graphics::prelude::*;
 
 /// Full size buffer for use with the 5in65f EPD
 ///
@@ -56,14 +56,14 @@ impl OctDisplay for Display5in65f {
 mod tests {
     use super::*;
     use crate::epd5in65f;
-    use crate::graphics::{OctDisplay, DisplayRotation};
+    use crate::graphics::{DisplayRotation, OctDisplay};
     use embedded_graphics::{primitives::Line, style::PrimitiveStyle};
 
     // test buffer length
     #[test]
     fn graphics_size() {
         let display = Display5in65f::default();
-        assert_eq!(display.buffer().len(), 448*600 / 2);
+        assert_eq!(display.buffer().len(), 448 * 600 / 2);
     }
 
     // test default background color on all bytes
@@ -71,10 +71,13 @@ mod tests {
     fn graphics_default() {
         let display = Display5in65f::default();
         for &byte in display.buffer() {
-            assert_eq!(byte, OctColor::colors_byte(
-                epd5in65f::DEFAULT_BACKGROUND_COLOR,
-                epd5in65f::DEFAULT_BACKGROUND_COLOR,
-            ));
+            assert_eq!(
+                byte,
+                OctColor::colors_byte(
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR,
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR,
+                )
+            );
         }
     }
 
@@ -87,15 +90,21 @@ mod tests {
             .draw(&mut display);
 
         let buffer = display.buffer();
-        
+
         for &byte in buffer.iter().take(1) {
-            assert_eq!(OctColor::split_byte(byte), Ok((OctColor::Black, OctColor::Black)));
+            assert_eq!(
+                OctColor::split_byte(byte),
+                Ok((OctColor::Black, OctColor::Black))
+            );
         }
 
         for &byte in buffer.iter().skip(1) {
             assert_eq!(
                 OctColor::split_byte(byte),
-                Ok((epd5in65f::DEFAULT_BACKGROUND_COLOR, epd5in65f::DEFAULT_BACKGROUND_COLOR))
+                Ok((
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR,
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR
+                ))
             );
         }
     }
@@ -105,20 +114,29 @@ mod tests {
         let mut display = Display5in65f::default();
         display.set_rotation(DisplayRotation::Rotate90);
 
-        let _ = Line::new(Point::new(0, WIDTH as i32 - 2), Point::new(0, WIDTH as i32- 1))
-            .into_styled(PrimitiveStyle::with_stroke(OctColor::Black, 1))
-            .draw(&mut display);
+        let _ = Line::new(
+            Point::new(0, WIDTH as i32 - 2),
+            Point::new(0, WIDTH as i32 - 1),
+        )
+        .into_styled(PrimitiveStyle::with_stroke(OctColor::Black, 1))
+        .draw(&mut display);
 
         let buffer = display.buffer();
 
         for &byte in buffer.iter().take(1) {
-            assert_eq!(OctColor::split_byte(byte), Ok((OctColor::Black, OctColor::Black)));
+            assert_eq!(
+                OctColor::split_byte(byte),
+                Ok((OctColor::Black, OctColor::Black))
+            );
         }
 
         for &byte in buffer.iter().skip(1) {
             assert_eq!(
                 OctColor::split_byte(byte),
-                Ok((epd5in65f::DEFAULT_BACKGROUND_COLOR, epd5in65f::DEFAULT_BACKGROUND_COLOR))
+                Ok((
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR,
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR
+                ))
             );
         }
     }
@@ -128,21 +146,29 @@ mod tests {
         let mut display = Display5in65f::default();
         display.set_rotation(DisplayRotation::Rotate180);
 
-        let _ = Line::new(Point::new(WIDTH as i32 - 2, HEIGHT as i32 - 1),
-                          Point::new(WIDTH as i32 - 1, HEIGHT as i32 - 1))
-            .into_styled(PrimitiveStyle::with_stroke(OctColor::Black, 1))
-            .draw(&mut display);
+        let _ = Line::new(
+            Point::new(WIDTH as i32 - 2, HEIGHT as i32 - 1),
+            Point::new(WIDTH as i32 - 1, HEIGHT as i32 - 1),
+        )
+        .into_styled(PrimitiveStyle::with_stroke(OctColor::Black, 1))
+        .draw(&mut display);
 
         let buffer = display.buffer();
-        
+
         for &byte in buffer.iter().take(1) {
-            assert_eq!(OctColor::split_byte(byte), Ok((OctColor::Black, OctColor::Black)));
+            assert_eq!(
+                OctColor::split_byte(byte),
+                Ok((OctColor::Black, OctColor::Black))
+            );
         }
 
         for &byte in buffer.iter().skip(1) {
             assert_eq!(
                 OctColor::split_byte(byte),
-                Ok((epd5in65f::DEFAULT_BACKGROUND_COLOR, epd5in65f::DEFAULT_BACKGROUND_COLOR))
+                Ok((
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR,
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR
+                ))
             );
         }
     }
@@ -152,21 +178,29 @@ mod tests {
         let mut display = Display5in65f::default();
         display.set_rotation(DisplayRotation::Rotate270);
 
-        let _ = Line::new(Point::new(HEIGHT as i32 -1, 0),
-                          Point::new(HEIGHT as i32 -1, 1))
-            .into_styled(PrimitiveStyle::with_stroke(OctColor::Black, 1))
-            .draw(&mut display);
+        let _ = Line::new(
+            Point::new(HEIGHT as i32 - 1, 0),
+            Point::new(HEIGHT as i32 - 1, 1),
+        )
+        .into_styled(PrimitiveStyle::with_stroke(OctColor::Black, 1))
+        .draw(&mut display);
 
         let buffer = display.buffer();
 
         for &byte in buffer.iter().take(1) {
-            assert_eq!(OctColor::split_byte(byte), Ok((OctColor::Black, OctColor::Black)));
+            assert_eq!(
+                OctColor::split_byte(byte),
+                Ok((OctColor::Black, OctColor::Black))
+            );
         }
 
         for &byte in buffer.iter().skip(1) {
             assert_eq!(
                 OctColor::split_byte(byte),
-                Ok((epd5in65f::DEFAULT_BACKGROUND_COLOR, epd5in65f::DEFAULT_BACKGROUND_COLOR))
+                Ok((
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR,
+                    epd5in65f::DEFAULT_BACKGROUND_COLOR
+                ))
             );
         }
     }
