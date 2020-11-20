@@ -204,4 +204,48 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn graphics_colors() {
+        let mut display = Display5in65f::default();
+
+        const COLORS: [OctColor; 8] = [
+            OctColor::HiZ,
+            OctColor::White,
+            OctColor::Black,
+            OctColor::Red,
+            OctColor::Green,
+            OctColor::Orange,
+            OctColor::Blue,
+            OctColor::Yellow,
+        ];
+        for c in &COLORS {
+            display.clear_buffer(*c);
+            for b in display.buffer() {
+                assert_eq!(OctColor::split_byte(*b), Ok((*c, *c)));
+            }
+        }
+
+        for (w, c) in (0..WIDTH).zip(COLORS.iter().cycle()) {
+            let _ = Line::new(
+                Point::new(w as i32, 0),
+                Point::new(w as i32, HEIGHT as i32 - 1),
+            )
+            .into_styled(PrimitiveStyle::with_stroke(*c, 1))
+            .draw(&mut display);
+        }
+
+        COLORS
+            .chunks(2)
+            .cycle()
+            .take(WIDTH as usize * 2)
+            .cycle()
+            .zip(display.buffer())
+            .for_each(|(window, b)| match (window, b) {
+                (&[c1, c2], b) => {
+                    assert_eq!(OctColor::split_byte(*b), Ok((c1, c2)));
+                }
+                _ => panic!("unexpected pattern"),
+            })
+    }
 }

@@ -185,4 +185,14 @@ mod tests {
         assert_eq!(Color::from(Color::White.get_bit_value()), Color::White);
         assert_eq!(Color::from(1u8).get_bit_value(), 1u8);
     }
+
+    #[test]
+    fn test_oct() {
+        let left = OctColor::Red;
+        let right = OctColor::Green;
+        assert_eq!(
+            OctColor::split_byte(OctColor::colors_byte(left, right)),
+            Ok((left, right))
+        );
+    }
 }

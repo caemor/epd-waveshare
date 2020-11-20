@@ -93,9 +93,9 @@ pub trait Display: DrawTarget<BinaryColor> {
 /// - Clearing
 pub trait OctDisplay: DrawTarget<OctColor> {
     /// Clears the buffer of the display with the chosen background color
-    fn clear_buffer(&mut self, background_color: Color) {
+    fn clear_buffer(&mut self, background_color: OctColor) {
         for elem in self.get_mut_buffer().iter_mut() {
-            *elem = background_color.get_byte_value();
+            *elem = OctColor::colors_byte(background_color, background_color);
         }
     }
 
@@ -274,7 +274,9 @@ fn find_rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotat
 fn find_oct_position(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, bool) {
     let (nx, ny) = find_rotation(x, y, width, height, rotation);
     (
+        /* what byte address is this? */
         nx / 2 + (width / 2) * ny,
+        /* is this the lower nibble (within byte)? */
         (nx & 0x1) == 0,
     )
 }
