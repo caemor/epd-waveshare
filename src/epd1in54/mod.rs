@@ -151,6 +151,7 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
+    type DisplayColor = Color;
     fn width(&self) -> u32 {
         WIDTH
     }

@@ -166,6 +166,7 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
+    type DisplayColor = Color;
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,
