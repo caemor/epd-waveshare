@@ -57,7 +57,7 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         // reset the device
-        self.interface.reset(delay, 10);
+        self.interface.reset(delay, 2);
 
         // power on
         self.command(spi, Command::POWER_ON)?;
