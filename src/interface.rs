@@ -159,13 +159,18 @@ where
     ///
     /// Often used to awake the module from deep sleep. See [EPD4in2::sleep()](EPD4in2::sleep())
     ///
-    /// TODO: Takes at least 400ms of delay alone, can it be shortened?
-    pub(crate) fn reset<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY) {
-        let _ = self.rst.set_low();
-        //TODO: why 200ms? (besides being in the arduino version)
-        delay.delay_ms(200);
+    /// The timing of keeping the reset pin low seems to be important and different per device.
+    /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
+    /// properly with 2ms
+    pub(crate) fn reset<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY, duration: u8) {
         let _ = self.rst.set_high();
-        //TODO: same as 3 lines above
+        delay.delay_ms(10);
+
+        let _ = self.rst.set_low();
+        delay.delay_ms(duration);
+        let _ = self.rst.set_high();
+        //TODO: the upstream libraries always sleep for 200ms here
+        // 10ms works fine with just for the 7in5_v2 but this needs to be validated for other devices
         delay.delay_ms(200);
     }
 }

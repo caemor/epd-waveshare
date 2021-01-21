@@ -111,7 +111,7 @@ where
     ) -> Result<(), SPI::Error> {
         // Values taken from datasheet and sample code
 
-        self.interface.reset(delay);
+        self.interface.reset(delay, 10);
 
         // start the booster
         self.interface
@@ -197,6 +197,7 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
+    type DisplayColor = Color;
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,

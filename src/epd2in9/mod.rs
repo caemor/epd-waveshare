@@ -94,7 +94,7 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.interface.reset(delay);
+        self.interface.reset(delay, 10);
 
         self.wait_until_idle();
 
@@ -147,6 +147,7 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
+    type DisplayColor = Color;
     fn width(&self) -> u32 {
         WIDTH
     }

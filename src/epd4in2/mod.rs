@@ -105,7 +105,7 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         // reset the device
-        self.interface.reset(delay);
+        self.interface.reset(delay, 10);
 
         // set the power settings
         self.interface.cmd_with_data(
@@ -148,6 +148,7 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
+    type DisplayColor = Color;
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,

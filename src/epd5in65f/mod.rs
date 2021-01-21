@@ -1,21 +1,17 @@
-//! A simple Driver for the Waveshare 7.5" E-Ink Display (V2) via SPI
+//! A simple Driver for the Waveshare 6.65 inch (F) E-Ink Display via SPI
 //!
 //! # References
 //!
-//! - [Datasheet](https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT)
-//! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/702def0/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_7in5_V2.c)
-//! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/702def0/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5_V2.py)
-//!
-//! Important note for V2:
-//! Revision V2 has been released on 2019.11, the resolution is upgraded to 800×480, from 640×384 of V1.
-//! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
+//! - [Datasheet](https://www.waveshare.com/wiki/5.65inch_e-Paper_Module_(F))
+//! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_5in65f.c)
+//! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd5in65f.py)
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::v2::{InputPin, OutputPin},
 };
 
-use crate::color::Color;
+use crate::color::OctColor;
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
 
@@ -25,27 +21,27 @@ use self::command::Command;
 #[cfg(feature = "graphics")]
 mod graphics;
 #[cfg(feature = "graphics")]
-pub use self::graphics::Display7in5;
+pub use self::graphics::Display5in65f;
 
 /// Width of the display
-pub const WIDTH: u32 = 800;
+pub const WIDTH: u32 = 600;
 /// Height of the display
-pub const HEIGHT: u32 = 480;
+pub const HEIGHT: u32 = 448;
 /// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+pub const DEFAULT_BACKGROUND_COLOR: OctColor = OctColor::White;
 const IS_BUSY_LOW: bool = true;
 
-/// EPD7in5 (V2) driver
+/// EPD5in65f driver
 ///
-pub struct EPD7in5<SPI, CS, BUSY, DC, RST> {
+pub struct EPD5in65f<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
-    color: Color,
+    color: OctColor,
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD7in5<SPI, CS, BUSY, DC, RST>
+    for EPD5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -61,28 +57,27 @@ where
         // Reset the device
         self.interface.reset(delay, 2);
 
-        // V2 procedure as described here:
-        // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5bc_V2.py
-        // and as per specs:
-        // https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
-
-        self.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x27, 0x17])?;
-        self.cmd_with_data(spi, Command::POWER_SETTING, &[0x07, 0x17, 0x3F, 0x3F])?;
-        self.command(spi, Command::POWER_ON)?;
-        self.wait_until_idle();
-        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0x1F])?;
-        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x06])?;
-        self.cmd_with_data(spi, Command::TCON_RESOLUTION, &[0x03, 0x20, 0x01, 0xE0])?;
-        self.cmd_with_data(spi, Command::DUAL_SPI, &[0x00])?;
+        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0xEF, 0x08])?;
+        self.cmd_with_data(spi, Command::POWER_SETTING, &[0x37, 0x00, 0x23, 0x23])?;
+        self.cmd_with_data(spi, Command::POWER_OFF_SEQUENCE_SETTING, &[0x00])?;
+        self.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0xC7, 0xC7, 0x1D])?;
+        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3C])?;
+        self.cmd_with_data(spi, Command::TEMPERATURE_SENSOR_COMMAND, &[0x00])?;
+        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x37])?;
         self.cmd_with_data(spi, Command::TCON_SETTING, &[0x22])?;
-        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x10, 0x07])?;
-        self.wait_until_idle();
+        self.send_resolution(spi)?;
+
+        self.cmd_with_data(spi, Command::FLASH_MODE, &[0xAA])?;
+
+        delay.delay_ms(100);
+
+        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x37])?;
         Ok(())
     }
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD7in5<SPI, CS, BUSY, DC, RST>
+    for EPD5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -90,7 +85,7 @@ where
     DC: OutputPin,
     RST: OutputPin,
 {
-    type DisplayColor = Color;
+    type DisplayColor = OctColor;
     fn new<DELAY: DelayMs<u8>>(
         spi: &mut SPI,
         cs: CS,
@@ -102,7 +97,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD7in5 { interface, color };
+        let mut epd = EPD5in65f { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -118,16 +113,14 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.command(spi, Command::POWER_OFF)?;
-        self.wait_until_idle();
         self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)?;
+        self.wait_busy_high();
+        self.send_resolution(spi)?;
+        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_1, buffer)?;
         Ok(())
     }
 
@@ -144,36 +137,37 @@ where
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_busy_high();
+        self.command(spi, Command::POWER_ON)?;
+        self.wait_busy_high();
         self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.wait_busy_high();
+        self.command(spi, Command::POWER_OFF)?;
+        self.wait_busy_low();
         Ok(())
     }
 
     fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.update_frame(spi, buffer)?;
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.display_frame(spi)?;
         Ok(())
     }
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        let bg = OctColor::colors_byte(self.color, self.color);
+        self.wait_busy_high();
         self.send_resolution(spi)?;
-
         self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
-
-        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
-
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;
+        self.display_frame(spi)?;
         Ok(())
     }
 
-    fn set_background_color(&mut self, color: Color) {
+    fn set_background_color(&mut self, color: OctColor) {
         self.color = color;
     }
 
-    fn background_color(&self) -> &Color {
+    fn background_color(&self) -> &OctColor {
         &self.color
     }
 
@@ -198,7 +192,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD7in5<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> EPD5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -223,10 +217,12 @@ where
         self.interface.cmd_with_data(spi, command, data)
     }
 
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW)
+    fn wait_busy_high(&mut self) {
+        self.interface.wait_until_idle(true)
     }
-
+    fn wait_busy_low(&mut self) {
+        self.interface.wait_until_idle(false)
+    }
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
         let h = self.height();
@@ -245,8 +241,8 @@ mod tests {
 
     #[test]
     fn epd_size() {
-        assert_eq!(WIDTH, 800);
-        assert_eq!(HEIGHT, 480);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
+        assert_eq!(WIDTH, 600);
+        assert_eq!(HEIGHT, 448);
+        assert_eq!(DEFAULT_BACKGROUND_COLOR, OctColor::White);
     }
 }

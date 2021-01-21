@@ -1,6 +1,7 @@
 //! Graphics Support for EPDs
 
-use crate::color::Color;
+use crate::buffer_len;
+use crate::color::{Color, OctColor};
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
 
 /// Displayrotation
@@ -84,10 +85,70 @@ pub trait Display: DrawTarget<BinaryColor> {
     }
 }
 
+/// Necessary traits for all displays to implement for drawing
+///
+/// Adds support for:
+/// - Drawing (With the help of DrawTarget/Embedded Graphics)
+/// - Rotations
+/// - Clearing
+pub trait OctDisplay: DrawTarget<OctColor> {
+    /// Clears the buffer of the display with the chosen background color
+    fn clear_buffer(&mut self, background_color: OctColor) {
+        for elem in self.get_mut_buffer().iter_mut() {
+            *elem = OctColor::colors_byte(background_color, background_color);
+        }
+    }
+
+    /// Returns the buffer
+    fn buffer(&self) -> &[u8];
+
+    /// Returns a mutable buffer
+    fn get_mut_buffer(&mut self) -> &mut [u8];
+
+    /// Sets the rotation of the display
+    fn set_rotation(&mut self, rotation: DisplayRotation);
+
+    /// Get the current rotation of the display
+    fn rotation(&self) -> DisplayRotation;
+
+    /// Helperfunction for the Embedded Graphics draw trait
+    ///
+    /// Becomes uneccesary when const_generics become stablised
+    fn draw_helper(
+        &mut self,
+        width: u32,
+        height: u32,
+        pixel: Pixel<OctColor>,
+    ) -> Result<(), Self::Error> {
+        let rotation = self.rotation();
+        let buffer = self.get_mut_buffer();
+
+        let Pixel(point, color) = pixel;
+        if outside_display(point, width, height, rotation) {
+            return Ok(());
+        }
+
+        // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
+        let (index, upper) =
+            find_oct_position(point.x as u32, point.y as u32, width, height, rotation);
+        let index = index as usize;
+
+        // "Draw" the Pixel on that bit
+        let (mask, color_nibble) = if upper {
+            (0x0f, color.get_nibble() << 4)
+        } else {
+            (0xf0, color.get_nibble())
+        };
+        buffer[index] = (buffer[index] & mask) | color_nibble;
+        Ok(())
+    }
+}
+
 /// A variable Display without a predefined buffer
 ///
 /// The buffer can be created as following:
 /// buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]
+/// If WIDTH is not a multiple of 8, don't forget to round it up (ie. (WIDTH + 7) / 8)
 ///
 /// Example:
 /// ```rust,no_run
@@ -120,10 +181,10 @@ pub struct VarDisplay<'a> {
 impl<'a> VarDisplay<'a> {
     /// Create a new variable sized display.
     ///
-    /// Buffersize must be at least width / 8 * height bytes.
+    /// Buffersize must be at least (width + 7) / 8 * height bytes.
     pub fn new(width: u32, height: u32, buffer: &'a mut [u8]) -> VarDisplay<'a> {
         let len = buffer.len() as u32;
-        assert!(width / 8 * height >= len);
+        assert!(buffer_len(width as usize, height as usize) >= len as usize);
         VarDisplay {
             width,
             height,
@@ -184,32 +245,55 @@ fn outside_display(p: Point, width: u32, height: u32, rotation: DisplayRotation)
     false
 }
 
+fn find_rotation(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u32) {
+    let nx;
+    let ny;
+    match rotation {
+        DisplayRotation::Rotate0 => {
+            nx = x;
+            ny = y;
+        }
+        DisplayRotation::Rotate90 => {
+            nx = width - 1 - y;
+            ny = x;
+        }
+        DisplayRotation::Rotate180 => {
+            nx = width - 1 - x;
+            ny = height - 1 - y;
+        }
+        DisplayRotation::Rotate270 => {
+            nx = y;
+            ny = height - 1 - x;
+        }
+    }
+    (nx, ny)
+}
+
+#[rustfmt::skip]
+//returns index position in the u8-slice and the bit-position inside that u8
+fn find_oct_position(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, bool) {
+    let (nx, ny) = find_rotation(x, y, width, height, rotation);
+    (
+        /* what byte address is this? */
+        nx / 2 + (width / 2) * ny,
+        /* is this the lower nibble (within byte)? */
+        (nx & 0x1) == 0,
+    )
+}
+
 #[rustfmt::skip]
 //returns index position in the u8-slice and the bit-position inside that u8
 fn find_position(x: u32, y: u32, width: u32, height: u32, rotation: DisplayRotation) -> (u32, u8) {
-    match rotation {
-        DisplayRotation::Rotate0 => (
-            x / 8 + (width / 8) * y,
-            0x80 >> (x % 8),
-        ),
-        DisplayRotation::Rotate90 => (
-            (width - 1 - y) / 8 + (width / 8) * x,
-            0x01 << (y % 8),
-        ),
-        DisplayRotation::Rotate180 => (
-            ((width / 8) * height - 1) - (x / 8 + (width / 8) * y),
-            0x01 << (x % 8),
-        ),
-        DisplayRotation::Rotate270 => (
-            y / 8 + (height - 1 - x) * (width / 8),
-            0x80 >> (y % 8),
-        ),
-    }
+    let (nx, ny) = find_rotation(x, y, width, height, rotation);
+    (
+        nx / 8 + ((width + 7) / 8) * ny,
+        0x80 >> (nx % 8),
+    )
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{find_position, outside_display, Display, DisplayRotation, VarDisplay};
+    use super::{buffer_len, find_position, outside_display, Display, DisplayRotation, VarDisplay};
     use crate::color::Black;
     use crate::color::Color;
     use embedded_graphics::{prelude::*, primitives::Line, style::PrimitiveStyle};
@@ -218,7 +302,8 @@ mod tests {
     fn buffer_clear() {
         use crate::epd4in2::{HEIGHT, WIDTH};
 
-        let mut buffer = [Color::Black.get_byte_value(); WIDTH as usize / 8 * HEIGHT as usize];
+        let mut buffer =
+            [Color::Black.get_byte_value(); buffer_len(WIDTH as usize, HEIGHT as usize)];
         let mut display = VarDisplay::new(WIDTH, HEIGHT, &mut buffer);
 
         for &byte in display.buffer.iter() {

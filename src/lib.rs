@@ -74,11 +74,14 @@ mod interface;
 
 pub mod epd1in54;
 pub mod epd1in54b;
+pub mod epd2in13_v2;
 pub mod epd2in9;
 pub mod epd2in9bc;
 pub mod epd4in2;
+pub mod epd5in65f;
 pub mod epd7in5;
 pub mod epd7in5_v2;
+
 pub(crate) mod type_a;
 
 /// Includes everything important besides the chosen Display
@@ -91,7 +94,20 @@ pub mod prelude {
     pub use crate::SPI_MODE;
 
     #[cfg(feature = "graphics")]
-    pub use crate::graphics::{Display, DisplayRotation};
+    pub use crate::graphics::{Display, DisplayRotation, OctDisplay};
+}
+
+/// Computes the needed buffer length. Takes care of rounding up in case width
+/// is not divisible by 8.
+///
+///  unused
+///  bits        width
+/// <----><------------------------>
+/// [XXXXX210][76543210]...[76543210] ^
+/// [XXXXX210][76543210]...[76543210] | height
+/// [XXXXX210][76543210]...[76543210] v
+pub const fn buffer_len(width: usize, height: usize) -> usize {
+    (width + 7) / 8 * height
 }
 
 use embedded_hal::spi::{Mode, Phase, Polarity};
