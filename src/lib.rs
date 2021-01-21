@@ -87,7 +87,9 @@ pub(crate) mod type_a;
 /// Includes everything important besides the chosen Display
 pub mod prelude {
     pub use crate::color::{Color, OctColor, TriColor};
-    pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
+    pub use crate::traits::{
+        QuickRefresh, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
+    };
 
     pub use crate::SPI_MODE;
 
