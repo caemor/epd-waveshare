@@ -11,7 +11,7 @@ pub use BinaryColor::Off as White;
 pub use BinaryColor::On as Black;
 
 /// When trying to parse u8 to one of the color types
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct OutOfColorRangeParseError(u8);
 impl core::fmt::Display for OutOfColorRangeParseError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
