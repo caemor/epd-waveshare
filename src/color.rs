@@ -19,6 +19,12 @@ impl core::fmt::Display for OutOfColorRangeParseError {
     }
 }
 
+impl OutOfColorRangeParseError {
+    fn _new(size: u8) -> OutOfColorRangeParseError {
+        OutOfColorRangeParseError(size)
+    }
+}
+
 /// Only for the Black/White-Displays
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
