@@ -221,7 +221,7 @@ impl I32Ext for i32 {
     // This is really not very nice. Until I find something better, this will be
     // a placeholder.
     fn vcom(self) -> VCOM {
-        assert!(self >= -30 && self <= -2);
+        assert!((-30..=-2).contains(&self));
         let u = match -self {
             2 => 0x08,
             3 => 0x0B,
@@ -258,20 +258,16 @@ impl I32Ext for i32 {
     }
 
     fn gate_driving_decivolt(self) -> GateDrivingVoltage {
-        assert!(self >= 100 && self <= 210 && self % 5 == 0);
+        assert!((100..=210).contains(&self) && self % 5 == 0);
         GateDrivingVoltage(((self - 100) / 5 + 0x03) as u8)
     }
 
     fn source_driving_decivolt(self) -> SourceDrivingVoltage {
-        assert!(
-            (self >= 24 && self <= 88)
-                || (self >= 90 && self <= 180 && self % 5 == 0)
-                || (self >= -180 && self <= -90 && self % 5 == 0)
-        );
+        assert!((24..=88).contains(&self) || (self % 5 == 0 && (90..=180).contains(&self.abs())));
 
-        if self >= 24 && self <= 88 {
+        if (24..=88).contains(&self) {
             SourceDrivingVoltage(((self - 24) + 0x8E) as u8)
-        } else if self >= 90 && self <= 180 {
+        } else if (90..=180).contains(&self) {
             SourceDrivingVoltage(((self - 90) / 2 + 0x23) as u8)
         } else {
             SourceDrivingVoltage((((-self - 90) / 5) * 2 + 0x1A) as u8)

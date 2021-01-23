@@ -10,6 +10,15 @@ pub use BinaryColor::Off as White;
 #[cfg(feature = "graphics")]
 pub use BinaryColor::On as Black;
 
+/// When trying to parse u8 to one of the color types
+#[derive(Debug)]
+pub struct OutOfColorRangeParseError(u8);
+impl core::fmt::Display for OutOfColorRangeParseError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Outside of possible Color Range: {}", self.0)
+    }
+}
+
 /// Only for the Black/White-Displays
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Color {
@@ -73,7 +82,7 @@ impl OctColor {
     }
 
     ///Take the nibble (lower 4 bits) and convert to an OctColor if possible
-    pub fn from_nibble(nibble: u8) -> Result<OctColor, ()> {
+    pub fn from_nibble(nibble: u8) -> Result<OctColor, OutOfColorRangeParseError> {
         match nibble & 0xf {
             0x00 => Ok(OctColor::Black),
             0x01 => Ok(OctColor::White),
@@ -83,11 +92,11 @@ impl OctColor {
             0x05 => Ok(OctColor::Yellow),
             0x06 => Ok(OctColor::Orange),
             0x07 => Ok(OctColor::HiZ),
-            _ => Err(()),
+            e => Err(OutOfColorRangeParseError(e)),
         }
     }
     ///Split the nibbles of a single byte and convert both to an OctColor if possible
-    pub fn split_byte(byte: u8) -> Result<(OctColor, OctColor), ()> {
+    pub fn split_byte(byte: u8) -> Result<(OctColor, OctColor), OutOfColorRangeParseError> {
         let low = OctColor::from_nibble(byte & 0xf)?;
         let high = OctColor::from_nibble((byte >> 4) & 0xf)?;
         Ok((high, low))

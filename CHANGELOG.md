@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+
+### Changed
+ - Use specific ParseColorError instead of ()
+
+### Fixed
+
+
+## [v0.5.0]
+
+TODO!
+
 ## [v0.4.0] - 2020-04-06
 
 ### Added
