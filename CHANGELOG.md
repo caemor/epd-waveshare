@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
  - Use specific ParseColorError instead of ()
+ - EPD4in2: Don't set the resolution (and some more) over and over again (#48)
 
 ### Fixed
 
