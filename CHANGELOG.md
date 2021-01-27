@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
-
+ - Added QuickRefresh Trait and implemented it for EPD4in2 in #62 (thanks to @David-OConnor)
 
 ### Changed
  - Use specific ParseColorError instead of ()
