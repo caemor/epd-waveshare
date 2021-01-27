@@ -238,6 +238,43 @@ where
 /// and how they will change. This isn't required when using full refreshes.
 ///
 /// (todo: Example ommitted due to CI failures.)
+/// Example:
+///```rust, no_run
+///# use embedded_hal_mock::*;
+///# fn main() -> Result<(), MockError> {
+///# use embedded_graphics::{
+///#   pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+///# };
+///# use epd_waveshare::{epd4in2::*, prelude::*};
+///# use epd_waveshare::graphics::VarDisplay;
+///#
+///# let expectations = [];
+///# let mut spi = spi::Mock::new(&expectations);
+///# let expectations = [];
+///# let cs_pin = pin::Mock::new(&expectations);
+///# let busy_in = pin::Mock::new(&expectations);
+///# let dc = pin::Mock::new(&expectations);
+///# let rst = pin::Mock::new(&expectations);
+///# let mut delay = delay::MockNoop::new();
+///#
+///# // Setup EPD
+///# let mut epd = EPD4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+///let (x, y, frame_width, frame_height) = (20, 40, 80,80);
+///
+///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];
+///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer);
+///
+///epd.update_partial_old_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
+///  .ok();
+///
+///display.clear_buffer(Color::White);
+///// Execute drawing commands here.
+///
+///epd.update_partial_new_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
+///  .ok();
+///# Ok(())
+///# }
+///```
 pub trait QuickRefresh<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
