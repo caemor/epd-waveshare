@@ -229,3 +229,59 @@ where
     /// if the device is still busy
     fn is_busy(&self) -> bool;
 }
+
+/// Allows quick refresh support for displays that support it; lets you send both
+/// old and new frame data to support this.
+///
+/// When using the quick refresh look-up table, the display must receive separate display
+/// buffer data marked as old, and new. This is used to determine which pixels need to change,
+/// and how they will change. This isn't required when using full refreshes.
+///
+/// (todo: Example ommitted due to CI failures.)
+pub trait QuickRefresh<SPI, CS, BUSY, DC, RST>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+{
+    /// Updates the old frame.
+    fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+
+    /// Updates the new frame.
+    fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+
+    /// Updates the old frame for a portion of the display.
+    fn update_partial_old_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error>;
+
+    /// Updates the new frame for a portion of the display.
+    fn update_partial_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error>;
+
+    /// Clears the partial frame buffer on the EPD with the declared background color
+    /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
+    fn clear_partial_frame(
+        &mut self,
+        spi: &mut SPI,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error>;
+}
