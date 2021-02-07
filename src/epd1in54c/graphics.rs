@@ -1,4 +1,4 @@
-use crate::epd1in54c::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH, NUM_DISPLAY_BITS};
+use crate::epd1in54c::{DEFAULT_BACKGROUND_COLOR, HEIGHT, NUM_DISPLAY_BITS, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
