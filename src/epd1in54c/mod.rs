@@ -16,15 +16,12 @@ pub const WIDTH: u32 = 152;
 pub const HEIGHT: u32 = 152;
 /// Default Background Color (white)
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
-
-const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
-
 const IS_BUSY_LOW: bool = true;
+const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 
 use crate::color::Color;
 
 pub(crate) mod command;
-
 use self::command::Command;
 
 #[cfg(feature = "graphics")]
@@ -100,10 +97,8 @@ where
 
     fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
+        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_1, black)?;
 
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
-        self.interface.data(spi, black)?;
         Ok(())
     }
 
@@ -113,10 +108,8 @@ where
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
+        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, chromatic)?;
 
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
-        self.interface.data(spi, chromatic)?;
         Ok(())
     }
 }
@@ -189,8 +182,7 @@ where
         // Clear the chromatic layer
         let color = self.color.get_byte_value();
 
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         Ok(())
@@ -228,13 +220,11 @@ where
         let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
 
         // Clear the black
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
-        // Clear the red
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+        // Clear the chromatic
+        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         Ok(())
