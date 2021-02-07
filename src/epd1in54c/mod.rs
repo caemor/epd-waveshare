@@ -99,6 +99,8 @@ where
     }
 
     fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
         self.interface.data(spi, black)?;
@@ -110,6 +112,8 @@ where
         spi: &mut SPI,
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+
         self.interface
             .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
         self.interface.data(spi, chromatic)?;
