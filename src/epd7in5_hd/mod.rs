@@ -171,9 +171,6 @@ where
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let pixel_count = WIDTH * HEIGHT / 8;
-        let blank_frame = [0xFF; (WIDTH * HEIGHT / 8) as usize];
-
-        // self.update_and_display_frame(spi, &blank_frame)?;
 
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::SET_RAM_Y_AC, &[0x00, 0x00])?;
@@ -230,10 +227,6 @@ where
         self.interface.cmd(spi, command)
     }
 
-    fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
-        self.interface.data(spi, data)
-    }
-
     fn cmd_with_data(
         &mut self,
         spi: &mut SPI,
@@ -246,20 +239,6 @@ where
     fn wait_until_idle(&mut self) {
         self.interface.wait_until_idle(IS_BUSY_LOW)
     }
-
-    // fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-    //     unimplemented!();
-    //     // let w = self.width();
-    //     // let h = self.height();
-
-    //     // self.cmd_with_data(spi, Command::SET_RAM_Y_AC, &[0x00, 0x00])?;
-
-    //     // self.command(spi, Command::TCON_RESOLUTION)?;
-    //     // self.send_data(spi, &[(w >> 8) as u8])?;
-    //     // self.send_data(spi, &[w as u8])?;
-    //     // self.send_data(spi, &[(h >> 8) as u8])?;
-    //     // self.send_data(spi, &[h as u8])
-    // }
 }
 
 #[cfg(test)]
