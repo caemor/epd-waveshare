@@ -16,7 +16,7 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST> {
     busy: BUSY,
     /// Data/Command Control Pin (High for data, Low for command)
     dc: DC,
-    /// Pin for Reseting
+    /// Pin for Resetting
     rst: RST,
 }
 
@@ -107,7 +107,7 @@ where
             spi.write(data)?;
         }
 
-        // deativate spi with cs high
+        // deactivate spi with cs high
         let _ = self.cs.set_high();
 
         Ok(())
