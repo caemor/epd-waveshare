@@ -152,7 +152,8 @@ mod tests {
 
     #[test]
     fn command_addr() {
-        // assert_eq!(Command::PANEL_SETTING.address(), 0x00);
-        // assert_eq!(Command::DISPLAY_REFRESH.address(), 0x12);
+        assert_eq!(Command::MASTER_ACTIVATION.address(), 0x20);
+        assert_eq!(Command::SW_RESET.address(), 0x12);
+        assert_eq!(Command::DISPLAY_UPDATE_CONTROL_2.address(), 0x22);
     }
 }
