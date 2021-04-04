@@ -26,13 +26,14 @@ impl Default for RefreshLUT {
     }
 }
 
-pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST>
+pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -44,22 +45,19 @@ where
     /// This function calls [reset](WaveshareDisplay::reset),
     /// so you don't need to call reset your self when trying to wake your device up
     /// after setting it to sleep.
-    fn init<DELAY: DelayMs<u8>>(
-        &mut self,
-        spi: &mut SPI,
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error>;
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 }
 
 /// Functions to interact with three color panels
-pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>:
-    WaveshareDisplay<SPI, CS, BUSY, DC, RST>
+pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>:
+    WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -127,20 +125,21 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST>
+pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     /// The Color Type used by the Display    
     type DisplayColor;
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
     /// This already initialises the device.
-    fn new<DELAY: DelayMs<u8>>(
+    fn new(
         spi: &mut SPI,
         cs: CS,
         busy: BUSY,
@@ -154,16 +153,12 @@ where
     /// Let the device enter deep-sleep mode to save power.
     ///
     /// The deep sleep mode returns to standby with a hardware reset.
-    fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 
     /// Wakes the device up from sleep
     ///
     /// Also reintialises the device if necessary.
-    fn wake_up<DELAY: DelayMs<u8>>(
-        &mut self,
-        spi: &mut SPI,
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error>;
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 
     /// Sets the backgroundcolor for various commands like [clear_frame](WaveshareDisplay::clear_frame)
     fn set_background_color(&mut self, color: Self::DisplayColor);
@@ -178,7 +173,12 @@ where
     fn height(&self) -> u32;
 
     /// Transmit a full frame to the SRAM of the EPD
-    fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+    fn update_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error>;
 
     /// Transmits partial data to the SRAM of the EPD
     ///
@@ -198,15 +198,20 @@ where
     /// Displays the frame data from SRAM
     ///
     /// This function waits until the device isn`t busy anymore
-    fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 
     /// Provide a combined update&display and save some time (skipping a busy check in between)
-    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+    fn update_and_display_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error>;
 
     /// Clears the frame buffer on the EPD with the declared background color
     ///
     /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
-    fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 
     /// Trait for using various Waveforms from different LUTs
     /// E.g. for partial refreshes
@@ -275,13 +280,14 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait QuickRefresh<SPI, CS, BUSY, DC, RST>
+pub trait QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     /// Updates the old frame.
     fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;

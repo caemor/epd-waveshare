@@ -88,7 +88,7 @@ fn main() -> Result<(), std::io::Error> {
         .update_partial_frame(&mut spi, &display.buffer(), x, y, width, height)
         .unwrap();
     epd4in2
-        .display_frame(&mut spi)
+        .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
     delay.delay_ms(5000u16);
 
@@ -137,14 +137,14 @@ fn main() -> Result<(), std::io::Error> {
             .update_partial_frame(&mut spi, &display.buffer(), x, y, width, height)
             .unwrap();
         epd4in2
-            .display_frame(&mut spi)
+            .display_frame(&mut spi, &mut delay)
             .expect("display frame new graphics");
 
         delay.delay_ms(1_000u16);
     }
 
     println!("Finished tests - going to sleep");
-    epd4in2.sleep(&mut spi)
+    epd4in2.sleep(&mut spi, &mut delay)
 }
 
 fn draw_text(display: &mut VarDisplay, text: &str, x: i32, y: i32) {

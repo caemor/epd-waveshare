@@ -7,9 +7,11 @@ use embedded_hal::{
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
-pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST> {
+pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
     /// SPI
     _spi: PhantomData<SPI>,
+    /// DELAY
+    _delay: PhantomData<DELAY>,
     /// CS for SPI
     cs: CS,
     /// Low for busy, Wait until display is ready!
@@ -20,17 +22,19 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST> {
     rst: RST,
 }
 
-impl<SPI, CS, BUSY, DC, RST> DisplayInterface<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
         DisplayInterface {
             _spi: PhantomData::default(),
+            _delay: PhantomData::default(),
             cs,
             busy,
             dc,
@@ -126,15 +130,32 @@ where
     ///
     /// Most likely there was a mistake with the 2in9 busy connection
     /// //TODO: use the #cfg feature to make this compile the right way for the certain types
-    pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
-        //tested: worked without the delay for all tested devices
-        //self.delay_ms(1);
+    pub(crate) fn wait_until_idle(
+        &mut self,
+        is_busy_low: bool,
+        mut task: Option<(
+            &mut SPI,
+            &mut DELAY,
+            fn(&mut Self, &mut SPI, &mut DELAY) -> Result<(), SPI::Error>,
+        )>,
+    ) -> Result<(), SPI::Error> {
+        // //tested: worked without the delay for all tested devices
+        // //self.delay_ms(1);
 
+        // Some displays need special treatment (Only 7.5"V2 known so far)
+        // In those cases, a "task" is provided and run here. If note, this
+        // just busy waits for the display.
         while self.is_busy(is_busy_low) {
-            //tested: REMOVAL of DELAY: it's only waiting for the signal anyway and should continue work asap
-            //old: shorten the time? it was 100 in the beginning
-            //self.delay_ms(5);
+            match task {
+                // TODO: Ignore this error?
+                Some((ref mut spi, ref mut delay, tcb)) => tcb(self, spi, delay)?,
+                None => {}
+            }
+            // //tested: REMOVAL of DELAY: it's only waiting for the signal anyway and should continue work asap
+            // //old: shorten the time? it was 100 in the beginning
+            // //self.delay_ms(5);
         }
+        Ok(())
     }
 
     /// Checks if device is still busy
@@ -162,7 +183,7 @@ where
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY, duration: u8) {
+    pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u8) {
         let _ = self.rst.set_high();
         delay.delay_ms(10);
 
