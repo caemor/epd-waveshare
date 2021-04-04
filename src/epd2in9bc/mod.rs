@@ -46,10 +46,10 @@
 //!    &mono_display.buffer(),
 //!    &chromatic_display.buffer()
 //!)?;
-//!epd.display_frame(&mut spi)?;
+//!epd.display_frame(&mut spi, &mut delay)?;
 //!
 //!// Set the EPD to sleep
-//!epd.sleep(&mut spi)?;
+//!epd.sleep(&mut spi, &mut delay)?;
 //!# Ok(())
 //!# }
 //!```

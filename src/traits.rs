@@ -117,11 +117,11 @@ where
 ///    .draw(&mut display);
 ///
 ///    // Display updated frame
-///epd.update_frame(&mut spi, &display.buffer())?;
-///epd.display_frame(&mut spi)?;
+///epd.update_frame(&mut spi, &display.buffer(), &mut delay)?;
+///epd.display_frame(&mut spi, &mut delay)?;
 ///
 ///// Set the EPD to sleep
-///epd.sleep(&mut spi)?;
+///epd.sleep(&mut spi, &mut delay)?;
 ///# Ok(())
 ///# }
 ///```
@@ -134,7 +134,7 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
-    /// The Color Type used by the Display    
+    /// The Color Type used by the Display
     type DisplayColor;
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
