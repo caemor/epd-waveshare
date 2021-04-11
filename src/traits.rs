@@ -280,14 +280,13 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait QuickRefresh<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
 {
     /// Updates the old frame.
     fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;

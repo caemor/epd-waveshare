@@ -130,32 +130,14 @@ where
     ///
     /// Most likely there was a mistake with the 2in9 busy connection
     /// //TODO: use the #cfg feature to make this compile the right way for the certain types
-    pub(crate) fn wait_until_idle(
-        &mut self,
-        is_busy_low: bool,
-        mut task: Option<(
-            &mut SPI,
-            &mut DELAY,
-            fn(&mut Self, &mut SPI, &mut DELAY) -> Result<(), SPI::Error>,
-        )>,
-    ) -> Result<(), SPI::Error> {
+    pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
         // //tested: worked without the delay for all tested devices
         // //self.delay_ms(1);
-
-        // Some displays need special treatment (Only 7.5"V2 known so far)
-        // In those cases, a "task" is provided and run here. If note, this
-        // just busy waits for the display.
         while self.is_busy(is_busy_low) {
-            match task {
-                // TODO: Ignore this error?
-                Some((ref mut spi, ref mut delay, tcb)) => tcb(self, spi, delay)?,
-                None => {}
-            }
             // //tested: REMOVAL of DELAY: it's only waiting for the signal anyway and should continue work asap
             // //old: shorten the time? it was 100 in the beginning
             // //self.delay_ms(5);
         }
-        Ok(())
     }
 
     /// Checks if device is still busy

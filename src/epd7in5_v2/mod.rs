@@ -229,14 +229,10 @@ where
     }
 
     fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.wait_until_idle(
-            IS_BUSY_LOW,
-            Some((spi, delay, |i, s, d| {
-                i.cmd(s, Command::GET_STATUS)?;
-                d.delay_ms(20);
-                Ok(())
-            })),
-        )?;
+        while self.interface.is_busy(IS_BUSY_LOW) {
+            self.interface.cmd(spi, Command::GET_STATUS)?;
+            delay.delay_ms(20);
+        }
         Ok(())
     }
 

@@ -372,7 +372,7 @@ where
     }
 
     fn wait_until_idle(&mut self) {
-        let _ = self.interface.wait_until_idle(IS_BUSY_LOW, None);
+        let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
@@ -442,7 +442,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST>
     for EPD4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,

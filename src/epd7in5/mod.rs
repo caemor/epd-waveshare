@@ -255,7 +255,7 @@ where
     }
 
     fn wait_until_idle(&mut self) {
-        let _ = self.interface.wait_until_idle(IS_BUSY_LOW, None);
+        let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
