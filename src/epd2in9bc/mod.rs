@@ -165,8 +165,7 @@ where
     ///
     /// Finish by calling `update_chromatic_frame`.
     fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface.data(spi, black)?;
         Ok(())
     }
@@ -179,8 +178,7 @@ where
         spi: &mut SPI,
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data(spi, chromatic)?;
 
         self.wait_until_idle();
@@ -258,16 +256,14 @@ where
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data(spi, &buffer)?;
 
         // Clear the chromatic layer
         let color = self.color.get_byte_value();
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         self.wait_until_idle();
@@ -306,14 +302,12 @@ where
         let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
 
         // Clear the black
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         // Clear the chromatic
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         self.wait_until_idle();

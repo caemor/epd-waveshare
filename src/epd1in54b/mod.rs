@@ -111,8 +111,7 @@ where
         self.wait_until_idle();
         self.send_resolution(spi)?;
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         for b in black {
             let expanded = expand_bits(*b);
@@ -126,8 +125,7 @@ where
         spi: &mut SPI,
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data(spi, chromatic)?;
         Ok(())
     }
@@ -209,8 +207,7 @@ where
         self.wait_until_idle();
         self.send_resolution(spi)?;
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         for b in buffer {
             // Two bits per pixel
@@ -224,8 +221,7 @@ where
         let color = self.color.get_byte_value();
         let nbits = WIDTH * (HEIGHT / 8);
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, nbits)?;
 
         //NOTE: Example code has a delay here
@@ -264,16 +260,14 @@ where
         let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
 
         // Clear the black
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         // Uses 2 bits per pixel
         self.interface
             .data_x_times(spi, color, 2 * (WIDTH * HEIGHT / 8))?;
 
         // Clear the red
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface
             .data_x_times(spi, color, WIDTH * HEIGHT / 8)?;
         Ok(())

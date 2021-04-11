@@ -112,11 +112,8 @@ where
         // 1 .. B[6:0]  = 0xCE | 0xD6
         // 1 .. C[6:0]  = 0x8D | 0x9D
         //TODO: test
-        self.interface.cmd_with_data(
-            spi,
-            Command::BoosterSoftStartControl,
-            &[0xD7, 0xD6, 0x9D],
-        )?;
+        self.interface
+            .cmd_with_data(spi, Command::BoosterSoftStartControl, &[0xD7, 0xD6, 0x9D])?;
 
         // One Databyte with value 0xA8 for 7V VCOM
         self.interface

@@ -211,8 +211,7 @@ where
         self.wait_until_idle();
         let color_value = self.color.get_byte_value();
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
@@ -285,13 +284,11 @@ where
 
         let color_value = self.color.get_byte_value();
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
         Ok(())
@@ -450,8 +447,7 @@ where
     fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data(spi, buffer)?;
 
@@ -463,8 +459,7 @@ where
         self.wait_until_idle();
         // self.send_resolution(spi)?;
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
 
         self.interface.data(spi, buffer)?;
 
@@ -492,8 +487,7 @@ where
 
         self.shift_display(spi, x, y, width, height)?;
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data(spi, buffer)?;
 
@@ -519,8 +513,7 @@ where
 
         self.shift_display(spi, x, y, width, height)?;
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
 
         self.interface.data(spi, buffer)?;
 
@@ -546,13 +539,11 @@ where
 
         self.shift_display(spi, x, y, width, height)?;
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, width / 8 * height)?;
 
-        self.interface
-            .cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface
             .data_x_times(spi, color_value, width / 8 * height)?;
 
