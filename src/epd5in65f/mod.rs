@@ -13,7 +13,7 @@ use embedded_hal::{
 
 use crate::color::OctColor;
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 
 pub(crate) mod command;
 use self::command::Command;
@@ -31,9 +31,9 @@ pub const HEIGHT: u32 = 448;
 pub const DEFAULT_BACKGROUND_COLOR: OctColor = OctColor::White;
 const IS_BUSY_LOW: bool = true;
 
-/// EPD5in65f driver
+/// Epd5in65f driver
 ///
-pub struct EPD5in65f<SPI, CS, BUSY, DC, RST> {
+pub struct Epd5in65f<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
@@ -41,7 +41,7 @@ pub struct EPD5in65f<SPI, CS, BUSY, DC, RST> {
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD5in65f<SPI, CS, BUSY, DC, RST>
+    for Epd5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -57,27 +57,27 @@ where
         // Reset the device
         self.interface.reset(delay, 2);
 
-        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0xEF, 0x08])?;
-        self.cmd_with_data(spi, Command::POWER_SETTING, &[0x37, 0x00, 0x23, 0x23])?;
-        self.cmd_with_data(spi, Command::POWER_OFF_SEQUENCE_SETTING, &[0x00])?;
-        self.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0xC7, 0xC7, 0x1D])?;
-        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3C])?;
-        self.cmd_with_data(spi, Command::TEMPERATURE_SENSOR_COMMAND, &[0x00])?;
-        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x37])?;
-        self.cmd_with_data(spi, Command::TCON_SETTING, &[0x22])?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0xEF, 0x08])?;
+        self.cmd_with_data(spi, Command::PowerSetting, &[0x37, 0x00, 0x23, 0x23])?;
+        self.cmd_with_data(spi, Command::PowerOffSequenceSetting, &[0x00])?;
+        self.cmd_with_data(spi, Command::BoosterSoftStart, &[0xC7, 0xC7, 0x1D])?;
+        self.cmd_with_data(spi, Command::PllControl, &[0x3C])?;
+        self.cmd_with_data(spi, Command::TemperatureSensor, &[0x00])?;
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x37])?;
+        self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
         self.send_resolution(spi)?;
 
-        self.cmd_with_data(spi, Command::FLASH_MODE, &[0xAA])?;
+        self.cmd_with_data(spi, Command::FlashMode, &[0xAA])?;
 
         delay.delay_ms(100);
 
-        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x37])?;
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x37])?;
         Ok(())
     }
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD5in65f<SPI, CS, BUSY, DC, RST>
+    for Epd5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -97,7 +97,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD5in65f { interface, color };
+        let mut epd = Epd5in65f { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -113,14 +113,14 @@ where
     }
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
+        self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_busy_high();
         self.send_resolution(spi)?;
-        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_1, buffer)?;
+        self.cmd_with_data(spi, Command::DataStartTransmission1, buffer)?;
         Ok(())
     }
 
@@ -138,11 +138,11 @@ where
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_busy_high();
-        self.command(spi, Command::POWER_ON)?;
+        self.command(spi, Command::PowerOn)?;
         self.wait_busy_high();
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
         self.wait_busy_high();
-        self.command(spi, Command::POWER_OFF)?;
+        self.command(spi, Command::PowerOff)?;
         self.wait_busy_low();
         Ok(())
     }
@@ -157,7 +157,7 @@ where
         let bg = OctColor::colors_byte(self.color, self.color);
         self.wait_busy_high();
         self.send_resolution(spi)?;
-        self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.command(spi, Command::DataStartTransmission1)?;
         self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;
         self.display_frame(spi)?;
         Ok(())
@@ -182,7 +182,7 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
-        _refresh_rate: Option<RefreshLUT>,
+        _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
     }
@@ -192,7 +192,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD5in65f<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -227,7 +227,7 @@ where
         let w = self.width();
         let h = self.height();
 
-        self.command(spi, Command::TCON_RESOLUTION)?;
+        self.command(spi, Command::TconResolution)?;
         self.send_data(spi, &[(w >> 8) as u8])?;
         self.send_data(spi, &[w as u8])?;
         self.send_data(spi, &[(h >> 8) as u8])?;

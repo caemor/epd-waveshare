@@ -1,12 +1,14 @@
 [![Build Status](https://travis-ci.com/caemor/epd-waveshare.svg?branch=master)](https://travis-ci.com/caemor/epd-waveshare)
 
-This library contains a driver for E-Paper Modules from Waveshare (which are basically the same as the Dalian Good Display ones).
+This library contains a driver for E-Paper Modules from Waveshare (which are basically the same as the Dalian Good
+Display ones).
 
 It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) library for the optional graphics support.
 
 A 2018-edition compatible version (Rust 1.31+) is needed.
 
-Other similiar libraries with support for much more displays are [u8g2](https://github.com/olikraus/u8g2) and [GxEPD](https://github.com/ZinggJM/GxEPD) for arduino.
+Other similar libraries with support for much more displays are [u8g2](https://github.com/olikraus/u8g2)
+and [GxEPD](https://github.com/ZinggJM/GxEPD) for arduino.
 
 ## Examples
 
@@ -14,24 +16,24 @@ There are multiple examples in the examples folder. Use `cargo run --example exa
 
 ```Rust
 // Setup the epd
-let mut epd = EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay)?;
+let mut epd = Epd4in2::new( & mut spi, cs, busy, dc, rst, & mut delay) ?;
 
 // Setup the graphics
-let mut display = Display4in2::default();
+let mut display = Display4in2::default ();
 
 // Draw some text
 display.draw(
-    let _ = Text::new("Hello Rust!", Point::new(x, y))
-        .into_styled(text_style!(
+let _ = Text::new("Hello Rust!", Point::new(x, y))
+.into_styled(text_style!(
             font = Font12x16,
             text_color = Black,
             background_color = White
         ))
-        .draw(display);
+.draw(display);
 );
 
 // Transfer the frame data to the epd and display it
-epd.update_and_display_frame(&mut spi, &display.buffer())?;
+epd.update_and_display_frame( & mut spi, & display.buffer()) ?;
 ```
 
 ## (Supported) Devices
@@ -50,11 +52,10 @@ epd.update_and_display_frame(&mut spi, &display.buffer())?;
 | [5.65 Inch 7 Color (F)](https://www.waveshare.com/5.65inch-e-paper-module-f.htm) | Black, White, Red, Green, Blue, Yellow, Orange | ✕ | ✕ | ✔ | ✔ |
 | [2.7 Inch 3 Color (B)](https://www.waveshare.com/2.7inch-e-paper-b.htm) | Black, White, Red | ✕ | ✔ | ✔ | ✔ |
 
-
 ### [1]: 7.5 Inch B/W V2 (A)
 
-Since November 2019 Waveshare sells their updated version of these displays.
-They should have a "V2" marking sticker on the backside of the panel.
+Since November 2019 Waveshare sells their updated version of these displays. They should have a "V2" marking sticker on
+the backside of the panel.
 
 Use `epd7in5_v2` instead of `epd7in5`, because the protocol changed.
 
@@ -69,21 +70,23 @@ It's possible with this driver but might lead to ghosting / burn-in effects ther
 
 | Interface | Description |
 | :---: |  :--- |
-| VCC 	|   3.3V |
-| GND   | 	GND |
-| DIN   | 	SPI MOSI |
-| CLK   | 	SPI SCK |
-| CS    | 	SPI chip select (Low active) |
-| DC    | 	Data/Command control pin (High for data, and low for command) |
-| RST   | 	External reset pin (Low for reset) |
-| BUSY  | 	Busy state output pin (Low for busy)  |
+| VCC    |   3.3V |
+| GND   |    GND |
+| DIN   |    SPI MOSI |
+| CLK   |    SPI SCK |
+| CS    |    SPI chip select (Low active) |
+| DC    |    Data/Command control pin (High for data, and low for command) |
+| RST   |    External reset pin (Low for reset) |
+| BUSY  |    Busy state output pin (Low for busy)  |
 
 ### Display Configs
 
-There are two types of Display Configurations used in Wavedshare EPDs, which also needs to be set on the "new" E-Paper Driver HAT.
-They are also called A and B, but you shouldn't get confused and mix it with the Type A,B,C and D of the various Displays, which just describe different types (colored variants) or new versions. In the Display Config the seperation is most likely due to included fast partial refresh of the displays. In a Tabular form:
+There are two types of Display Configurations used in Waveshare EPDs, which also needs to be set on the "new" E-Paper
+Driver HAT. They are also called A and B, but you shouldn't get confused and mix it with the Type A,B,C and D of the
+various Displays, which just describe different types (colored variants) or new versions. In the Display Config the
+separation is most likely due to included fast partial refresh of the displays. In a Tabular form:
 
-| Type A | Tybe B |
+| Type A | Type B |
 | :---: |  :---: |
 | 1.54in (A) | 1.54in (B) |
 | 2.13in (A) | 1.54in (C) |

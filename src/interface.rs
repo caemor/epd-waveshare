@@ -51,7 +51,7 @@ where
 
     /// Basic function for sending an array of u8-values of data over spi
     ///
-    /// Enables direct interaction with the device with the help of [command()](EPD4in2::command())
+    /// Enables direct interaction with the device with the help of [command()](Epd4in2::command())
     pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
         // high for data
         let _ = self.dc.set_high();
@@ -157,7 +157,7 @@ where
 
     /// Resets the device.
     ///
-    /// Often used to awake the module from deep sleep. See [EPD4in2::sleep()](EPD4in2::sleep())
+    /// Often used to awake the module from deep sleep. See [Epd4in2::sleep()](Epd4in2::sleep())
     ///
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
