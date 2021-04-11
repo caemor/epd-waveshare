@@ -16,13 +16,13 @@ use embedded_hal::{
 use crate::buffer_len;
 use crate::color::Color;
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 
 pub(crate) mod command;
 use self::command::{
-    BorderWaveForm, BorderWaveFormFixLevel, BorderWaveFormGS, BorderWaveFormVBD, Command,
+    BorderWaveForm, BorderWaveFormFixLevel, BorderWaveFormGs, BorderWaveFormVbd, Command,
     DataEntryModeDir, DataEntryModeIncr, DeepSleepMode, DisplayUpdateControl2, DriverOutput,
-    GateDrivingVoltage, I32Ext, SourceDrivingVoltage, VCOM,
+    GateDrivingVoltage, I32Ext, SourceDrivingVoltage, Vcom,
 };
 
 pub(crate) mod constants;
@@ -43,9 +43,9 @@ pub const HEIGHT: u32 = 250;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 
-/// EPD2in13 (V2) driver
+/// Epd2in13 (V2) driver
 ///
-pub struct EPD2in13<SPI, CS, BUSY, DC, RST> {
+pub struct Epd2in13<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
 
@@ -53,11 +53,11 @@ pub struct EPD2in13<SPI, CS, BUSY, DC, RST> {
 
     /// Background Color
     background_color: Color,
-    refresh: RefreshLUT,
+    refresh: RefreshLut,
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD2in13<SPI, CS, BUSY, DC, RST>
+    for Epd2in13<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -73,7 +73,7 @@ where
         // HW reset
         self.interface.reset(delay, 10);
 
-        if self.refresh == RefreshLUT::QUICK {
+        if self.refresh == RefreshLut::Quick {
             self.set_vcom_register(spi, (-9).vcom())?;
             self.wait_until_idle();
 
@@ -94,9 +94,9 @@ where
             self.set_border_waveform(
                 spi,
                 BorderWaveForm {
-                    vbd: BorderWaveFormVBD::GS,
-                    fix_level: BorderWaveFormFixLevel::VSS,
-                    gs_trans: BorderWaveFormGS::LUT1,
+                    vbd: BorderWaveFormVbd::Gs,
+                    fix_level: BorderWaveFormFixLevel::Vss,
+                    gs_trans: BorderWaveFormGs::Lut1,
                 },
             )?;
         } else {
@@ -127,9 +127,9 @@ where
             self.set_border_waveform(
                 spi,
                 BorderWaveForm {
-                    vbd: BorderWaveFormVBD::GS,
-                    fix_level: BorderWaveFormFixLevel::VSS,
-                    gs_trans: BorderWaveFormGS::LUT3,
+                    vbd: BorderWaveFormVbd::Gs,
+                    fix_level: BorderWaveFormFixLevel::Vss,
+                    gs_trans: BorderWaveFormGs::Lut3,
                 },
             )?;
 
@@ -154,7 +154,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD2in13<SPI, CS, BUSY, DC, RST>
+    for Epd2in13<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -171,11 +171,11 @@ where
         rst: RST,
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
-        let mut epd = EPD2in13 {
+        let mut epd = Epd2in13 {
             interface: DisplayInterface::new(cs, busy, dc, rst),
             sleep_mode: DeepSleepMode::Mode1,
             background_color: DEFAULT_BACKGROUND_COLOR,
-            refresh: RefreshLUT::FULL,
+            refresh: RefreshLut::Full,
         };
 
         epd.init(spi, delay)?;
@@ -215,7 +215,7 @@ where
 
         self.cmd_with_data(spi, Command::WriteRam, buffer)?;
 
-        if self.refresh == RefreshLUT::FULL {
+        if self.refresh == RefreshLut::Full {
             // Always keep the base buffer equal to current if not doing partial refresh.
             self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
             self.set_ram_address_counters(spi, 0, 0)?;
@@ -245,14 +245,14 @@ where
         // RAM content). Using this function will most probably make the actual
         // display incorrect as the controler will compare with something
         // incorrect.
-        assert!(self.refresh == RefreshLUT::FULL);
+        assert!(self.refresh == RefreshLut::Full);
 
         self.set_ram_area(spi, x, y, x + width, y + height)?;
         self.set_ram_address_counters(spi, x, y)?;
 
         self.cmd_with_data(spi, Command::WriteRam, buffer)?;
 
-        if self.refresh == RefreshLUT::FULL {
+        if self.refresh == RefreshLut::Full {
             // Always keep the base buffer equals to current if not doing partial refresh.
             self.set_ram_area(spi, x, y, x + width, y + height)?;
             self.set_ram_address_counters(spi, x, y)?;
@@ -266,7 +266,7 @@ where
     /// Never use directly this function when using partial refresh, or also
     /// keep the base buffer in syncd using `set_partial_base_buffer` function.
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        if self.refresh == RefreshLUT::FULL {
+        if self.refresh == RefreshLut::Full {
             self.set_display_update_control_2(
                 spi,
                 DisplayUpdateControl2::new()
@@ -289,7 +289,7 @@ where
         self.update_frame(spi, buffer)?;
         self.display_frame(spi)?;
 
-        if self.refresh == RefreshLUT::QUICK {
+        if self.refresh == RefreshLut::Quick {
             self.set_partial_base_buffer(spi, buffer)?;
         }
         Ok(())
@@ -309,7 +309,7 @@ where
         )?;
 
         // Always keep the base buffer equals to current if not doing partial refresh.
-        if self.refresh == RefreshLUT::FULL {
+        if self.refresh == RefreshLut::Full {
             self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
             self.set_ram_address_counters(spi, 0, 0)?;
 
@@ -342,11 +342,11 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
-        refresh_rate: Option<RefreshLUT>,
+        refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         let buffer = match refresh_rate {
-            Some(RefreshLUT::FULL) | None => &LUT_FULL_UPDATE,
-            Some(RefreshLUT::QUICK) => &LUT_PARTIAL_UPDATE,
+            Some(RefreshLut::Full) | None => &LUT_FULL_UPDATE,
+            Some(RefreshLut::Quick) => &LUT_PARTIAL_UPDATE,
         };
 
         self.cmd_with_data(spi, Command::WriteLutRegister, buffer)
@@ -357,7 +357,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD2in13<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd2in13<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -391,7 +391,7 @@ where
         &mut self,
         spi: &mut SPI,
         delay: &mut DELAY,
-        refresh: RefreshLUT,
+        refresh: RefreshLut,
     ) -> Result<(), SPI::Error> {
         if self.refresh != refresh {
             self.refresh = refresh;
@@ -425,7 +425,7 @@ where
         )
     }
 
-    fn set_vcom_register(&mut self, spi: &mut SPI, vcom: VCOM) -> Result<(), SPI::Error> {
+    fn set_vcom_register(&mut self, spi: &mut SPI, vcom: Vcom) -> Result<(), SPI::Error> {
         self.cmd_with_data(spi, Command::WriteVcomRegister, &[vcom.0])
     }
 

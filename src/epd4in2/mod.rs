@@ -25,7 +25,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = EPD4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display4in2::default();
@@ -55,7 +55,7 @@ use embedded_hal::{
 };
 
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, QuickRefresh, RefreshLUT, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, QuickRefresh, RefreshLut, WaveshareDisplay};
 
 //The Lookup Tables for the Display
 mod constants;
@@ -79,19 +79,19 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display4in2;
 
-/// EPD4in2 driver
+/// Epd4in2 driver
 ///
-pub struct EPD4in2<SPI, CS, BUSY, DC, RST> {
+pub struct Epd4in2<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
     color: Color,
     /// Refresh LUT
-    refresh: RefreshLUT,
+    refresh: RefreshLut,
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD4in2<SPI, CS, BUSY, DC, RST>
+    for Epd4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -149,7 +149,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD4in2<SPI, CS, BUSY, DC, RST>
+    for Epd4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -169,10 +169,10 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD4in2 {
+        let mut epd = Epd4in2 {
             interface,
             color,
-            refresh: RefreshLUT::FULL,
+            refresh: RefreshLut::Full,
         };
 
         epd.init(spi, delay)?;
@@ -313,16 +313,16 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
-        refresh_rate: Option<RefreshLUT>,
+        refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
         match self.refresh {
-            RefreshLUT::FULL => {
+            RefreshLut::Full => {
                 self.set_lut_helper(spi, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
             }
-            RefreshLUT::QUICK => self.set_lut_helper(
+            RefreshLut::Quick => self.set_lut_helper(
                 spi,
                 &LUT_VCOM0_QUICK,
                 &LUT_WW_QUICK,
@@ -338,7 +338,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD4in2<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -435,7 +435,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> QuickRefresh<SPI, CS, BUSY, DC, RST>
-    for EPD4in2<SPI, CS, BUSY, DC, RST>
+    for Epd4in2<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

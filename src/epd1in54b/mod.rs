@@ -7,7 +7,7 @@ use embedded_hal::{
 
 use crate::interface::DisplayInterface;
 use crate::traits::{
-    InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
+    InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
 
 //The Lookup Tables for the Display
@@ -32,14 +32,14 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display1in54b;
 
-/// EPD1in54b driver
-pub struct EPD1in54b<SPI, CS, BUSY, DC, RST> {
+/// Epd1in54b driver
+pub struct Epd1in54b<SPI, CS, BUSY, DC, RST> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD1in54b<SPI, CS, BUSY, DC, RST>
+    for Epd1in54b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -89,7 +89,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD1in54b<SPI, CS, BUSY, DC, RST>
+    for Epd1in54b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -132,7 +132,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD1in54b<SPI, CS, BUSY, DC, RST>
+    for Epd1in54b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -152,7 +152,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD1in54b { interface, color };
+        let mut epd = Epd1in54b { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -165,7 +165,7 @@ where
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x17])?; //border floating
 
         self.interface
-            .cmd_with_data(spi, Command::VcmDcSetting, &[0x00])?; // VCOM to 0V
+            .cmd_with_data(spi, Command::VcmDcSetting, &[0x00])?; // Vcom to 0V
 
         self.interface
             .cmd_with_data(spi, Command::PowerSetting, &[0x02, 0x00, 0x00, 0x00])?; //VG&VS to 0V fast
@@ -276,7 +276,7 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
-        _refresh_rate: Option<RefreshLUT>,
+        _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         self.interface
             .cmd_with_data(spi, Command::LutForVcom, LUT_VCOM0)?;
@@ -301,7 +301,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD1in54b<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd1in54b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

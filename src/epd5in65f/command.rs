@@ -64,7 +64,7 @@ pub(crate) enum Command {
     DisplayRefresh = 0x12,
 
     /// Image Process Command
-    ImageProcessCommand = 0x13,
+    ImageProcess = 0x13,
 
     /// This command builds the VCOM Look-Up Table (LUTC).
     LutForVcom = 0x20,
@@ -91,7 +91,7 @@ pub(crate) enum Command {
     PllControl = 0x30,
 
     /// This command reads the temperature sensed by the temperature sensor.
-    TemperatureSensorCommand = 0x40,
+    TemperatureSensor = 0x40,
     /// This command selects the Internal or External temperature sensor.
     TemperatureCalibration = 0x41,
     /// This command could write data to the external temperature sensor.
@@ -115,7 +115,7 @@ pub(crate) enum Command {
     //SpiFlashControl = 0x65,
 
     /// The LUT_REV / Chip Revision is read from OTP address = 25001 and 25000.
-    //REVISION = 0x70,
+    //Revision = 0x70,
     /// This command reads the IC status.
     GetStatus = 0x71,
 

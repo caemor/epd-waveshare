@@ -5,7 +5,7 @@ use crate::traits;
 extern crate bit_field;
 use bit_field::BitField;
 
-/// EPD2in13 v2
+/// Epd2in13 v2
 ///
 /// For more infos about the addresses and what they are doing look into the pdfs
 #[allow(dead_code)]
@@ -54,7 +54,7 @@ pub(crate) enum Command {
     SetAnalogBlockControl = 0x74,
     SetDigitalBlockControl = 0x7E,
 
-    NOP = 0x7F,
+    Nop = 0x7F,
 }
 
 pub(crate) struct DriverOutput {
@@ -151,34 +151,34 @@ pub(crate) enum DataEntryModeDir {
 
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
-pub(crate) enum BorderWaveFormVBD {
-    GS = 0x0,
+pub(crate) enum BorderWaveFormVbd {
+    Gs = 0x0,
     FixLevel = 0x1,
-    VCOM = 0x2,
+    Vcom = 0x2,
 }
 
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub(crate) enum BorderWaveFormFixLevel {
-    VSS = 0x0,
-    VSH1 = 0x1,
-    VSL = 0x2,
-    VSH2 = 0x3,
+    Vss = 0x0,
+    Vsh1 = 0x1,
+    Vsl = 0x2,
+    Vsh2 = 0x3,
 }
 
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
-pub(crate) enum BorderWaveFormGS {
-    LUT0 = 0x0,
-    LUT1 = 0x1,
-    LUT2 = 0x2,
-    LUT3 = 0x3,
+pub(crate) enum BorderWaveFormGs {
+    Lut0 = 0x0,
+    Lut1 = 0x1,
+    Lut2 = 0x2,
+    Lut3 = 0x3,
 }
 
 pub(crate) struct BorderWaveForm {
-    pub vbd: BorderWaveFormVBD,
+    pub vbd: BorderWaveFormVbd,
     pub fix_level: BorderWaveFormFixLevel,
-    pub gs_trans: BorderWaveFormGS,
+    pub gs_trans: BorderWaveFormGs,
 }
 
 impl BorderWaveForm {
@@ -204,10 +204,10 @@ pub enum DeepSleepMode {
 
 pub(crate) struct GateDrivingVoltage(pub u8);
 pub(crate) struct SourceDrivingVoltage(pub u8);
-pub(crate) struct VCOM(pub u8);
+pub(crate) struct Vcom(pub u8);
 
 pub(crate) trait I32Ext {
-    fn vcom(self) -> VCOM;
+    fn vcom(self) -> Vcom;
     fn gate_driving_decivolt(self) -> GateDrivingVoltage;
     fn source_driving_decivolt(self) -> SourceDrivingVoltage;
 }
@@ -215,7 +215,7 @@ pub(crate) trait I32Ext {
 impl I32Ext for i32 {
     // This is really not very nice. Until I find something better, this will be
     // a placeholder.
-    fn vcom(self) -> VCOM {
+    fn vcom(self) -> Vcom {
         assert!((-30..=-2).contains(&self));
         let u = match -self {
             2 => 0x08,
@@ -249,7 +249,7 @@ impl I32Ext for i32 {
             30 => 0x78,
             _ => 0,
         };
-        VCOM(u)
+        Vcom(u)
     }
 
     fn gate_driving_decivolt(self) -> GateDrivingVoltage {

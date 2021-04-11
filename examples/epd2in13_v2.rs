@@ -10,7 +10,7 @@ use embedded_graphics::{
 use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
-    epd2in13_v2::{Display2in13, EPD2in13},
+    epd2in13_v2::{Display2in13, Epd2in13},
     graphics::{Display, DisplayRotation},
     prelude::*,
 };
@@ -63,7 +63,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd2in13 =
-        EPD2in13::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+        Epd2in13::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     //println!("Test all the rotations");
     let mut display = Display2in13::default();
@@ -121,7 +121,7 @@ fn main() -> Result<(), std::io::Error> {
     // Demonstrating how to use the partial refresh feature of the screen.
     // Real animations can be used.
     epd2in13
-        .set_refresh(&mut spi, &mut delay, RefreshLUT::QUICK)
+        .set_refresh(&mut spi, &mut delay, RefreshLut::Quick)
         .unwrap();
     epd2in13.clear_frame(&mut spi).unwrap();
 

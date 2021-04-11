@@ -13,7 +13,7 @@ use embedded_hal::{
 
 use crate::color::OctColor;
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 
 pub(crate) mod command;
 use self::command::Command;
@@ -31,9 +31,9 @@ pub const HEIGHT: u32 = 448;
 pub const DEFAULT_BACKGROUND_COLOR: OctColor = OctColor::White;
 const IS_BUSY_LOW: bool = true;
 
-/// EPD5in65f driver
+/// Epd5in65f driver
 ///
-pub struct EPD5in65f<SPI, CS, BUSY, DC, RST> {
+pub struct Epd5in65f<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
@@ -41,7 +41,7 @@ pub struct EPD5in65f<SPI, CS, BUSY, DC, RST> {
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD5in65f<SPI, CS, BUSY, DC, RST>
+    for Epd5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -62,7 +62,7 @@ where
         self.cmd_with_data(spi, Command::PowerOffSequenceSetting, &[0x00])?;
         self.cmd_with_data(spi, Command::BoosterSoftStart, &[0xC7, 0xC7, 0x1D])?;
         self.cmd_with_data(spi, Command::PllControl, &[0x3C])?;
-        self.cmd_with_data(spi, Command::TemperatureSensorCommand, &[0x00])?;
+        self.cmd_with_data(spi, Command::TemperatureSensor, &[0x00])?;
         self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x37])?;
         self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
         self.send_resolution(spi)?;
@@ -77,7 +77,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD5in65f<SPI, CS, BUSY, DC, RST>
+    for Epd5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -97,7 +97,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD5in65f { interface, color };
+        let mut epd = Epd5in65f { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -182,7 +182,7 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
-        _refresh_rate: Option<RefreshLUT>,
+        _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
     }
@@ -192,7 +192,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD5in65f<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd5in65f<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

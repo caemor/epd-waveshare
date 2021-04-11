@@ -20,7 +20,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = EPD2in9bc::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd2in9bc::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!// This display is for the black/white pixels
@@ -60,7 +60,7 @@ use embedded_hal::{
 
 use crate::interface::DisplayInterface;
 use crate::traits::{
-    InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
+    InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
 
 /// Width of epd2in9bc in pixels
@@ -89,14 +89,14 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display2in9bc;
 
-/// EPD2in9bc driver
-pub struct EPD2in9bc<SPI, CS, BUSY, DC, RST> {
+/// Epd2in9bc driver
+pub struct Epd2in9bc<SPI, CS, BUSY, DC, RST> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD2in9bc<SPI, CS, BUSY, DC, RST>
+    for Epd2in9bc<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -143,7 +143,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD2in9bc<SPI, CS, BUSY, DC, RST>
+    for Epd2in9bc<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -187,7 +187,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD2in9bc<SPI, CS, BUSY, DC, RST>
+    for Epd2in9bc<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -207,7 +207,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD2in9bc { interface, color };
+        let mut epd = Epd2in9bc { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -317,7 +317,7 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
-        _refresh_rate: Option<RefreshLUT>,
+        _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         Ok(())
     }
@@ -327,7 +327,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD2in9bc<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd2in9bc<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

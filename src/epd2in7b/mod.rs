@@ -9,7 +9,7 @@ use embedded_hal::{
 
 use crate::interface::DisplayInterface;
 use crate::traits::{
-    InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
+    InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
 
 // The Lookup Tables for the Display
@@ -34,8 +34,8 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display2in7b;
 
-/// EPD2in7b driver
-pub struct EPD2in7b<SPI, CS, BUSY, DC, RST> {
+/// Epd2in7b driver
+pub struct Epd2in7b<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
@@ -43,7 +43,7 @@ pub struct EPD2in7b<SPI, CS, BUSY, DC, RST> {
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD2in7b<SPI, CS, BUSY, DC, RST>
+    for Epd2in7b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -112,7 +112,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD2in7b<SPI, CS, BUSY, DC, RST>
+    for Epd2in7b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -132,7 +132,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD2in7b { interface, color };
+        let mut epd = Epd2in7b { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -247,7 +247,7 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
-        _refresh_rate: Option<RefreshLUT>,
+        _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::LutForVcom, &LUT_VCOM_DC)?;
@@ -264,7 +264,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD2in7b<SPI, CS, BUSY, DC, RST>
+    for Epd2in7b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -316,7 +316,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD2in7b<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd2in7b<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

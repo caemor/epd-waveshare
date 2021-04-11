@@ -16,7 +16,7 @@ There are multiple examples in the examples folder. Use `cargo run --example exa
 
 ```Rust
 // Setup the epd
-let mut epd = EPD4in2::new( & mut spi, cs, busy, dc, rst, & mut delay) ?;
+let mut epd = Epd4in2::new( & mut spi, cs, busy, dc, rst, & mut delay) ?;
 
 // Setup the graphics
 let mut display = Display4in2::default ();

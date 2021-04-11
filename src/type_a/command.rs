@@ -2,7 +2,7 @@
 
 use crate::traits;
 
-/// EPD1in54 and EPD2IN9 commands
+/// Epd1in54 and EPD2IN9 commands
 ///
 /// Should rarely (never?) be needed directly.
 ///
@@ -67,7 +67,7 @@ pub(crate) enum Command {
 
     SetRamYAddressCounter = 0x4F,
 
-    NOP = 0xFF,
+    Nop = 0xFF,
 }
 
 impl traits::Command for Command {
@@ -88,6 +88,6 @@ mod tests {
 
         assert_eq!(Command::SetRamXAddressCounter.address(), 0x4E);
 
-        assert_eq!(Command::NOP.address(), 0xFF);
+        assert_eq!(Command::Nop.address(), 0xFF);
     }
 }

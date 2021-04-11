@@ -24,7 +24,7 @@ pub(crate) enum Command {
     LutRed1 = 0x27,
 
     PllControl = 0x30,
-    TemperatureSensorCommand = 0x40,
+    TemperatureSensor = 0x40,
     TemperatureSensorSelection = 0x41,
     VcomAndDataIntervalSetting = 0x50,
     ResolutionSetting = 0x61,

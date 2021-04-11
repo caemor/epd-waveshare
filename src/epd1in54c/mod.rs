@@ -7,7 +7,7 @@ use embedded_hal::{
 
 use crate::interface::DisplayInterface;
 use crate::traits::{
-    InternalWiAdditions, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
+    InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
 
 /// Width of epd1in54 in pixels
@@ -30,14 +30,14 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display1in54c;
 
-/// EPD1in54c driver
-pub struct EPD1in54c<SPI, CS, BUSY, DC, RST> {
+/// Epd1in54c driver
+pub struct Epd1in54c<SPI, CS, BUSY, DC, RST> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD1in54c<SPI, CS, BUSY, DC, RST>
+    for Epd1in54c<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -77,7 +77,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD1in54c<SPI, CS, BUSY, DC, RST>
+    for Epd1in54c<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -115,7 +115,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD1in54c<SPI, CS, BUSY, DC, RST>
+    for Epd1in54c<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -135,7 +135,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD1in54c { interface, color };
+        let mut epd = Epd1in54c { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -233,7 +233,7 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
-        _refresh_rate: Option<RefreshLUT>,
+        _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         Ok(())
     }
@@ -243,7 +243,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD1in54c<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd1in54c<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

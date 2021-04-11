@@ -21,7 +21,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = EPD2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display2in9::default();
@@ -70,18 +70,18 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use crate::epd2in9::graphics::Display2in9;
 
-/// EPD2in9 driver
+/// Epd2in9 driver
 ///
-pub struct EPD2in9<SPI, CS, BUSY, DC, RST> {
+pub struct Epd2in9<SPI, CS, BUSY, DC, RST> {
     /// SPI
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Color
     background_color: Color,
     /// Refresh LUT
-    refresh: RefreshLUT,
+    refresh: RefreshLut,
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD2in9<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd2in9<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -136,7 +136,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD2in9<SPI, CS, BUSY, DC, RST>
+    for Epd2in9<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -163,10 +163,10 @@ where
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
 
-        let mut epd = EPD2in9 {
+        let mut epd = Epd2in9 {
             interface,
             background_color: DEFAULT_BACKGROUND_COLOR,
-            refresh: RefreshLUT::FULL,
+            refresh: RefreshLut::Full,
         };
 
         epd.init(spi, delay)?;
@@ -231,7 +231,7 @@ where
         self.interface.cmd(spi, Command::MasterActivation)?;
         // MASTER Activation should not be interupted to avoid currption of panel images
         // therefore a terminate command is send
-        self.interface.cmd(spi, Command::NOP)?;
+        self.interface.cmd(spi, Command::Nop)?;
         Ok(())
     }
 
@@ -265,14 +265,14 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
-        refresh_rate: Option<RefreshLUT>,
+        refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
         match self.refresh {
-            RefreshLUT::FULL => self.set_lut_helper(spi, &LUT_FULL_UPDATE),
-            RefreshLUT::QUICK => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
+            RefreshLut::Full => self.set_lut_helper(spi, &LUT_FULL_UPDATE),
+            RefreshLut::Quick => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
         }
     }
 
@@ -281,7 +281,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD2in9<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd2in9<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

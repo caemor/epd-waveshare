@@ -2,7 +2,7 @@
 
 use crate::traits;
 
-/// EPD7in5 commands
+/// Epd7in5 commands
 ///
 /// Should rarely (never?) be needed directly.
 ///
@@ -93,7 +93,7 @@ pub(crate) enum Command {
     PllControl = 0x30,
 
     /// This command reads the temperature sensed by the temperature sensor.
-    TemperatureSensorCommand = 0x40,
+    TemperatureSensor = 0x40,
     /// This command selects the Internal or External temperature sensor.
     TemperatureCalibration = 0x41,
     /// This command could write data to the external temperature sensor.
@@ -117,7 +117,7 @@ pub(crate) enum Command {
     SpiFlashControl = 0x65,
 
     /// The LUT_REV / Chip Revision is read from OTP address = 25001 and 25000.
-    REVISION = 0x70,
+    Revision = 0x70,
     /// This command reads the IC status.
     GetStatus = 0x71,
 
@@ -128,7 +128,7 @@ pub(crate) enum Command {
     /// This command sets `VCOM_DC` value.
     VcmDcSetting = 0x82,
 
-    /// This is in all the Waveshare controllers for EPD7in5, but it's not documented
+    /// This is in all the Waveshare controllers for Epd7in5, but it's not documented
     /// anywhere in the datasheet `¯\_(ツ)_/¯`
     FlashMode = 0xE5,
 }

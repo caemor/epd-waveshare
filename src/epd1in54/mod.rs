@@ -20,7 +20,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display1in54::default();
@@ -61,7 +61,7 @@ use crate::type_a::{
 
 use crate::color::Color;
 
-use crate::traits::{RefreshLUT, WaveshareDisplay};
+use crate::traits::{RefreshLut, WaveshareDisplay};
 
 use crate::interface::DisplayInterface;
 
@@ -70,18 +70,18 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use crate::epd1in54::graphics::Display1in54;
 
-/// EPD1in54 driver
+/// Epd1in54 driver
 ///
-pub struct EPD1in54<SPI, CS, BUSY, DC, RST> {
+pub struct Epd1in54<SPI, CS, BUSY, DC, RST> {
     /// SPI
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Color
     background_color: Color,
     /// Refresh LUT
-    refresh: RefreshLUT,
+    refresh: RefreshLut,
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD1in54<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd1in54<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -140,7 +140,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST, E> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD1in54<SPI, CS, BUSY, DC, RST>
+    for Epd1in54<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8, Error = E>,
     CS: OutputPin,
@@ -167,10 +167,10 @@ where
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
 
-        let mut epd = EPD1in54 {
+        let mut epd = Epd1in54 {
             interface,
             background_color: DEFAULT_BACKGROUND_COLOR,
-            refresh: RefreshLUT::FULL,
+            refresh: RefreshLut::Full,
         };
 
         epd.init(spi, delay)?;
@@ -232,7 +232,7 @@ where
         self.interface.cmd(spi, Command::MasterActivation)?;
         // MASTER Activation should not be interupted to avoid currption of panel images
         // therefore a terminate command is send
-        self.interface.cmd(spi, Command::NOP)?;
+        self.interface.cmd(spi, Command::Nop)?;
         Ok(())
     }
 
@@ -266,14 +266,14 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
-        refresh_rate: Option<RefreshLUT>,
+        refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
         match self.refresh {
-            RefreshLUT::FULL => self.set_lut_helper(spi, &LUT_FULL_UPDATE),
-            RefreshLUT::QUICK => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
+            RefreshLut::Full => self.set_lut_helper(spi, &LUT_FULL_UPDATE),
+            RefreshLut::Quick => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
         }
     }
 
@@ -282,7 +282,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD1in54<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd1in54<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,

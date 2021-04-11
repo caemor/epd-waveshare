@@ -71,7 +71,7 @@ pub(crate) enum Command {
     /// This command reads the temperature sensed by the temperature sensor.
     ///
     /// Doesn't work! Waveshare doesn't connect the read pin
-    TemperatureSensorCommand = 0x40,
+    TemperatureSensor = 0x40,
     /// This command selects Internal or External temperature sensor.
     TemperatureSensorCalibration = 0x41,
     /// Write External Temperature Sensor

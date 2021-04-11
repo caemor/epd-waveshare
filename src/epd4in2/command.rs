@@ -92,7 +92,7 @@ pub(crate) enum Command {
     /// This command reads the temperature sensed by the temperature sensor.
     ///
     /// Doesn't work! Waveshare doesn't connect the read pin
-    TemperatureSensorCommand = 0x40,
+    TemperatureSensor = 0x40,
     /// Selects the Internal or External temperature sensor and offset
     TemperatureSensorSelection = 0x41,
     /// Write External Temperature Sensor
@@ -114,7 +114,7 @@ pub(crate) enum Command {
     /// The LUT_REV / Chip Revision is read from OTP address = 0x001.
     ///
     /// Doesn't work! Waveshare doesn't connect the read pin
-    REVISION = 0x70,
+    Revision = 0x70,
     /// Read Flags. This command reads the IC status
     /// PTL, I2C_ERR, I2C_BUSY, DATA, PON, POF, BUSY
     ///
