@@ -110,36 +110,36 @@ where
         // set the power settings
         self.interface.cmd_with_data(
             spi,
-            Command::POWER_SETTING,
+            Command::PowerSetting,
             &[0x03, 0x00, 0x2b, 0x2b, 0xff],
         )?;
 
         // start the booster
         self.interface
-            .cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;
+            .cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])?;
 
         // power on
-        self.command(spi, Command::POWER_ON)?;
+        self.command(spi, Command::PowerOn)?;
         delay.delay_ms(5);
         self.wait_until_idle();
 
         // set the panel settings
-        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0x3F])?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x3F])?;
 
         // Set Frequency, 200 Hz didn't work on my board
         // 150Hz and 171Hz wasn't tested yet
         // TODO: Test these other frequencies
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
-        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3A])?;
+        self.cmd_with_data(spi, Command::PllControl, &[0x3A])?;
 
         self.send_resolution(spi)?;
 
         self.interface
-            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
+            .cmd_with_data(spi, Command::VcmDcSetting, &[0x12])?;
 
         //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
         self.interface
-            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
+            .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])?;
 
         self.set_lut(spi, None)?;
 
@@ -191,19 +191,19 @@ where
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.interface
-            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
-        self.command(spi, Command::VCM_DC_SETTING)?; // VCOM to 0V
-        self.command(spi, Command::PANEL_SETTING)?;
+            .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x17])?; //border floating
+        self.command(spi, Command::VcmDcSetting)?; // VCOM to 0V
+        self.command(spi, Command::PanelSetting)?;
 
-        self.command(spi, Command::POWER_SETTING)?; //VG&VS to 0V fast
+        self.command(spi, Command::PowerSetting)?; //VG&VS to 0V fast
         for _ in 0..4 {
             self.send_data(spi, &[0x00])?;
         }
 
-        self.command(spi, Command::POWER_OFF)?;
+        self.command(spi, Command::PowerOff)?;
         self.wait_until_idle();
         self.interface
-            .cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
+            .cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
     }
 
@@ -212,12 +212,12 @@ where
         let color_value = self.color.get_byte_value();
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+            .cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
         self.interface
-            .cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)?;
+            .cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
         Ok(())
     }
 
@@ -236,8 +236,8 @@ where
             //return Err("Wrong buffersize");
         }
 
-        self.command(spi, Command::PARTIAL_IN)?;
-        self.command(spi, Command::PARTIAL_WINDOW)?;
+        self.command(spi, Command::PartialIn)?;
+        self.command(spi, Command::PartialWindow)?;
         self.send_data(spi, &[(x >> 8) as u8])?;
         let tmp = x & 0xf8;
         self.send_data(spi, &[tmp as u8])?; // x should be the multiple of 8, the last 3 bit will always be ignored
@@ -256,26 +256,26 @@ where
         //TODO: handle dtm somehow
         let is_dtm1 = false;
         if is_dtm1 {
-            self.command(spi, Command::DATA_START_TRANSMISSION_1)? //TODO: check if data_start transmission 1 also needs "old"/background data here
+            self.command(spi, Command::DataStartTransmission1)? //TODO: check if data_start transmission 1 also needs "old"/background data here
         } else {
-            self.command(spi, Command::DATA_START_TRANSMISSION_2)?
+            self.command(spi, Command::DataStartTransmission2)?
         }
 
         self.send_data(spi, buffer)?;
 
-        self.command(spi, Command::PARTIAL_OUT)?;
+        self.command(spi, Command::PartialOut)?;
         Ok(())
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
     fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.update_frame(spi, buffer)?;
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
@@ -286,12 +286,12 @@ where
         let color_value = self.color.get_byte_value();
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+            .cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+            .cmd(spi, Command::DataStartTransmission2)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
         Ok(())
@@ -374,7 +374,7 @@ where
         let w = self.width();
         let h = self.height();
 
-        self.command(spi, Command::RESOLUTION_SETTING)?;
+        self.command(spi, Command::ResolutionSetting)?;
         self.send_data(spi, &[(w >> 8) as u8])?;
         self.send_data(spi, &[w as u8])?;
         self.send_data(spi, &[(h >> 8) as u8])?;
@@ -392,19 +392,19 @@ where
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         // LUT VCOM
-        self.cmd_with_data(spi, Command::LUT_FOR_VCOM, lut_vcom)?;
+        self.cmd_with_data(spi, Command::LutForVcom, lut_vcom)?;
 
         // LUT WHITE to WHITE
-        self.cmd_with_data(spi, Command::LUT_WHITE_TO_WHITE, lut_ww)?;
+        self.cmd_with_data(spi, Command::LutWhiteToWhite, lut_ww)?;
 
         // LUT BLACK to WHITE
-        self.cmd_with_data(spi, Command::LUT_BLACK_TO_WHITE, lut_bw)?;
+        self.cmd_with_data(spi, Command::LutBlackToWhite, lut_bw)?;
 
         // LUT WHITE to BLACK
-        self.cmd_with_data(spi, Command::LUT_WHITE_TO_BLACK, lut_wb)?;
+        self.cmd_with_data(spi, Command::LutWhiteToBlack, lut_wb)?;
 
         // LUT BLACK to BLACK
-        self.cmd_with_data(spi, Command::LUT_BLACK_TO_BLACK, lut_bb)?;
+        self.cmd_with_data(spi, Command::LutBlackToBlack, lut_bb)?;
         Ok(())
     }
 
@@ -451,7 +451,7 @@ where
         self.wait_until_idle();
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+            .cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data(spi, buffer)?;
 
@@ -464,7 +464,7 @@ where
         // self.send_resolution(spi)?;
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+            .cmd(spi, Command::DataStartTransmission2)?;
 
         self.interface.data(spi, buffer)?;
 
@@ -487,13 +487,13 @@ where
             //return Err("Wrong buffersize");
         }
 
-        self.interface.cmd(spi, Command::PARTIAL_IN)?;
-        self.interface.cmd(spi, Command::PARTIAL_WINDOW)?;
+        self.interface.cmd(spi, Command::PartialIn)?;
+        self.interface.cmd(spi, Command::PartialWindow)?;
 
         self.shift_display(spi, x, y, width, height)?;
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+            .cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data(spi, buffer)?;
 
@@ -520,11 +520,11 @@ where
         self.shift_display(spi, x, y, width, height)?;
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+            .cmd(spi, Command::DataStartTransmission2)?;
 
         self.interface.data(spi, buffer)?;
 
-        self.interface.cmd(spi, Command::PARTIAL_OUT)?;
+        self.interface.cmd(spi, Command::PartialOut)?;
         Ok(())
     }
 
@@ -541,22 +541,22 @@ where
 
         let color_value = self.color.get_byte_value();
 
-        self.interface.cmd(spi, Command::PARTIAL_IN)?;
-        self.interface.cmd(spi, Command::PARTIAL_WINDOW)?;
+        self.interface.cmd(spi, Command::PartialIn)?;
+        self.interface.cmd(spi, Command::PartialWindow)?;
 
         self.shift_display(spi, x, y, width, height)?;
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+            .cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, width / 8 * height)?;
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+            .cmd(spi, Command::DataStartTransmission2)?;
         self.interface
             .data_x_times(spi, color_value, width / 8 * height)?;
 
-        self.interface.cmd(spi, Command::PARTIAL_OUT)?;
+        self.interface.cmd(spi, Command::PartialOut)?;
         Ok(())
     }
 }

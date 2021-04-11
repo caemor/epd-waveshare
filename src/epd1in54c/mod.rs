@@ -57,20 +57,20 @@ where
         self.interface.reset(delay, 2);
 
         // start the booster
-        self.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;
+        self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])?;
 
         // power on
-        self.command(spi, Command::POWER_ON)?;
+        self.command(spi, Command::PowerOn)?;
         delay.delay_ms(5);
         self.wait_until_idle();
 
         // set the panel settings
-        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0x0f, 0x0d])?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x0f, 0x0d])?;
 
         // set resolution
         self.send_resolution(spi)?;
 
-        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x77])?;
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x77])?;
 
         Ok(())
     }
@@ -97,7 +97,7 @@ where
 
     fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_1, black)?;
+        self.cmd_with_data(spi, Command::DataStartTransmission1, black)?;
 
         Ok(())
     }
@@ -108,7 +108,7 @@ where
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, chromatic)?;
+        self.cmd_with_data(spi, Command::DataStartTransmission2, chromatic)?;
 
         Ok(())
     }
@@ -145,9 +145,9 @@ where
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_until_idle();
 
-        self.command(spi, Command::POWER_OFF)?;
+        self.command(spi, Command::PowerOff)?;
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xa5])?;
+        self.cmd_with_data(spi, Command::DeepSleep, &[0xa5])?;
 
         Ok(())
     }
@@ -182,7 +182,7 @@ where
         // Clear the chromatic layer
         let color = self.color.get_byte_value();
 
-        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.command(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         Ok(())
@@ -202,7 +202,7 @@ where
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
         self.wait_until_idle();
 
         Ok(())
@@ -220,11 +220,11 @@ where
         let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
 
         // Clear the black
-        self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.command(spi, Command::DataStartTransmission1)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         // Clear the chromatic
-        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.command(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         Ok(())
@@ -276,7 +276,7 @@ where
         let w = self.width();
         let h = self.height();
 
-        self.command(spi, Command::RESOLUTION_SETTING)?;
+        self.command(spi, Command::ResolutionSetting)?;
 
         // | D7 | D6 | D5 | D4 | D3 | D2 | D1 | D0 |
         // |       HRES[7:3]        |  0 |  0 |  0 |

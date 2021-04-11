@@ -66,16 +66,16 @@ where
         // and as per specs:
         // https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
 
-        self.cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x27, 0x17])?;
-        self.cmd_with_data(spi, Command::POWER_SETTING, &[0x07, 0x17, 0x3F, 0x3F])?;
-        self.command(spi, Command::POWER_ON)?;
+        self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x27, 0x17])?;
+        self.cmd_with_data(spi, Command::PowerSetting, &[0x07, 0x17, 0x3F, 0x3F])?;
+        self.command(spi, Command::PowerOn)?;
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0x1F])?;
-        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x06])?;
-        self.cmd_with_data(spi, Command::TCON_RESOLUTION, &[0x03, 0x20, 0x01, 0xE0])?;
-        self.cmd_with_data(spi, Command::DUAL_SPI, &[0x00])?;
-        self.cmd_with_data(spi, Command::TCON_SETTING, &[0x22])?;
-        self.cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x10, 0x07])?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x1F])?;
+        self.cmd_with_data(spi, Command::PllControl, &[0x06])?;
+        self.cmd_with_data(spi, Command::TconResolution, &[0x03, 0x20, 0x01, 0xE0])?;
+        self.cmd_with_data(spi, Command::DualSpi, &[0x00])?;
+        self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x10, 0x07])?;
         self.wait_until_idle();
         Ok(())
     }
@@ -119,15 +119,15 @@ where
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.command(spi, Command::POWER_OFF)?;
+        self.command(spi, Command::PowerOff)?;
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
+        self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)?;
+        self.cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
         Ok(())
     }
 
@@ -145,13 +145,13 @@ where
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
     fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.update_frame(spi, buffer)?;
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
@@ -159,13 +159,13 @@ where
         self.wait_until_idle();
         self.send_resolution(spi)?;
 
-        self.command(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.command(spi, Command::DataStartTransmission1)?;
         self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
 
-        self.command(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.command(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
 
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
@@ -231,7 +231,7 @@ where
         let w = self.width();
         let h = self.height();
 
-        self.command(spi, Command::TCON_RESOLUTION)?;
+        self.command(spi, Command::TconResolution)?;
         self.send_data(spi, &[(w >> 8) as u8])?;
         self.send_data(spi, &[w as u8])?;
         self.send_data(spi, &[(h >> 8) as u8])?;

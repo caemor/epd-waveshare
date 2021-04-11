@@ -2,33 +2,32 @@
 use crate::traits;
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
-    PANEL_SETTING = 0x00,
+    PanelSetting = 0x00,
 
-    POWER_SETTING = 0x01,
-    POWER_OFF = 0x02,
-    POWER_ON = 0x04,
-    BOOSTER_SOFT_START = 0x06,
-    DEEP_SLEEP = 0x07,
-    DATA_START_TRANSMISSION_1 = 0x10,
-    DISPLAY_REFRESH = 0x12,
-    DATA_START_TRANSMISSION_2 = 0x13,
+    PowerSetting = 0x01,
+    PowerOff = 0x02,
+    PowerOn = 0x04,
+    BoosterSoftStart = 0x06,
+    DeepSleep = 0x07,
+    DataStartTransmission1 = 0x10,
+    DisplayRefresh = 0x12,
+    DataStartTransmission2 = 0x13,
 
-    LUT_FOR_VCOM = 0x20,
-    LUT_WHITE_TO_WHITE = 0x21,
-    LUT_BLACK_TO_WHITE = 0x22,
-    LUT_WHITE_TO_BLACK = 0x23,
-    LUT_BLACK_TO_BLACK = 0x24,
+    LutForVcom = 0x20,
+    LutWhiteToWhite = 0x21,
+    LutBlackToWhite = 0x22,
+    LutWhiteToBlack = 0x23,
+    LutBlackToBlack = 0x24,
 
-    PLL_CONTROL = 0x30,
-    TEMPERATURE_SENSOR_COMMAND = 0x40,
-    TEMPERATURE_SENSOR_SELECTION = 0x41,
-    VCOM_AND_DATA_INTERVAL_SETTING = 0x50,
-    RESOLUTION_SETTING = 0x61,
-    VCM_DC_SETTING = 0x82,
-    POWER_SAVING = 0xE3,
+    PllControl = 0x30,
+    TemperatureSensorCommand = 0x40,
+    TemperatureSensorSelection = 0x41,
+    VcomAndDataIntervalSetting = 0x50,
+    ResolutionSetting = 0x61,
+    VcmDcSetting = 0x82,
+    PowerSaving = 0xE3,
 }
 
 impl traits::Command for Command {

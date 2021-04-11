@@ -115,26 +115,26 @@ where
 
         // start the booster
         self.interface
-            .cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;
+            .cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])?;
 
         // power on
-        self.command(spi, Command::POWER_ON)?;
+        self.command(spi, Command::PowerOn)?;
         delay.delay_ms(5);
         self.wait_until_idle();
 
         // set the panel settings
-        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0x8F])?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x8F])?;
 
         self.cmd_with_data(
             spi,
-            Command::VCOM_AND_DATA_INTERVAL_SETTING,
+            Command::VcomAndDataIntervalSetting,
             &[WHITE_BORDER | VCOM_DATA_INTERVAL],
         )?;
 
         // set resolution
         self.send_resolution(spi)?;
 
-        self.cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x0A])?;
+        self.cmd_with_data(spi, Command::VcmDcSetting, &[0x0A])?;
 
         self.wait_until_idle();
 
@@ -166,7 +166,7 @@ where
     /// Finish by calling `update_chromatic_frame`.
     fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+            .cmd(spi, Command::DataStartTransmission1)?;
         self.interface.data(spi, black)?;
         Ok(())
     }
@@ -180,7 +180,7 @@ where
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+            .cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data(spi, chromatic)?;
 
         self.wait_until_idle();
@@ -220,15 +220,15 @@ where
         // Section 8.2 from datasheet
         self.interface.cmd_with_data(
             spi,
-            Command::VCOM_AND_DATA_INTERVAL_SETTING,
+            Command::VcomAndDataIntervalSetting,
             &[FLOATING_BORDER | VCOM_DATA_INTERVAL],
         )?;
 
-        self.command(spi, Command::POWER_OFF)?;
-        // The example STM code from Github has a wait after POWER_OFF
+        self.command(spi, Command::PowerOff)?;
+        // The example STM code from Github has a wait after PowerOff
         self.wait_until_idle();
 
-        self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
+        self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
 
         Ok(())
     }
@@ -259,7 +259,7 @@ where
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+            .cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data(spi, &buffer)?;
 
@@ -267,7 +267,7 @@ where
         let color = self.color.get_byte_value();
 
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+            .cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         self.wait_until_idle();
@@ -288,7 +288,7 @@ where
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
 
         self.wait_until_idle();
         Ok(())
@@ -307,13 +307,13 @@ where
 
         // Clear the black
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+            .cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         // Clear the chromatic
         self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+            .cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
 
         self.wait_until_idle();
@@ -366,7 +366,7 @@ where
         let w = self.width();
         let h = self.height();
 
-        self.command(spi, Command::RESOLUTION_SETTING)?;
+        self.command(spi, Command::ResolutionSetting)?;
 
         self.send_data(spi, &[w as u8])?;
         self.send_data(spi, &[(h >> 8) as u8])?;
@@ -382,7 +382,7 @@ where
         };
         self.cmd_with_data(
             spi,
-            Command::VCOM_AND_DATA_INTERVAL_SETTING,
+            Command::VcomAndDataIntervalSetting,
             &[border | VCOM_DATA_INTERVAL],
         )
     }
