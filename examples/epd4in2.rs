@@ -10,7 +10,7 @@ use embedded_graphics::{
 use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
-    epd4in2::{Display4in2, EPD4in2},
+    epd4in2::{Display4in2, Epd4in2},
     graphics::{Display, DisplayRotation},
     prelude::*,
 };
@@ -63,7 +63,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd4in2 =
-        EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+        Epd4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     //println!("Test all the rotations");
     let mut display = Display4in2::default();
@@ -120,7 +120,7 @@ fn main() -> Result<(), std::io::Error> {
 
     // a moving `Hello World!`
     let limit = 10;
-    epd4in2.set_lut(&mut spi, Some(RefreshLUT::QUICK)).unwrap();
+    epd4in2.set_lut(&mut spi, Some(RefreshLut::Quick)).unwrap();
     epd4in2.clear_frame(&mut spi).unwrap();
     for i in 0..limit {
         //println!("Moving Hello World. Loop {} from {}", (i + 1), limit);

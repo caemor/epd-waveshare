@@ -28,7 +28,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display1in54::default();
@@ -91,7 +91,7 @@ pub(crate) mod type_a;
 pub mod prelude {
     pub use crate::color::{Color, OctColor, TriColor};
     pub use crate::traits::{
-        QuickRefresh, RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay,
+        QuickRefresh, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
     };
 
     pub use crate::SPI_MODE;

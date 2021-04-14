@@ -1,7 +1,7 @@
 #![deny(warnings)]
 
 use embedded_hal::prelude::*;
-use epd_waveshare::{epd1in54::EPD1in54, prelude::*};
+use epd_waveshare::{epd1in54::Epd1in54, prelude::*};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
@@ -58,14 +58,14 @@ fn main() -> Result<(), std::io::Error> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
+    let mut epd = Epd1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
 
     // Clear the full screen
     epd.clear_frame(&mut spi)?;
     epd.display_frame(&mut spi)?;
 
     // Speeddemo
-    epd.set_lut(&mut spi, Some(RefreshLUT::QUICK))?;
+    epd.set_lut(&mut spi, Some(RefreshLut::Quick))?;
     let small_buffer = [Color::Black.get_byte_value(); 32]; //16x16
     let number_of_runs = 1;
     for i in 0..number_of_runs {
