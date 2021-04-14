@@ -11,7 +11,7 @@ use embedded_graphics::{
 use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
-    epd4in2::{self, EPD4in2},
+    epd4in2::{self, Epd4in2},
     graphics::{Display, DisplayRotation, VarDisplay},
     prelude::*,
 };
@@ -64,7 +64,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd4in2 =
-        EPD4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+        Epd4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     println!("Test all the rotations");
 

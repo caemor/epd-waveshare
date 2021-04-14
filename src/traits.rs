@@ -12,17 +12,17 @@ pub(crate) trait Command {
 
 /// Seperates the different LUT for the Display Refresh process
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
-pub enum RefreshLUT {
+pub enum RefreshLut {
     /// The "normal" full Lookuptable for the Refresh-Sequence
-    FULL,
+    Full,
     /// The quick LUT where not the full refresh sequence is followed.
     /// This might lead to some
-    QUICK,
+    Quick,
 }
 
-impl Default for RefreshLUT {
+impl Default for RefreshLut {
     fn default() -> Self {
-        RefreshLUT::FULL
+        RefreshLut::Full
     }
 }
 
@@ -108,7 +108,7 @@ where
 ///# let mut delay = delay::MockNoop::new();
 ///
 ///// Setup EPD
-///let mut epd = EPD4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+///let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 ///
 ///// Use display graphics from embedded-graphics
 ///let mut display = Display4in2::default();
@@ -219,7 +219,7 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
-        refresh_rate: Option<RefreshLUT>,
+        refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error>;
 
     /// Checks if the display is busy transmitting data
@@ -258,7 +258,7 @@ where
 ///# let mut delay = delay::MockNoop::new();
 ///#
 ///# // Setup EPD
-///# let mut epd = EPD4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+///# let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 ///let (x, y, frame_width, frame_height) = (20, 40, 80,80);
 ///
 ///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];

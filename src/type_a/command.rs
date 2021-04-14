@@ -2,13 +2,12 @@
 
 use crate::traits;
 
-/// EPD1in54 and EPD2IN9 commands
+/// Epd1in54 and EPD2IN9 commands
 ///
 /// Should rarely (never?) be needed directly.
 ///
 /// For more infos about the addresses and what they are doing look into the pdfs
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
     /// Driver Output control
@@ -17,58 +16,58 @@ pub(crate) enum Command {
     ///     0.. A[8]
     ///     0.. B[2:0]
     ///     Default: Set A[8:0] = 0x127 and B[2:0] = 0x0
-    DRIVER_OUTPUT_CONTROL = 0x01,
+    DriverOutputControl = 0x01,
     /// Booster Soft start control
     ///     3 Databytes:
     ///     1.. A[6:0]
     ///     1.. B[6:0]
     ///     1.. C[6:0]
     ///     Default: A[7:0] = 0xCF, B[7:0] = 0xCE, C[7:0] = 0x8D
-    BOOSTER_SOFT_START_CONTROL = 0x0C,
-    GATE_SCAN_START_POSITION = 0x0F,
+    BoosterSoftStartControl = 0x0C,
+    GateScanStartPosition = 0x0F,
     //TODO: useful?
-    // GATE_SCAN_START_POSITION = 0x0F,
+    // GateScanStartPosition = 0x0F,
     /// Deep Sleep Mode Control
     ///     1 Databyte:
     ///     0.. A[0]
     ///     Values:
     ///         A[0] = 0: Normal Mode (POR)
     ///         A[0] = 1: Enter Deep Sleep Mode
-    DEEP_SLEEP_MODE = 0x10,
+    DeepSleepMode = 0x10,
     // /// Data Entry mode setting
-    DATA_ENTRY_MODE_SETTING = 0x11,
+    DataEntryModeSetting = 0x11,
 
-    SW_RESET = 0x12,
+    SwReset = 0x12,
 
-    TEMPERATURE_SENSOR_CONTROL = 0x1A,
+    TemperatureSensorControl = 0x1A,
 
-    MASTER_ACTIVATION = 0x20,
+    MasterActivation = 0x20,
 
-    DISPLAY_UPDATE_CONTROL_1 = 0x21,
+    DisplayUpdateControl1 = 0x21,
 
-    DISPLAY_UPDATE_CONTROL_2 = 0x22,
+    DisplayUpdateControl2 = 0x22,
 
-    WRITE_RAM = 0x24,
+    WriteRam = 0x24,
 
-    WRITE_VCOM_REGISTER = 0x2C,
+    WriteVcomRegister = 0x2C,
 
-    WRITE_LUT_REGISTER = 0x32,
+    WriteLutRegister = 0x32,
 
-    SET_DUMMY_LINE_PERIOD = 0x3A,
+    SetDummyLinePeriod = 0x3A,
 
-    SET_GATE_LINE_WIDTH = 0x3B,
+    SetGateLineWidth = 0x3B,
 
-    BORDER_WAVEFORM_CONTROL = 0x3C,
+    BorderWaveformControl = 0x3C,
 
-    SET_RAM_X_ADDRESS_START_END_POSITION = 0x44,
+    SetRamXAddressStartEndPosition = 0x44,
 
-    SET_RAM_Y_ADDRESS_START_END_POSITION = 0x45,
+    SetRamYAddressStartEndPosition = 0x45,
 
-    SET_RAM_X_ADDRESS_COUNTER = 0x4E,
+    SetRamXAddressCounter = 0x4E,
 
-    SET_RAM_Y_ADDRESS_COUNTER = 0x4F,
+    SetRamYAddressCounter = 0x4F,
 
-    NOP = 0xFF,
+    Nop = 0xFF,
 }
 
 impl traits::Command for Command {
@@ -85,10 +84,10 @@ mod tests {
 
     #[test]
     fn command_addr() {
-        assert_eq!(Command::DRIVER_OUTPUT_CONTROL.address(), 0x01);
+        assert_eq!(Command::DriverOutputControl.address(), 0x01);
 
-        assert_eq!(Command::SET_RAM_X_ADDRESS_COUNTER.address(), 0x4E);
+        assert_eq!(Command::SetRamXAddressCounter.address(), 0x4E);
 
-        assert_eq!(Command::NOP.address(), 0xFF);
+        assert_eq!(Command::Nop.address(), 0xFF);
     }
 }
