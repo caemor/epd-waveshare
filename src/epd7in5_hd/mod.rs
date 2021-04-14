@@ -182,7 +182,8 @@ where
 
         for cmd in &[Command::WRITE_RAM_BW, Command::WRITE_RAM_RED] {
             self.command(spi, *cmd)?;
-            self.interface.data_x_times(spi, background_color_byte, pixel_count)?;
+            self.interface
+                .data_x_times(spi, background_color_byte, pixel_count)?;
         }
 
         self.cmd_with_data(spi, Command::DISPLAY_UPDATE_CONTROL_2, &[0xF7])?;
