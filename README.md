@@ -38,6 +38,7 @@ epd.update_and_display_frame(&mut spi, &display.buffer())?;
 
 | Device (with Link) | Colors | Flexible Display | Partial Refresh | Supported | Tested |
 | :---: | --- | :---: | :---: | :---: | :---: |
+| [7.5 Inch B/W HD (A)](https://www.waveshare.com/product/displays/e-paper/epaper-1/7.5inch-hd-e-paper-hat.htm) | Black, White | ✕ | ✕ | ✔ | ✔ |
 | [7.5 Inch B/W V2 (A)](https://www.waveshare.com/product/7.5inch-e-paper-hat.htm) [[1](#1-75-inch-bw-v2-a)] | Black, White | ✕ | ✕ | ✔ | ✔ |
 | [7.5 Inch B/W (A)](https://www.waveshare.com/product/7.5inch-e-paper-hat.htm) | Black, White | ✕ | ✕ | ✔ | ✔ |
 | [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[2](#2-42-inch-e-ink-blackwhite---partial-refresh)] | ✔ | ✔ |

@@ -1,5 +1,9 @@
 //! A simple Driver for the Waveshare 7.5" E-Ink Display (HD) via SPI
 //!
+//! Color values for this driver are inverted compared to the [EPD 7in5 V2 driver](crate::epd7in5_v2)
+//! *EPD 7in5 HD:* White = 1/0xFF, Black = 0/0x00
+//! *EPD 7in5 V2:* White = 0/0x00, Black = 1/0xFF
+//!
 //! # References
 //!
 //! - [Datasheet](https://www.waveshare.com/w/upload/2/27/7inch_HD_e-Paper_Specification.pdf)
@@ -27,7 +31,7 @@ pub const WIDTH: u32 = 880;
 /// Height of the display
 pub const HEIGHT: u32 = 528;
 /// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::Black; // Inverted for HD (0xFF = White)
+pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White; // Inverted for HD as compared to 7in5 v2 (HD: 0xFF = White)
 const IS_BUSY_LOW: bool = false;
 
 /// EPD7in5 (HD) driver
@@ -171,13 +175,14 @@ where
 
     fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let pixel_count = WIDTH * HEIGHT / 8;
+        let background_color_byte = self.color.get_byte_value();
 
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::SET_RAM_Y_AC, &[0x00, 0x00])?;
 
         for cmd in &[Command::WRITE_RAM_BW, Command::WRITE_RAM_RED] {
             self.command(spi, *cmd)?;
-            self.interface.data_x_times(spi, 0xFF, pixel_count)?;
+            self.interface.data_x_times(spi, background_color_byte, pixel_count)?;
         }
 
         self.cmd_with_data(spi, Command::DISPLAY_UPDATE_CONTROL_2, &[0xF7])?;
@@ -249,6 +254,6 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 880);
         assert_eq!(HEIGHT, 528);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::Black);
+        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }
