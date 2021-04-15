@@ -36,7 +36,7 @@ const IS_BUSY_LOW: bool = false;
 
 /// EPD7in5 (HD) driver
 ///
-pub struct EPD7in5<SPI, CS, BUSY, DC, RST> {
+pub struct Epd7in5<SPI, CS, BUSY, DC, RST> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
     /// Background Color
@@ -44,7 +44,7 @@ pub struct EPD7in5<SPI, CS, BUSY, DC, RST> {
 }
 
 impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD7in5<SPI, CS, BUSY, DC, RST>
+    for Epd7in5<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -100,7 +100,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD7in5<SPI, CS, BUSY, DC, RST>
+    for Epd7in5<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -120,7 +120,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD7in5 { interface, color };
+        let mut epd = Epd7in5 { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -221,7 +221,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD7in5<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST> Epd7in5<SPI, CS, BUSY, DC, RST>
 where
     SPI: Write<u8>,
     CS: OutputPin,
