@@ -98,7 +98,7 @@ mod tests {
         let mut display = Display7in5::default();
         display.set_rotation(DisplayRotation::Rotate90);
 
-        let _ = Line::new(Point::new(0, 792), Point::new(0, 799))
+        let _ = Line::new(Point::new(0, 872), Point::new(0, 879))
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
@@ -116,7 +116,7 @@ mod tests {
         let mut display = Display7in5::default();
         display.set_rotation(DisplayRotation::Rotate180);
 
-        let _ = Line::new(Point::new(792, 479), Point::new(799, 479))
+        let _ = Line::new(Point::new(872, 527), Point::new(879, 527))
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
@@ -134,7 +134,7 @@ mod tests {
         let mut display = Display7in5::default();
         display.set_rotation(DisplayRotation::Rotate270);
 
-        let _ = Line::new(Point::new(479, 0), Point::new(479, 7))
+        let _ = Line::new(Point::new(527, 0), Point::new(527, 7))
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
