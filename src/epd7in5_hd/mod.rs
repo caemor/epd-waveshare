@@ -66,34 +66,34 @@ where
         // https://www.waveshare.com/w/upload/2/27/7inch_HD_e-Paper_Specification.pdf
 
         self.wait_until_idle();
-        self.command(spi, Command::SW_RESET)?;
+        self.command(spi, Command::SwReset)?;
         self.wait_until_idle();
 
-        self.cmd_with_data(spi, Command::AUTO_WRITE_RED, &[0xF7])?;
+        self.cmd_with_data(spi, Command::AutoWriteRed, &[0xF7])?;
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::AUTO_WRITE_BW, &[0xF7])?;
-        self.wait_until_idle();
-
-        self.cmd_with_data(spi, Command::SOFT_START, &[0xAE, 0xC7, 0xC3, 0xC0, 0x40])?;
-
-        self.cmd_with_data(spi, Command::DRIVER_OUTPUT_CONTROL, &[0xAF, 0x02, 0x01])?;
-
-        self.cmd_with_data(spi, Command::DATA_ENTRY, &[0x01])?;
-
-        self.cmd_with_data(spi, Command::SET_RAM_X_START_END, &[0x00, 0x00, 0x6F, 0x03])?;
-        self.cmd_with_data(spi, Command::SET_RAM_Y_START_END, &[0xAF, 0x02, 0x00, 0x00])?;
-
-        self.cmd_with_data(spi, Command::VBD_CONTROL, &[0x05])?;
-
-        self.cmd_with_data(spi, Command::TEMPERATURE_SENSOR_CONTROL, &[0x80])?;
-
-        self.cmd_with_data(spi, Command::DISPLAY_UPDATE_CONTROL_2, &[0xB1])?;
-
-        self.command(spi, Command::MASTER_ACTIVATION)?;
+        self.cmd_with_data(spi, Command::AutoWriteBw, &[0xF7])?;
         self.wait_until_idle();
 
-        self.cmd_with_data(spi, Command::SET_RAM_X_AC, &[0x00, 0x00])?;
-        self.cmd_with_data(spi, Command::SET_RAM_Y_AC, &[0x00, 0x00])?;
+        self.cmd_with_data(spi, Command::SoftStart, &[0xAE, 0xC7, 0xC3, 0xC0, 0x40])?;
+
+        self.cmd_with_data(spi, Command::DriverOutputControl, &[0xAF, 0x02, 0x01])?;
+
+        self.cmd_with_data(spi, Command::DataEntry, &[0x01])?;
+
+        self.cmd_with_data(spi, Command::SetRamXStartEnd, &[0x00, 0x00, 0x6F, 0x03])?;
+        self.cmd_with_data(spi, Command::SetRamYStartEnd, &[0xAF, 0x02, 0x00, 0x00])?;
+
+        self.cmd_with_data(spi, Command::VbdControl, &[0x05])?;
+
+        self.cmd_with_data(spi, Command::TemperatureSensorControl, &[0x80])?;
+
+        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xB1])?;
+
+        self.command(spi, Command::MasterActivation)?;
+        self.wait_until_idle();
+
+        self.cmd_with_data(spi, Command::SetRamXAc, &[0x00, 0x00])?;
+        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
 
         Ok(())
     }
@@ -137,15 +137,15 @@ where
 
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::DEEP_SLEEP, &[0x01])?;
+        self.cmd_with_data(spi, Command::DeepSleep, &[0x01])?;
         Ok(())
     }
 
     fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::SET_RAM_Y_AC, &[0x00, 0x00])?;
-        self.cmd_with_data(spi, Command::WRITE_RAM_BW, buffer)?;
-        self.cmd_with_data(spi, Command::DISPLAY_UPDATE_CONTROL_2, &[0xF7])?;
+        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
+        self.cmd_with_data(spi, Command::WriteRamBw, buffer)?;
+        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
         Ok(())
     }
 
@@ -162,7 +162,7 @@ where
     }
 
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        self.command(spi, Command::MASTER_ACTIVATION)?;
+        self.command(spi, Command::MasterActivation)?;
         self.wait_until_idle();
         Ok(())
     }
@@ -178,16 +178,16 @@ where
         let background_color_byte = self.color.get_byte_value();
 
         self.wait_until_idle();
-        self.cmd_with_data(spi, Command::SET_RAM_Y_AC, &[0x00, 0x00])?;
+        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
 
-        for cmd in &[Command::WRITE_RAM_BW, Command::WRITE_RAM_RED] {
+        for cmd in &[Command::WriteRamBw, Command::WriteRamRed] {
             self.command(spi, *cmd)?;
             self.interface
                 .data_x_times(spi, background_color_byte, pixel_count)?;
         }
 
-        self.cmd_with_data(spi, Command::DISPLAY_UPDATE_CONTROL_2, &[0xF7])?;
-        self.command(spi, Command::MASTER_ACTIVATION)?;
+        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
+        self.command(spi, Command::MasterActivation)?;
         self.wait_until_idle();
         Ok(())
     }
