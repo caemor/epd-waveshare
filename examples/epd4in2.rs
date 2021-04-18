@@ -80,9 +80,9 @@ fn main() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
-    epd4in2.update_frame(&mut spi, &display.buffer())?;
+    epd4in2.update_frame(&mut spi, &display.buffer(), &mut delay)?;
     epd4in2
-        .display_frame(&mut spi)
+        .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
     delay.delay_ms(5000u16);
 
@@ -121,22 +121,24 @@ fn main() -> Result<(), std::io::Error> {
     // a moving `Hello World!`
     let limit = 10;
     epd4in2.set_lut(&mut spi, Some(RefreshLut::Quick)).unwrap();
-    epd4in2.clear_frame(&mut spi).unwrap();
+    epd4in2.clear_frame(&mut spi, &mut delay).unwrap();
     for i in 0..limit {
         //println!("Moving Hello World. Loop {} from {}", (i + 1), limit);
 
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
-        epd4in2.update_frame(&mut spi, &display.buffer()).unwrap();
         epd4in2
-            .display_frame(&mut spi)
+            .update_frame(&mut spi, &display.buffer(), &mut delay)
+            .unwrap();
+        epd4in2
+            .display_frame(&mut spi, &mut delay)
             .expect("display frame new graphics");
 
         delay.delay_ms(1_000u16);
     }
 
     println!("Finished tests - going to sleep");
-    epd4in2.sleep(&mut spi)
+    epd4in2.sleep(&mut spi, &mut delay)
 }
 
 fn draw_text(display: &mut Display4in2, text: &str, x: i32, y: i32) {

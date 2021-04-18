@@ -80,9 +80,9 @@ fn main() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
-    epd2in13.update_frame(&mut spi, &display.buffer())?;
+    epd2in13.update_frame(&mut spi, &display.buffer(), &mut delay)?;
     epd2in13
-        .display_frame(&mut spi)
+        .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
     delay.delay_ms(5000u16);
 
@@ -123,7 +123,7 @@ fn main() -> Result<(), std::io::Error> {
     epd2in13
         .set_refresh(&mut spi, &mut delay, RefreshLut::Quick)
         .unwrap();
-    epd2in13.clear_frame(&mut spi).unwrap();
+    epd2in13.clear_frame(&mut spi, &mut delay).unwrap();
 
     // a moving `Hello World!`
     let limit = 10;
@@ -131,7 +131,7 @@ fn main() -> Result<(), std::io::Error> {
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd2in13
-            .update_and_display_frame(&mut spi, &display.buffer())
+            .update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
             .expect("display frame new graphics");
         delay.delay_ms(1_000u16);
     }
@@ -140,7 +140,7 @@ fn main() -> Result<(), std::io::Error> {
     // the screen can refresh for this kind of change (small single character)
     display.clear_buffer(Color::White);
     epd2in13
-        .update_and_display_frame(&mut spi, &display.buffer())
+        .update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
         .unwrap();
 
     let spinner = ["|", "/", "-", "\\"];
@@ -148,12 +148,12 @@ fn main() -> Result<(), std::io::Error> {
         display.clear_buffer(Color::White);
         draw_text(&mut display, spinner[i % spinner.len()], 10, 100);
         epd2in13
-            .update_and_display_frame(&mut spi, &display.buffer())
+            .update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
             .unwrap();
     }
 
     println!("Finished tests - going to sleep");
-    epd2in13.sleep(&mut spi)
+    epd2in13.sleep(&mut spi, &mut delay)
 }
 
 fn draw_text(display: &mut Display2in13, text: &str, x: i32, y: i32) {
