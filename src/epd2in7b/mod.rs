@@ -35,27 +35,24 @@ mod graphics;
 pub use self::graphics::Display2in7b;
 
 /// Epd2in7b driver
-pub struct Epd2in7b<SPI, CS, BUSY, DC, RST> {
+pub struct Epd2in7b<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
     /// Background Color
     color: Color,
 }
 
-impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for Epd2in7b<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd2in7b<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
-    fn init<DELAY: DelayMs<u8>>(
-        &mut self,
-        spi: &mut SPI,
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
         self.interface.reset(delay, 2);
 
@@ -111,17 +108,18 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for Epd2in7b<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd2in7b<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     type DisplayColor = Color;
-    fn new<DELAY: DelayMs<u8>>(
+    fn new(
         spi: &mut SPI,
         cs: CS,
         busy: BUSY,
@@ -139,15 +137,11 @@ where
         Ok(epd)
     }
 
-    fn wake_up<DELAY: DelayMs<u8>>(
-        &mut self,
-        spi: &mut SPI,
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0xf7])?;
@@ -159,7 +153,12 @@ where
         Ok(())
     }
 
-    fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+    fn update_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        _delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.send_buffer_helper(spi, buffer)?;
 
@@ -199,19 +198,24 @@ where
         self.interface.cmd(spi, Command::DataStop)
     }
 
-    fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.command(spi, Command::DisplayRefresh)?;
         self.wait_until_idle();
         Ok(())
     }
 
-    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer)?;
+    fn update_and_display_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer, delay)?;
         self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.wait_until_idle();
 
         let color_value = self.color.get_byte_value();
@@ -263,14 +267,15 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST>
-    for Epd2in7b<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd2in7b<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     fn update_color_frame(
         &mut self,
@@ -316,13 +321,14 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> Epd2in7b<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in7b<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
@@ -351,7 +357,7 @@ where
     }
 
     fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW)
+        let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     /// Refresh display for partial frame

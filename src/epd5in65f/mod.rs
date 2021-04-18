@@ -33,27 +33,24 @@ const IS_BUSY_LOW: bool = true;
 
 /// Epd5in65f driver
 ///
-pub struct Epd5in65f<SPI, CS, BUSY, DC, RST> {
+pub struct Epd5in65f<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
     /// Background Color
     color: OctColor,
 }
 
-impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for Epd5in65f<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd5in65f<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
-    fn init<DELAY: DelayMs<u8>>(
-        &mut self,
-        spi: &mut SPI,
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
         self.interface.reset(delay, 2);
 
@@ -76,17 +73,18 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for Epd5in65f<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd5in65f<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     type DisplayColor = OctColor;
-    fn new<DELAY: DelayMs<u8>>(
+    fn new(
         spi: &mut SPI,
         cs: CS,
         busy: BUSY,
@@ -104,20 +102,21 @@ where
         Ok(epd)
     }
 
-    fn wake_up<DELAY: DelayMs<u8>>(
-        &mut self,
-        spi: &mut SPI,
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
     }
 
-    fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+    fn update_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        _delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         self.wait_busy_high();
         self.send_resolution(spi)?;
         self.cmd_with_data(spi, Command::DataStartTransmission1, buffer)?;
@@ -136,7 +135,7 @@ where
         unimplemented!();
     }
 
-    fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.wait_busy_high();
         self.command(spi, Command::PowerOn)?;
         self.wait_busy_high();
@@ -147,19 +146,24 @@ where
         Ok(())
     }
 
-    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer)?;
-        self.display_frame(spi)?;
+    fn update_and_display_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer, delay)?;
+        self.display_frame(spi, delay)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         let bg = OctColor::colors_byte(self.color, self.color);
         self.wait_busy_high();
         self.send_resolution(spi)?;
         self.command(spi, Command::DataStartTransmission1)?;
         self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;
-        self.display_frame(spi)?;
+        self.display_frame(spi, delay)?;
         Ok(())
     }
 
@@ -192,13 +196,14 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> Epd5in65f<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> Epd5in65f<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
@@ -218,10 +223,10 @@ where
     }
 
     fn wait_busy_high(&mut self) {
-        self.interface.wait_until_idle(true)
+        let _ = self.interface.wait_until_idle(true);
     }
     fn wait_busy_low(&mut self) {
-        self.interface.wait_until_idle(false)
+        let _ = self.interface.wait_until_idle(false);
     }
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
