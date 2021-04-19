@@ -3,7 +3,7 @@ use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 
-/// Display with Fullsize buffer for use with the 2in9 EPD
+/// Display with Fullsize buffer for use with the 2in9 EPD V2
 ///
 /// Can also be manuall constructed:
 /// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]`

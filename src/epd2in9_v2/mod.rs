@@ -1,5 +1,5 @@
 //! A simple Driver for the Waveshare 2.9" E-Ink Display V2 via SPI
-//! 
+//!
 //! Specification: https://www.waveshare.com/w/upload/7/79/2.9inch-e-paper-v2-specification.pdf
 //!
 //! # Example for the 2.9 in E-Ink Display V2
@@ -51,24 +51,15 @@ pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 
 const LUT_PARTIAL_2IN9: [u8; 153] = [
-    0x0,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x80,0x80,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x40,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x80,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0A,0x0,0x0,0x0,0x0,0x0,0x2,  
-    0x1,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x1,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x0,0x0,0x0,0x0,0x0,0x0,0x0,
-    0x22,0x22,0x22,0x22,0x22,0x22,0x0,0x0,0x0,
+    0x0, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x80, 0x80, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0A, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x22, 0x22, 0x22, 0x22, 0x22,
+    0x22, 0x0, 0x0, 0x0,
 ];
 
 use embedded_hal::{
@@ -76,9 +67,7 @@ use embedded_hal::{
     digital::v2::*,
 };
 
-use crate::type_a::{
-    command::Command,
-};
+use crate::type_a::command::Command;
 
 use crate::color::Color;
 
@@ -121,24 +110,27 @@ where
         self.wait_until_idle();
         self.interface.cmd(spi, Command::SwReset)?;
         self.wait_until_idle();
-        
+
         // 3 Databytes:
         // A[7:0]
         // 0.. A[8]
         // 0.. B[2:0]
         // Default Values: A = Height of Screen (0x127), B = 0x00 (GD, SM and TB=0?)
-        self.interface.cmd_with_data(spi, Command::DriverOutputControl, &[0x27, 0x01, 0x00])?;
-        
+        self.interface
+            .cmd_with_data(spi, Command::DriverOutputControl, &[0x27, 0x01, 0x00])?;
+
         // One Databyte with default value 0x03
         //  -> address: x increment, y increment, address counter is updated in x direction
-        self.interface.cmd_with_data(spi, Command::DataEntryModeSetting, &[0x03])?;
-        
-        self.set_ram_area(spi, 0, 0, WIDTH-1, HEIGHT-1)?;
-        
-        self.interface.cmd_with_data(spi, Command::DisplayUpdateControl1, &[0x00, 0x80])?;
+        self.interface
+            .cmd_with_data(spi, Command::DataEntryModeSetting, &[0x03])?;
+
+        self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
+
+        self.interface
+            .cmd_with_data(spi, Command::DisplayUpdateControl1, &[0x00, 0x80])?;
 
         self.set_ram_counter(spi, 0, 0)?;
-        
+
         self.wait_until_idle();
         Ok(())
     }
@@ -186,7 +178,8 @@ where
     fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
-        self.interface.cmd_with_data(spi, Command::DeepSleepMode, &[0x01])?;
+        self.interface
+            .cmd_with_data(spi, Command::DeepSleepMode, &[0x01])?;
         Ok(())
     }
 
@@ -203,7 +196,7 @@ where
         self.wait_until_idle();
         self.interface.cmd_with_data(spi, Command::WriteRam, buffer)
     }
-    
+
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
@@ -225,7 +218,8 @@ where
     fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         // Enable clock signal, Enable Analog, Load temperature value, DISPLAY with DISPLAY Mode 1, Disable Analog, Disable OSC
-        self.interface.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
+        self.interface
+            .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
         self.interface.cmd(spi, Command::MasterActivation)?;
         self.wait_until_idle();
         Ok(())
@@ -342,7 +336,8 @@ where
     /// Set your own LUT, this function is also used internally for set_lut
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.interface.cmd_with_data(spi, Command::WriteLutRegister, buffer)?;
+        self.interface
+            .cmd_with_data(spi, Command::WriteLutRegister, buffer)?;
         self.wait_until_idle();
         Ok(())
     }
@@ -360,29 +355,39 @@ where
     /// To be followed immediately by `update_new_frame`.
     fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.interface.cmd_with_data(spi, Command::WriteRam, buffer)?;
-        self.interface.cmd_with_data(spi, Command::WriteRam2, buffer)
+        self.interface
+            .cmd_with_data(spi, Command::WriteRam, buffer)?;
+        self.interface
+            .cmd_with_data(spi, Command::WriteRam2, buffer)
     }
 
     /// To be used immediately after `update_old_frame`.
     fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         //TODO original waveshare library has a hardware reset for 2 ms. But it works without reset apparently.
-        
+
         self.set_lut_helper(spi, &LUT_PARTIAL_2IN9)?;
-        self.interface.cmd_with_data(spi, Command::WriteOtpSelection, &[0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00])?;
-        self.interface.cmd_with_data(spi, Command::BorderWaveformControl, &[0x80])?;
-        self.interface.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xC0])?;
+        self.interface.cmd_with_data(
+            spi,
+            Command::WriteOtpSelection,
+            &[0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00],
+        )?;
+        self.interface
+            .cmd_with_data(spi, Command::BorderWaveformControl, &[0x80])?;
+        self.interface
+            .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xC0])?;
         self.interface.cmd(spi, Command::MasterActivation)?;
-    
+
         self.wait_until_idle();
-    
+
         self.use_full_frame(spi)?;
-    
-        self.interface.cmd_with_data(spi, Command::WriteRam, buffer)?;
+
+        self.interface
+            .cmd_with_data(spi, Command::WriteRam, buffer)?;
         Ok(())
     }
 
+    /// Partial quick refresh not supported yet
     #[allow(unused)]
     fn update_partial_old_frame(
         &mut self,
@@ -396,7 +401,8 @@ where
         //TODO supported by display?
         unimplemented!()
     }
-    
+
+    /// Partial quick refresh not supported yet
     #[allow(unused)]
     fn update_partial_new_frame(
         &mut self,
@@ -410,7 +416,8 @@ where
         //TODO supported by display?
         unimplemented!()
     }
-    
+
+    /// Partial quick refresh not supported yet
     #[allow(unused)]
     fn clear_partial_frame(
         &mut self,

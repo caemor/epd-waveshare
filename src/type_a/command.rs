@@ -54,7 +54,7 @@ pub(crate) enum Command {
     WriteVcomRegister = 0x2C,
 
     WriteLutRegister = 0x32,
-    
+
     WriteOtpSelection = 0x37,
 
     SetDummyLinePeriod = 0x3A,
