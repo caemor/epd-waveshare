@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added QuickRefresh Trait and implemented it for EPD4in2 in #62 (thanks to @David-OConnor)
 - Added Epd 2in7 (B) support in #60 (thanks to @pjsier)
 - Added Epd 7in5 HD support
+- Added Epd 2in9 V2 support
 
 ### Changed
 
