@@ -32,9 +32,21 @@
 //!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
 //!    .draw(&mut display);
 //!
-//!    // Display updated frame
+//!// Display updated frame
 //!epd.update_frame(&mut spi, &display.buffer(), &mut delay)?;
 //!epd.display_frame(&mut spi, &mut delay)?;
+//!
+//!// Draw something new here
+//!
+//!// Display new image as a base image for further quick refreshes
+//!epd.update_old_frame(&mut spi, &display.buffer(), &mut delay)?;
+//!epd.display_frame(&mut spi, &mut delay)?;
+//!
+//!// Update image here
+//!
+//!// quick refresh of updated pixels
+//!epd.update_new_frame(&mut spi, &display.buffer(), &mut delay)?;
+//!epd.display_new_frame(&mut spi, &mut delay)?;
 //!
 //!// Set the EPD to sleep
 //!epd.sleep(&mut spi, &mut delay)?;
@@ -205,6 +217,7 @@ where
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
+        //TODO This is copied from epd2in9 but it seems not working. Partial refresh supported by version 2?
         self.wait_until_idle();
         self.set_ram_area(spi, x, y, x + width, y + height)?;
         self.set_ram_counter(spi, x, y)?;
@@ -348,7 +361,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd2in9<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
@@ -359,7 +372,12 @@ where
     DELAY: DelayMs<u8>,
 {
     /// To be followed immediately by `update_new_frame`.
-    fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+    fn update_old_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        _delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
@@ -368,9 +386,14 @@ where
     }
 
     /// To be used immediately after `update_old_frame`.
-    fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+    fn update_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        //TODO original waveshare library has a hardware reset for 2 ms. But it works without reset apparently.
+        self.interface.reset(delay, 2);
 
         self.set_lut_helper(spi, &LUT_PARTIAL_2IN9)?;
         self.interface.cmd_with_data(
@@ -390,6 +413,28 @@ where
 
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
+        Ok(())
+    }
+
+    /// For a quick refresh of the new updated frame. To be used immediately after `update_new_frame`
+    fn display_new_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+        self.interface
+            .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0x0F])?;
+        self.interface.cmd(spi, Command::MasterActivation)?;
+        self.wait_until_idle();
+        Ok(())
+    }
+
+    /// Updates and displays the new frame.
+    fn update_and_display_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.update_new_frame(spi, buffer, delay)?;
+        self.display_new_frame(spi, delay)?;
         Ok(())
     }
 

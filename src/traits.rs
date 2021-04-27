@@ -280,19 +280,41 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait QuickRefresh<SPI, CS, BUSY, DC, RST>
+pub trait QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     /// Updates the old frame.
-    fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+    fn update_old_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error>;
 
     /// Updates the new frame.
-    fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error>;
+    fn update_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error>;
+
+    /// Displays the new frame
+    fn display_new_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error>;
+
+    /// Updates and displays the new frame.
+    fn update_and_display_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error>;
 
     /// Updates the old frame for a portion of the display.
     fn update_partial_old_frame(

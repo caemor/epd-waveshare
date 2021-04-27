@@ -439,7 +439,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
@@ -450,7 +450,12 @@ where
     DELAY: DelayMs<u8>,
 {
     /// To be followed immediately after by `update_old_frame`.
-    fn update_old_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+    fn update_old_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        _delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
 
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
@@ -461,7 +466,12 @@ where
     }
 
     /// To be used immediately after `update_old_frame`.
-    fn update_new_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+    fn update_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        _delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         // self.send_resolution(spi)?;
 
@@ -470,6 +480,23 @@ where
         self.interface.data(spi, buffer)?;
 
         Ok(())
+    }
+
+    /// This function is not needed for this display
+    #[allow(unused)]
+    fn display_new_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        unimplemented!()
+    }
+
+    /// This function is not needed for this display
+    #[allow(unused)]
+    fn update_and_display_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        unimplemented!()
     }
 
     fn update_partial_old_frame(
