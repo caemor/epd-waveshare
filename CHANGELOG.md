@@ -10,16 +10,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Added QuickRefresh Trait and implemented it for EPD4in2 in #62 (thanks to @David-OConnor)
 - Added Epd 2in7 (B) support in #60 (thanks to @pjsier)
-- Added Epd 7in5 HD support
-- Added Epd 2in9 V2 support
+- Added Epd 7in5 HD support (thanks to @whiite)
+- Added Epd 2in9 V2 support in #73 & #74 (thanks to @andber1)
 
 ### Changed
 
 - Use specific ParseColorError instead of ()
 - Epd4in2: Don't set the resolution (and some more) over and over again (#48)
 - Removed `#[allow(non_camel_case_types)]` to fix various issues around it
+- Added Delay to QuickRefresh Trait due to #74 (thanks to @andber1)
 
-### Fixed
+
 
 ## [v0.5.0]
 
