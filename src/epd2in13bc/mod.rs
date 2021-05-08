@@ -1,6 +1,6 @@
-//! A simple Driver for the Waveshare 2.9" (B/C) E-Ink Display via SPI
+//! A simple Driver for the Waveshare 2.13" (B/C) E-Ink Display via SPI
 //!
-//! # Example for the 2.9" E-Ink Display
+//! # Example for the 2.13" E-Ink Display
 //!
 //!```rust, no_run
 //!# use embedded_hal_mock::*;
@@ -8,7 +8,7 @@
 //!use embedded_graphics::{
 //!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
 //!};
-//!use epd_waveshare::{epd2in9bc::*, prelude::*};
+//!use epd_waveshare::{epd2in13bc::*, prelude::*};
 //!#
 //!# let expectations = [];
 //!# let mut spi = spi::Mock::new(&expectations);
@@ -20,11 +20,11 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd2in9bc::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd2in13bc::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!// This display is for the black/white pixels
-//!let mut mono_display = Display2in9bc::default();
+//!let mut mono_display = Display2in13bc::default();
 //!
 //!// Use embedded graphics for drawing
 //!// A black line
@@ -33,7 +33,7 @@
 //!    .draw(&mut mono_display);
 //!
 //!// Use a second display for red/yellow
-//!let mut chromatic_display = Display2in9bc::default();
+//!let mut chromatic_display = Display2in13bc::default();
 //!
 //!// We use `Black` but it will be shown as red/yellow
 //!let _ = Line::new(Point::new(15, 120), Point::new(15, 200))
@@ -63,9 +63,9 @@ use crate::traits::{
     InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
 
-/// Width of epd2in9bc in pixels
+/// Width of epd2in13bc in pixels
 pub const WIDTH: u32 = 128;
-/// Height of epd2in9bc in pixels
+/// Height of epd2in13bc in pixels
 pub const HEIGHT: u32 = 296;
 /// Default background color (white) of epd2in9bc display
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
@@ -87,16 +87,16 @@ use self::command::Command;
 #[cfg(feature = "graphics")]
 mod graphics;
 #[cfg(feature = "graphics")]
-pub use self::graphics::Display2in9bc;
+pub use self::graphics::Display2in13bc;
 
 /// Epd2in9bc driver
-pub struct Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
     color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -140,7 +140,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -185,7 +185,7 @@ where
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -206,7 +206,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd2in9bc { interface, color };
+        let mut epd = Epd2in13bc { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -332,7 +332,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
