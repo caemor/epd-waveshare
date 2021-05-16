@@ -3,7 +3,7 @@ use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 
-/// Full size buffer for use with the 2in9b/c EPD
+/// Full size buffer for use with the 2in13b/c EPD
 ///
 /// Can also be manually constructed and be used together with VarDisplay
 pub struct Display2in13bc {

@@ -64,9 +64,9 @@ use crate::traits::{
 };
 
 /// Width of epd2in13bc in pixels
-pub const WIDTH: u32 = 128;
+pub const WIDTH: u32 = 104;
 /// Height of epd2in13bc in pixels
-pub const HEIGHT: u32 = 296;
+pub const HEIGHT: u32 = 212;
 /// Default background color (white) of epd2in9bc display
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
