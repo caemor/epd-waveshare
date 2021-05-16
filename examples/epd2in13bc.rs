@@ -45,7 +45,7 @@ fn main() -> Result<(), std::io::Error> {
     // Configure Digital I/O Pin to be used as Chip Select for SPI
     let cs = Pin::new(26); // CE0, board J-24, GPIO 8 -> doesn work. use this from 2in19 example which works
     cs.export().expect("cs export");
-    while !cs.is_exported() { }
+    while !cs.is_exported() {}
     cs.set_direction(Direction::Out).expect("CS Direction");
     cs.set_value(1).expect("CS Value set to 1");
 
@@ -80,7 +80,8 @@ fn main() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     draw_text(&mut display, "Rotation 270!", 5, 50);
 
-    epd2in13.update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
+    epd2in13
+        .update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
         .expect("display frame new graphics");
 
     println!("First frame done. Waiting 5s");
@@ -90,10 +91,10 @@ fn main() -> Result<(), std::io::Error> {
     display.clear_buffer(Color::White);
     display_chromatic.clear_buffer(Color::White);
     // keep both displays on same rotation
-    display_chromatic.set_rotation(DisplayRotation::Rotate270); 
+    display_chromatic.set_rotation(DisplayRotation::Rotate270);
 
     // draw a analog clock
-    let _ = Circle::new(Point::new(64, 	64), 40)
+    let _ = Circle::new(Point::new(64, 64), 40)
         .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(30, 40))
@@ -133,7 +134,7 @@ fn main() -> Result<(), std::io::Error> {
     epd2in13.update_color_frame(&mut spi, &display.buffer(), &display_chromatic.buffer())?;
     epd2in13.display_frame(&mut spi, &mut delay)?;
 
-    println!("Finished tests - going to sleep"); 
+    println!("Finished tests - going to sleep");
     epd2in13.sleep(&mut spi, &mut delay)
 }
 
