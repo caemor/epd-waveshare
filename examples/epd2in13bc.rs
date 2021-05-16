@@ -23,6 +23,17 @@ use linux_embedded_hal::{
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
+//
+// This example first setups SPI communication using the pin layout found
+// at https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_(B). This example uses the layout for the
+// Raspberry Pi Zero (RPI Zero). The Chip Select (CS) was taken from the ep2in9 example since CE0 (GPIO8) did
+// not seem to work on RPI Zero with 2.13" HAT
+//
+// The first frame is filled with four texts at different rotations (black on white)
+// The second frame uses a buffer for black/white and a seperate buffer for chromatic/white (i.e. red or yellow)
+// This example draws a sample clock in black on white and two texts using white on red.
+//
+// after finishing, put the display to sleep
 
 fn main() -> Result<(), std::io::Error> {
     let busy = Pin::new(24); // GPIO 24, board J-18
@@ -104,7 +115,8 @@ fn main() -> Result<(), std::io::Error> {
         .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
 
-    // draw white on Red background
+    // draw text white on Red background by using the chromatic buffer
+
     let _ = Text::new("It's working-WoB!", Point::new(90, 10))
         .into_styled(text_style!(
             font = Font6x8,
