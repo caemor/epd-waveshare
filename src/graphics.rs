@@ -116,7 +116,7 @@ pub trait TriDisplay: DrawTarget<TriColor> {
 
     /// return the b/w part of the buffer
     fn bw_buffer(&self) -> &[u8];
-    
+
     /// return the chromatic part of the buffer
     fn chromatic_buffer(&self) -> &[u8];
 
@@ -130,12 +130,12 @@ pub trait TriDisplay: DrawTarget<TriColor> {
         pixel: Pixel<TriColor>,
     ) -> Result<(), Self::Error> {
         let rotation = self.rotation();
-        
+
         let Pixel(point, color) = pixel;
         if outside_display(point, width, height, rotation) {
             return Ok(());
         }
-        
+
         // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
         let (index, bit) = find_position(point.x as u32, point.y as u32, width, height, rotation);
         let index = index as usize;
@@ -149,19 +149,19 @@ pub trait TriDisplay: DrawTarget<TriColor> {
                 // clear bit in bw-buffer -> black
                 buffer[index] &= !bit;
                 // set bit in chromatic-buffer -> white
-                buffer[index+offset] |= bit;
+                buffer[index + offset] |= bit;
             }
             TriColor::White => {
                 // set bit in bw-buffer -> white
                 buffer[index] |= bit;
                 // set bit in chromatic-buffer -> white
-                buffer[index+offset] |= bit;
+                buffer[index + offset] |= bit;
             }
             TriColor::Chromatic => {
                 // set bit in b/w buffer (white)
                 buffer[index] |= bit;
                 // clear bit in chromatic buffer -> chromatic
-                buffer[index+offset] &= !bit;
+                buffer[index + offset] &= !bit;
             }
         }
         Ok(())

@@ -91,7 +91,7 @@ fn main() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     draw_text(&mut display, "Rotation 270!", 5, 50);
 
-    // Since we only used black and white, we can resort to updating only 
+    // Since we only used black and white, we can resort to updating only
     // the bw-buffer of this tri-color screen
 
     epd2in13
