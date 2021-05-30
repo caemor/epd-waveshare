@@ -70,8 +70,9 @@ pub const WIDTH: u32 = 104;
 /// Height of epd2in13bc in pixels
 pub const HEIGHT: u32 = 212;
 /// Default background color (white) of epd2in13bc display
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
+/// Number of bits for b/w buffer and same for chromatic buffer
 const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 
 const IS_BUSY_LOW: bool = true;
@@ -81,7 +82,7 @@ const BLACK_BORDER: u8 = 0x30;
 const CHROMATIC_BORDER: u8 = 0xb0;
 const FLOATING_BORDER: u8 = 0xF0;
 
-use crate::color::{Color, TriColor};
+use crate::color::TriColor;
 
 pub(crate) mod command;
 use self::command::Command;
@@ -91,10 +92,10 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display2in13bc;
 
-/// Epd2in9bc driver
+/// Epd2in13bc driver
 pub struct Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    color: Color,
+    color: TriColor,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -196,7 +197,7 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
-    type DisplayColor = Color;
+    type DisplayColor = TriColor;
     fn new(
         spi: &mut SPI,
         cs: CS,
@@ -236,11 +237,11 @@ where
         self.init(spi, delay)
     }
 
-    fn set_background_color(&mut self, color: Color) {
+    fn set_background_color(&mut self, color: TriColor) {
         self.color = color;
     }
 
-    fn background_color(&self) -> &Color {
+    fn background_color(&self) -> &TriColor {
         &self.color
     }
 

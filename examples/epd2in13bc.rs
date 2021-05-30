@@ -11,7 +11,7 @@ use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
     epd2in13bc::{Display2in13bc, Epd2in13bc},
-    graphics::{Display, DisplayRotation},
+    graphics::{DisplayRotation, TriDisplay},
     prelude::*,
 };
 use linux_embedded_hal::{
@@ -77,7 +77,7 @@ fn main() -> Result<(), std::io::Error> {
 
     println!("Test all the rotations");
     let mut display = Display2in13bc::default();
-    let mut display_chromatic = Display2in13bc::default();
+    display.clear_buffer(TriColor::White);
 
     display.set_rotation(DisplayRotation::Rotate0);
     draw_text(&mut display, "Rotation 0!", 5, 50);
@@ -91,59 +91,62 @@ fn main() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     draw_text(&mut display, "Rotation 270!", 5, 50);
 
+    // Since we only used black and white, we can resort to updating only 
+    // the bw-buffer of this tri-color screen
+
     epd2in13
-        .update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
+        .update_and_display_frame(&mut spi, &display.bw_buffer(), &mut delay)
         .expect("display frame new graphics");
 
     println!("First frame done. Waiting 5s");
     delay.delay_ms(5000u16);
 
-    println!("Now test new graphics with default rotation:");
-    display.clear_buffer(Color::White);
-    display_chromatic.clear_buffer(Color::White);
-    // keep both displays on same rotation
-    display_chromatic.set_rotation(DisplayRotation::Rotate270);
+    println!("Now test new graphics with default rotation and three colors:");
+    display.clear_buffer(TriColor::White);
 
-    // draw a analog clock
+    // draw a analog clock in black
     let _ = Circle::new(Point::new(64, 64), 40)
-        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .into_styled(PrimitiveStyle::with_stroke(TriColor::Black, 1))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(30, 40))
-        .into_styled(PrimitiveStyle::with_stroke(Black, 4))
+        .into_styled(PrimitiveStyle::with_stroke(TriColor::Black, 4))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(80, 40))
-        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .into_styled(PrimitiveStyle::with_stroke(TriColor::Black, 1))
         .draw(&mut display);
 
-    // draw text white on Red background by using the chromatic buffer
+    // draw text white on chromatic (red or yellow) background
 
     let _ = Text::new("It's working-WoB!", Point::new(90, 10))
         .into_styled(text_style!(
             font = Font6x8,
-            text_color = White,
-            background_color = Black
+            text_color = TriColor::White,
+            background_color = TriColor::Chromatic
         ))
-        .draw(&mut display_chromatic);
+        .draw(&mut display);
 
     // use bigger/different font
     let _ = Text::new("It's working-WoB!", Point::new(90, 40))
         .into_styled(text_style!(
             font = Font12x16,
-            text_color = White,
-            background_color = Black
+            text_color = TriColor::White,
+            background_color = TriColor::Chromatic
         ))
-        .draw(&mut display_chromatic);
+        .draw(&mut display);
 
-    epd2in13.update_color_frame(&mut spi, &display.buffer(), &display_chromatic.buffer())?;
+    // we used three colors, so we need to update both bw-buffer and chromatic-buffer
+
+    epd2in13.update_color_frame(&mut spi, display.bw_buffer(), display.chromatic_buffer())?;
     epd2in13
         .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
+
     println!("Second frame done. Waiting 5s");
     delay.delay_ms(5000u16);
 
-    display.clear_buffer(Color::White);
-    display_chromatic.clear_buffer(Color::White);
-    epd2in13.update_color_frame(&mut spi, &display.buffer(), &display_chromatic.buffer())?;
+    // clear both bw buffer and chromatic buffer
+    display.clear_buffer(TriColor::White);
+    epd2in13.update_color_frame(&mut spi, display.bw_buffer(), display.chromatic_buffer())?;
     epd2in13.display_frame(&mut spi, &mut delay)?;
 
     println!("Finished tests - going to sleep");
@@ -154,8 +157,8 @@ fn draw_text(display: &mut Display2in13bc, text: &str, x: i32, y: i32) {
     let _ = Text::new(text, Point::new(x, y))
         .into_styled(text_style!(
             font = Font6x8,
-            text_color = Black,
-            background_color = White
+            text_color = TriColor::Black,
+            background_color = TriColor::White
         ))
         .draw(display);
 }

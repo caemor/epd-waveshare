@@ -1,7 +1,7 @@
 //! Graphics Support for EPDs
 
 use crate::buffer_len;
-use crate::color::{Color, OctColor};
+use crate::color::{Color, OctColor, TriColor};
 use embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
 
 /// Displayrotation
@@ -79,6 +79,89 @@ pub trait Display: DrawTarget<BinaryColor> {
             // White
             BinaryColor::Off => {
                 buffer[index] |= bit;
+            }
+        }
+        Ok(())
+    }
+}
+
+/// Necessary traits for all displays to implement for drawing
+///
+/// Adds support for:
+/// - Drawing (With the help of DrawTarget/Embedded Graphics)
+/// - Rotations
+/// - Clearing
+pub trait TriDisplay: DrawTarget<TriColor> {
+    /// Clears the buffer of the display with the chosen background color
+    fn clear_buffer(&mut self, background_color: TriColor) {
+        for elem in self.get_mut_buffer().iter_mut() {
+            *elem = background_color.get_byte_value();
+        }
+    }
+
+    /// Returns the buffer
+    fn buffer(&self) -> &[u8];
+
+    /// Returns a mutable buffer
+    fn get_mut_buffer(&mut self) -> &mut [u8];
+
+    /// Sets the rotation of the display
+    fn set_rotation(&mut self, rotation: DisplayRotation);
+
+    /// Get the current rotation of the display
+    fn rotation(&self) -> DisplayRotation;
+
+    /// Get the offset into buffer where chromatic data starts
+    fn chromatic_offset(&self) -> usize;
+
+    /// return the b/w part of the buffer
+    fn bw_buffer(&self) -> &[u8];
+    
+    /// return the chromatic part of the buffer
+    fn chromatic_buffer(&self) -> &[u8];
+
+    /// Helperfunction for the Embedded Graphics draw trait
+    ///
+    /// Becomes uneccesary when const_generics become stablised
+    fn draw_helper_tri(
+        &mut self,
+        width: u32,
+        height: u32,
+        pixel: Pixel<TriColor>,
+    ) -> Result<(), Self::Error> {
+        let rotation = self.rotation();
+        
+        let Pixel(point, color) = pixel;
+        if outside_display(point, width, height, rotation) {
+            return Ok(());
+        }
+        
+        // Give us index inside the buffer and the bit-position in that u8 which needs to be changed
+        let (index, bit) = find_position(point.x as u32, point.y as u32, width, height, rotation);
+        let index = index as usize;
+        let offset = self.chromatic_offset();
+
+        let buffer = self.get_mut_buffer();
+
+        // "Draw" the Pixel on that bit
+        match color {
+            TriColor::Black => {
+                // clear bit in bw-buffer -> black
+                buffer[index] &= !bit;
+                // set bit in chromatic-buffer -> white
+                buffer[index+offset] |= bit;
+            }
+            TriColor::White => {
+                // set bit in bw-buffer -> white
+                buffer[index] |= bit;
+                // set bit in chromatic-buffer -> white
+                buffer[index+offset] |= bit;
+            }
+            TriColor::Chromatic => {
+                // set bit in b/w buffer (white)
+                buffer[index] |= bit;
+                // clear bit in chromatic buffer -> chromatic
+                buffer[index+offset] &= !bit;
             }
         }
         Ok(())
