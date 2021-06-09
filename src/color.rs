@@ -187,6 +187,7 @@ impl TriColor {
     }
 }
 
+#[cfg(feature = "graphics")]
 impl PixelColor for TriColor {
     type Raw = ();
 }
