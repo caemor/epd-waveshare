@@ -1,7 +1,7 @@
 use crate::epd4in2::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics::pixelcolor::BinaryColor;
-use embedded_graphics::prelude::*;
+use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 4in2 EPD
 ///
@@ -22,13 +22,21 @@ impl Default for Display4in2 {
     }
 }
 
-impl DrawTarget<BinaryColor> for Display4in2 {
+impl DrawTarget for Display4in2 {
+    type Color = BinaryColor;
     type Error = core::convert::Infallible;
-
-    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
-        self.draw_helper(WIDTH, HEIGHT, pixel)
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        for pixel in pixels {
+            self.draw_helper(WIDTH, HEIGHT, pixel)?;
+        }
+        Ok(())
     }
+}
 
+impl OriginDimensions for Display4in2 {
     fn size(&self) -> Size {
         Size::new(WIDTH, HEIGHT)
     }
@@ -59,7 +67,10 @@ mod tests {
     use crate::color::Color;
     use crate::epd4in2;
     use crate::graphics::{Display, DisplayRotation};
-    use embedded_graphics::{primitives::Line, style::PrimitiveStyle};
+    use embedded_graphics::{
+        prelude::*,
+        primitives::{Line, PrimitiveStyleBuilder},
+    };
 
     // test buffer length
     #[test]
@@ -81,7 +92,12 @@ mod tests {
     fn graphics_rotation_0() {
         let mut display = Display4in2::default();
         let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .into_styled(
+                PrimitiveStyleBuilder::new()
+                    .stroke_color(Black)
+                    .stroke_width(1)
+                    .build(),
+            )
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -98,7 +114,12 @@ mod tests {
         let mut display = Display4in2::default();
         display.set_rotation(DisplayRotation::Rotate90);
         let _ = Line::new(Point::new(0, 392), Point::new(0, 399))
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .into_styled(
+                PrimitiveStyleBuilder::new()
+                    .stroke_color(Black)
+                    .stroke_width(1)
+                    .build(),
+            )
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -116,7 +137,12 @@ mod tests {
         display.set_rotation(DisplayRotation::Rotate180);
 
         let _ = Line::new(Point::new(392, 299), Point::new(399, 299))
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .into_styled(
+                PrimitiveStyleBuilder::new()
+                    .stroke_color(Black)
+                    .stroke_width(1)
+                    .build(),
+            )
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -136,7 +162,12 @@ mod tests {
         let mut display = Display4in2::default();
         display.set_rotation(DisplayRotation::Rotate270);
         let _ = Line::new(Point::new(299, 0), Point::new(299, 7))
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .into_styled(
+                PrimitiveStyleBuilder::new()
+                    .stroke_color(Black)
+                    .stroke_width(1)
+                    .build(),
+            )
             .draw(&mut display);
 
         let buffer = display.buffer();

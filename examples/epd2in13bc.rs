@@ -1,11 +1,10 @@
 #![deny(warnings)]
 
 use embedded_graphics::{
-    fonts::{Font12x16, Font6x8, Text},
+    mono_font::MonoTextStyleBuilder,
     prelude::*,
-    primitives::{Circle, Line},
-    style::PrimitiveStyle,
-    text_style,
+    primitives::{Circle, Line, PrimitiveStyleBuilder},
+    text::{Baseline, Text, TextStyleBuilder},
 };
 use embedded_hal::prelude::*;
 use epd_waveshare::{
@@ -104,34 +103,41 @@ fn main() -> Result<(), std::io::Error> {
     println!("Now test new graphics with default rotation and three colors:");
     display.clear_buffer(TriColor::White);
 
-    // draw a analog clock in black
+    // draw a analog clock
+    let style = PrimitiveStyleBuilder::new()
+        .stroke_color(TriColor::Black)
+        .stroke_width(1)
+        .build();
+
     let _ = Circle::new(Point::new(64, 64), 40)
-        .into_styled(PrimitiveStyle::with_stroke(TriColor::Black, 1))
+        .into_styled(style)
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(30, 40))
-        .into_styled(PrimitiveStyle::with_stroke(TriColor::Black, 4))
+        .into_styled(style)
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(80, 40))
-        .into_styled(PrimitiveStyle::with_stroke(TriColor::Black, 1))
+        .into_styled(style)
         .draw(&mut display);
 
-    // draw text white on chromatic (red or yellow) background
+    // draw text white on Red background by using the chromatic buffer
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
+        .text_color(TriColor::White)
+        .background_color(TriColor::Chromatic)
+        .build();
+    let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
 
-    let _ = Text::new("It's working-WoB!", Point::new(90, 10))
-        .into_styled(text_style!(
-            font = Font6x8,
-            text_color = TriColor::White,
-            background_color = TriColor::Chromatic
-        ))
+    let _ = Text::with_text_style("It's working-WoB!", Point::new(90, 10), style, text_style)
         .draw(&mut display);
 
     // use bigger/different font
-    let _ = Text::new("It's working-WoB!", Point::new(90, 40))
-        .into_styled(text_style!(
-            font = Font12x16,
-            text_color = TriColor::White,
-            background_color = TriColor::Chromatic
-        ))
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_10X20)
+        .text_color(TriColor::White)
+        .background_color(TriColor::Chromatic)
+        .build();
+
+    let _ = Text::with_text_style("It's working-WoB!", Point::new(90, 40), style, text_style)
         .draw(&mut display);
 
     // we used three colors, so we need to update both bw-buffer and chromatic-buffer
@@ -154,11 +160,13 @@ fn main() -> Result<(), std::io::Error> {
 }
 
 fn draw_text(display: &mut Display2in13bc, text: &str, x: i32, y: i32) {
-    let _ = Text::new(text, Point::new(x, y))
-        .into_styled(text_style!(
-            font = Font6x8,
-            text_color = TriColor::Black,
-            background_color = TriColor::White
-        ))
-        .draw(display);
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
+        .text_color(TriColor::White)
+        .background_color(TriColor::Black)
+        .build();
+
+    let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
+
+    let _ = Text::with_text_style(text, Point::new(x, y), style, text_style).draw(display);
 }

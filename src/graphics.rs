@@ -2,7 +2,8 @@
 
 use crate::buffer_len;
 use crate::color::{Color, OctColor, TriColor};
-use embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
+use embedded_graphics::pixelcolor::BinaryColor;
+use embedded_graphics_core::prelude::*;
 
 /// Displayrotation
 #[derive(Clone, Copy)]
@@ -29,7 +30,7 @@ impl Default for DisplayRotation {
 /// - Drawing (With the help of DrawTarget/Embedded Graphics)
 /// - Rotations
 /// - Clearing
-pub trait Display: DrawTarget<BinaryColor> {
+pub trait Display: DrawTarget<Color = BinaryColor> {
     /// Clears the buffer of the display with the chosen background color
     fn clear_buffer(&mut self, background_color: Color) {
         for elem in self.get_mut_buffer().iter_mut() {
@@ -91,7 +92,7 @@ pub trait Display: DrawTarget<BinaryColor> {
 /// - Drawing (With the help of DrawTarget/Embedded Graphics)
 /// - Rotations
 /// - Clearing
-pub trait TriDisplay: DrawTarget<TriColor> {
+pub trait TriDisplay: DrawTarget<Color = TriColor> {
     /// Clears the buffer of the display with the chosen background color
     fn clear_buffer(&mut self, background_color: TriColor) {
         for elem in self.get_mut_buffer().iter_mut() {
@@ -174,7 +175,7 @@ pub trait TriDisplay: DrawTarget<TriColor> {
 /// - Drawing (With the help of DrawTarget/Embedded Graphics)
 /// - Rotations
 /// - Clearing
-pub trait OctDisplay: DrawTarget<OctColor> {
+pub trait OctDisplay: DrawTarget<Color = OctColor> {
     /// Clears the buffer of the display with the chosen background color
     fn clear_buffer(&mut self, background_color: OctColor) {
         for elem in self.get_mut_buffer().iter_mut() {
@@ -240,8 +241,7 @@ pub trait OctDisplay: DrawTarget<OctColor> {
 /// # use epd_waveshare::graphics::VarDisplay;
 /// # use epd_waveshare::color::Black;
 /// # use embedded_graphics::prelude::*;
-/// # use embedded_graphics::primitives::{Circle, Line};
-/// # use embedded_graphics::style::PrimitiveStyle;
+/// # use embedded_graphics::primitives::{Circle, Line, PrimitiveStyleBuilder};
 /// let width = 128;
 /// let height = 296;
 ///
@@ -250,8 +250,13 @@ pub trait OctDisplay: DrawTarget<OctColor> {
 ///
 /// display.set_rotation(DisplayRotation::Rotate90);
 ///
+///let style = PrimitiveStyleBuilder::new()
+///  .stroke_color(Black)
+///  .stroke_width(1)
+///  .build();
+///
 /// let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-///         .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+///         .into_styled(style)
 ///         .draw(&mut display);
 /// ```
 pub struct VarDisplay<'a> {
@@ -277,13 +282,22 @@ impl<'a> VarDisplay<'a> {
     }
 }
 
-impl<'a> DrawTarget<BinaryColor> for VarDisplay<'a> {
+impl<'a> DrawTarget for VarDisplay<'a> {
+    type Color = BinaryColor;
     type Error = core::convert::Infallible;
 
-    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
-        self.draw_helper(self.width, self.height, pixel)
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        for pixel in pixels {
+            self.draw_helper(self.width, self.height, pixel)?;
+        }
+        Ok(())
     }
+}
 
+impl<'a> OriginDimensions for VarDisplay<'a> {
     fn size(&self) -> Size {
         Size::new(self.width, self.height)
     }
@@ -379,7 +393,10 @@ mod tests {
     use super::{buffer_len, find_position, outside_display, Display, DisplayRotation, VarDisplay};
     use crate::color::Black;
     use crate::color::Color;
-    use embedded_graphics::{prelude::*, primitives::Line, style::PrimitiveStyle};
+    use embedded_graphics::{
+        prelude::*,
+        primitives::{Line, PrimitiveStyleBuilder},
+    };
 
     #[test]
     fn buffer_clear() {
@@ -436,7 +453,12 @@ mod tests {
         let mut display = VarDisplay::new(width, height, &mut buffer);
 
         let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .into_styled(
+                PrimitiveStyleBuilder::new()
+                    .stroke_color(Black)
+                    .stroke_width(1)
+                    .build(),
+            )
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -460,7 +482,12 @@ mod tests {
         display.set_rotation(DisplayRotation::Rotate90);
 
         let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .into_styled(
+                PrimitiveStyleBuilder::new()
+                    .stroke_color(Black)
+                    .stroke_width(1)
+                    .build(),
+            )
             .draw(&mut display);
 
         let buffer = display.buffer();

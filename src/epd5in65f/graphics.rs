@@ -22,7 +22,8 @@ impl Default for Display5in65f {
     }
 }
 
-impl DrawTarget<OctColor> for Display5in65f {
+impl DrawTarget for Display5in65f {
+    type Color = OctColor;
     type Error = core::convert::Infallible;
 
     fn draw_pixel(&mut self, pixel: Pixel<OctColor>) -> Result<(), Self::Error> {

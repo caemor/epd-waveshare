@@ -21,7 +21,8 @@ impl Default for Display1in54b {
     }
 }
 
-impl DrawTarget<BinaryColor> for Display1in54b {
+impl DrawTarget for Display1in54b {
+    type Color = BinaryColor;
     type Error = core::convert::Infallible;
 
     fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {

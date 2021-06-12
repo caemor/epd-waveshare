@@ -1,6 +1,5 @@
 use crate::epd2in9bc::{DEFAULT_BACKGROUND_COLOR, HEIGHT, NUM_DISPLAY_BITS, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
-use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics::prelude::*;
 
 /// Full size buffer for use with the 2in9b/c EPD
@@ -20,7 +19,8 @@ impl Default for Display2in9bc {
     }
 }
 
-impl DrawTarget<BinaryColor> for Display2in9bc {
+impl DrawTarget for Display2in9bc {
+    type Color = BinaryColor
     type Error = core::convert::Infallible;
 
     fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {

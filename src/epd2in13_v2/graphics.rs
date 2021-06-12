@@ -2,7 +2,7 @@ use crate::buffer_len;
 use crate::epd2in13_v2::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics::pixelcolor::BinaryColor;
-use embedded_graphics::prelude::*;
+use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 2in13 v2 EPD
 ///
@@ -23,13 +23,22 @@ impl Default for Display2in13 {
     }
 }
 
-impl DrawTarget<BinaryColor> for Display2in13 {
+impl DrawTarget for Display2in13 {
+    type Color = BinaryColor;
     type Error = core::convert::Infallible;
 
-    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
-        self.draw_helper(WIDTH, HEIGHT, pixel)
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        for pixel in pixels {
+            self.draw_helper(WIDTH, HEIGHT, pixel)?;
+        }
+        Ok(())
     }
+}
 
+impl OriginDimensions for Display2in13 {
     fn size(&self) -> Size {
         Size::new(WIDTH, HEIGHT)
     }
@@ -59,7 +68,10 @@ mod tests {
     use crate::color::{Black, Color};
     use crate::epd2in13_v2;
     use crate::graphics::{Display, DisplayRotation};
-    use embedded_graphics::{primitives::Line, style::PrimitiveStyle};
+    use embedded_graphics::{
+        prelude::*,
+        primitives::{Line, PrimitiveStyleBuilder},
+    };
 
     // test buffer length
     #[test]
@@ -82,7 +94,12 @@ mod tests {
         let mut display = Display2in13::default();
 
         let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+            .into_styled(
+                PrimitiveStyleBuilder::new()
+                    .stroke_color(Black)
+                    .stroke_width(1)
+                    .build(),
+            )
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -103,7 +120,12 @@ mod tests {
             Point::new(0, (WIDTH - 8) as i32),
             Point::new(0, (WIDTH - 1) as i32),
         )
-        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .into_styled(
+            PrimitiveStyleBuilder::new()
+                .stroke_color(Black)
+                .stroke_width(1)
+                .build(),
+        )
         .draw(&mut display);
 
         let buffer = display.buffer();
@@ -124,7 +146,12 @@ mod tests {
             Point::new((WIDTH - 8) as i32, (HEIGHT - 1) as i32),
             Point::new((WIDTH - 1) as i32, (HEIGHT - 1) as i32),
         )
-        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .into_styled(
+            PrimitiveStyleBuilder::new()
+                .stroke_color(Black)
+                .stroke_width(1)
+                .build(),
+        )
         .draw(&mut display);
 
         let buffer = display.buffer();
@@ -145,7 +172,12 @@ mod tests {
             Point::new((HEIGHT - 1) as i32, 0),
             Point::new((HEIGHT - 1) as i32, 7),
         )
-        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .into_styled(
+            PrimitiveStyleBuilder::new()
+                .stroke_color(Black)
+                .stroke_width(1)
+                .build(),
+        )
         .draw(&mut display);
 
         let buffer = display.buffer();

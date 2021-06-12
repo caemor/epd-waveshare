@@ -14,7 +14,7 @@
 //!# use embedded_hal_mock::*;
 //!# fn main() -> Result<(), MockError> {
 //!use embedded_graphics::{
-//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyleBuilder},
 //!};
 //!use epd_waveshare::{epd1in54::*, prelude::*};
 //!#
@@ -34,8 +34,14 @@
 //!let mut display = Display1in54::default();
 //!
 //!// Use embedded graphics for drawing a line
+//!
+//!let style = PrimitiveStyleBuilder::new()
+//!  .stroke_color(Black)
+//!  .stroke_width(1)
+//!  .build();
+//!
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .into_styled(style)
 //!    .draw(&mut display);
 //!
 //!    // Display updated frame
@@ -73,19 +79,19 @@ pub mod color;
 mod interface;
 
 pub mod epd1in54;
-pub mod epd1in54b;
-pub mod epd1in54c;
+//pub mod epd1in54b;
+//pub mod epd1in54c;
 pub mod epd2in13_v2;
 pub mod epd2in13bc;
-pub mod epd2in7b;
+//pub mod epd2in7b;
 pub mod epd2in9;
-pub mod epd2in9_v2;
-pub mod epd2in9bc;
+//pub mod epd2in9_v2;
+//pub mod epd2in9bc;
 pub mod epd4in2;
-pub mod epd5in65f;
-pub mod epd7in5;
-pub mod epd7in5_hd;
-pub mod epd7in5_v2;
+//pub mod epd5in65f;
+//pub mod epd7in5;
+//pub mod epd7in5_hd;
+//pub mod epd7in5_v2;
 
 pub(crate) mod type_a;
 
