@@ -169,6 +169,29 @@ impl From<u8> for Color {
     }
 }
 
+impl TriColor {
+    /// Get the color encoding of the color for one bit
+    pub fn get_bit_value(self) -> u8 {
+        match self {
+            TriColor::White => 1u8,
+            TriColor::Black | TriColor::Chromatic => 0u8,
+        }
+    }
+
+    /// Gets a full byte of black or white pixels
+    pub fn get_byte_value(self) -> u8 {
+        match self {
+            TriColor::White => 0xff,
+            TriColor::Black | TriColor::Chromatic => 0x00,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl PixelColor for TriColor {
+    type Raw = ();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

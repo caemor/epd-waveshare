@@ -7,10 +7,8 @@
 //!```rust, no_run
 //!# use embedded_hal_mock::*;
 //!# fn main() -> Result<(), MockError> {
-//!use embedded_graphics::{
-//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
-//!};
-//!use epd_waveshare::{epd2in13bc::*, prelude::*};
+//!use embedded_graphics::{prelude::*, primitives::Line, style::PrimitiveStyle};
+//!use epd_waveshare::{epd2in13bc::*, prelude::*, color::TriColor};
 //!#
 //!# let expectations = [];
 //!# let mut spi = spi::Mock::new(&expectations);
@@ -25,28 +23,24 @@
 //!let mut epd = Epd2in13bc::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
-//!// This display is for the black/white pixels
-//!let mut mono_display = Display2in13bc::default();
+//!// This display is for the black/white/chromatic pixels
+//!let mut tricolor_display = Display2in13bc::default();
 //!
-//!// Use embedded graphics for drawing
-//!// A black line
+//!// Use embedded graphics for drawing a black line
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 200))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
-//!    .draw(&mut mono_display);
+//!    .into_styled(PrimitiveStyle::with_stroke(TriColor::Black, 1))
+//!    .draw(&mut tricolor_display);
 //!
-//!// Use a second display for red/yellow
-//!let mut chromatic_display = Display2in13bc::default();
-//!
-//!// We use `Black` but it will be shown as red/yellow
+//!// We use `chromatic` but it will be shown as red/yellow
 //!let _ = Line::new(Point::new(15, 120), Point::new(15, 200))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
-//!    .draw(&mut chromatic_display);
+//!    .into_styled(PrimitiveStyle::with_stroke(TriColor::Chromatic, 1))
+//!    .draw(&mut tricolor_display);
 //!
 //!// Display updated frame
 //!epd.update_color_frame(
 //!    &mut spi,
-//!    &mono_display.buffer(),
-//!    &chromatic_display.buffer()
+//!    &tricolor_display.bw_buffer(),
+//!    &tricolor_display.chromatic_buffer()
 //!)?;
 //!epd.display_frame(&mut spi, &mut delay)?;
 //!
@@ -70,8 +64,9 @@ pub const WIDTH: u32 = 104;
 /// Height of epd2in13bc in pixels
 pub const HEIGHT: u32 = 212;
 /// Default background color (white) of epd2in13bc display
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
+/// Number of bits for b/w buffer and same for chromatic buffer
 const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 
 const IS_BUSY_LOW: bool = true;
@@ -81,7 +76,7 @@ const BLACK_BORDER: u8 = 0x30;
 const CHROMATIC_BORDER: u8 = 0xb0;
 const FLOATING_BORDER: u8 = 0xF0;
 
-use crate::color::{Color, TriColor};
+use crate::color::TriColor;
 
 pub(crate) mod command;
 use self::command::Command;
@@ -91,10 +86,10 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display2in13bc;
 
-/// Epd2in9bc driver
+/// Epd2in13bc driver
 pub struct Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    color: Color,
+    color: TriColor,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -196,7 +191,7 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
-    type DisplayColor = Color;
+    type DisplayColor = TriColor;
     fn new(
         spi: &mut SPI,
         cs: CS,
@@ -236,11 +231,11 @@ where
         self.init(spi, delay)
     }
 
-    fn set_background_color(&mut self, color: Color) {
+    fn set_background_color(&mut self, color: TriColor) {
         self.color = color;
     }
 
-    fn background_color(&self) -> &Color {
+    fn background_color(&self) -> &TriColor {
         &self.color
     }
 

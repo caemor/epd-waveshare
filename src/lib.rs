@@ -99,7 +99,7 @@ pub mod prelude {
     pub use crate::SPI_MODE;
 
     #[cfg(feature = "graphics")]
-    pub use crate::graphics::{Display, DisplayRotation, OctDisplay};
+    pub use crate::graphics::{Display, DisplayRotation, OctDisplay, TriDisplay};
 }
 
 /// Computes the needed buffer length. Takes care of rounding up in case width
