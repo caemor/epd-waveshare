@@ -101,7 +101,7 @@ fn main() -> Result<(), std::io::Error> {
         .stroke_width(1)
         .build();
 
-    let _ = Circle::new(Point::new(64, 64), 64)
+    let _ = Circle::with_center(Point::new(64, 64), 128)
         .into_styled(style)
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(0, 64))

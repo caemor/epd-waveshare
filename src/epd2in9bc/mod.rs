@@ -6,7 +6,7 @@
 //!# use embedded_hal_mock::*;
 //!# fn main() -> Result<(), MockError> {
 //!use embedded_graphics::{
-//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyle},
 //!};
 //!use epd_waveshare::{epd2in9bc::*, prelude::*};
 //!#

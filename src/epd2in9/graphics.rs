@@ -36,6 +36,7 @@ impl DrawTarget for Display2in9 {
         Ok(())
     }
 }
+
 impl OriginDimensions for Display2in9 {
     fn size(&self) -> Size {
         Size::new(WIDTH, HEIGHT)

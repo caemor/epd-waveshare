@@ -64,7 +64,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut epd4in2 =
         Epd4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
-    //println!("Test all the rotations");
+    println!("Test all the rotations");
     let mut display = Display4in2::default();
 
     display.set_rotation(DisplayRotation::Rotate0);
@@ -85,7 +85,7 @@ fn main() -> Result<(), std::io::Error> {
         .expect("display frame new graphics");
     delay.delay_ms(5000u16);
 
-    //println!("Now test new graphics with default rotation and some special stuff:");
+    println!("Now test new graphics with default rotation and some special stuff");
     display.clear_buffer(Color::White);
 
     // draw a analog clock
@@ -94,7 +94,7 @@ fn main() -> Result<(), std::io::Error> {
         .stroke_width(1)
         .build();
 
-    let _ = Circle::new(Point::new(64, 64), 40)
+    let _ = Circle::with_center(Point::new(64, 64), 80)
         .into_styled(style)
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(0, 64))

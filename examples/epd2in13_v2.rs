@@ -89,7 +89,7 @@ fn main() -> Result<(), std::io::Error> {
     display.clear_buffer(Color::White);
 
     // draw a analog clock
-    let _ = Circle::new(Point::new(64, 64), 40)
+    let _ = Circle::with_center(Point::new(64, 64), 80)
         .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(30, 40))
@@ -117,7 +117,7 @@ fn main() -> Result<(), std::io::Error> {
         .background_color(Black)
         .build();
 
-    let _ = Text::with_text_style("It's working-WoB!", Point::new(90, 40), style, text_style)
+    let _ = Text::with_text_style("It's working\nWoB!", Point::new(90, 40), style, text_style)
         .draw(&mut display);
 
     // Demonstrating how to use the partial refresh feature of the screen.

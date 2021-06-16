@@ -25,6 +25,7 @@ impl Default for Display1in54 {
 impl DrawTarget for Display1in54 {
     type Color = BinaryColor;
     type Error = core::convert::Infallible;
+
     fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
     where
         I: IntoIterator<Item = Pixel<Self::Color>>,
