@@ -30,10 +30,6 @@ impl DrawTarget for Display7in5 {
     fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
         self.draw_helper(WIDTH, HEIGHT, pixel)
     }
-
-//     fn size(&self) -> Size {
-//        Size::new(WIDTH, HEIGHT)
-//    }
 }
 
 impl Display for Display7in5 {

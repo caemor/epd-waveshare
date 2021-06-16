@@ -67,7 +67,7 @@ mod tests {
     use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::{
         prelude::*,
-        primitives::{Line, PrimitiveStyleBuilder},
+        primitives::{Line, PrimitiveStyle},
     };
 
     // test buffer length
@@ -90,12 +90,7 @@ mod tests {
     fn graphics_rotation_0() {
         let mut display = Display1in54::default();
         let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -112,12 +107,7 @@ mod tests {
         let mut display = Display1in54::default();
         display.set_rotation(DisplayRotation::Rotate90);
         let _ = Line::new(Point::new(0, 192), Point::new(0, 199))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -134,12 +124,7 @@ mod tests {
         let mut display = Display1in54::default();
         display.set_rotation(DisplayRotation::Rotate180);
         let _ = Line::new(Point::new(192, 199), Point::new(199, 199))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -159,12 +144,7 @@ mod tests {
         let mut display = Display1in54::default();
         display.set_rotation(DisplayRotation::Rotate270);
         let _ = Line::new(Point::new(199, 0), Point::new(199, 7))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();

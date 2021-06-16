@@ -3,7 +3,7 @@
 use embedded_graphics::{
     mono_font::MonoTextStyleBuilder,
     prelude::*,
-    primitives::{Circle, Line, PrimitiveStyleBuilder},
+    primitives::{Circle, Line, PrimitiveStyle},
     text::{Baseline, Text, TextStyleBuilder},
 };
 use embedded_hal::prelude::*;
@@ -89,19 +89,14 @@ fn main() -> Result<(), std::io::Error> {
     display.clear_buffer(Color::White);
 
     // draw a analog clock
-    let style = PrimitiveStyleBuilder::new()
-        .stroke_color(Black)
-        .stroke_width(1)
-        .build();
-
     let _ = Circle::new(Point::new(64, 64), 40)
-        .into_styled(style)
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(30, 40))
-        .into_styled(style)
+        .into_styled(PrimitiveStyle::with_stroke(Black, 4))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(80, 40))
-        .into_styled(style)
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
 
     // draw white on black background
