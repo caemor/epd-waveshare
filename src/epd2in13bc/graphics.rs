@@ -1,6 +1,6 @@
 use crate::color::TriColor;
 use crate::epd2in13bc::{DEFAULT_BACKGROUND_COLOR, HEIGHT, NUM_DISPLAY_BITS, WIDTH};
-use crate::graphics::{TriDisplay, DisplayRotation};
+use crate::graphics::{DisplayRotation, TriDisplay};
 use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 2.13" b/c EPD
