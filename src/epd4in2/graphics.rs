@@ -69,7 +69,7 @@ mod tests {
     use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::{
         prelude::*,
-        primitives::{Line, PrimitiveStyleBuilder},
+        primitives::{Line, PrimitiveStyle},
     };
 
     // test buffer length
@@ -92,12 +92,7 @@ mod tests {
     fn graphics_rotation_0() {
         let mut display = Display4in2::default();
         let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -114,12 +109,7 @@ mod tests {
         let mut display = Display4in2::default();
         display.set_rotation(DisplayRotation::Rotate90);
         let _ = Line::new(Point::new(0, 392), Point::new(0, 399))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -137,12 +127,7 @@ mod tests {
         display.set_rotation(DisplayRotation::Rotate180);
 
         let _ = Line::new(Point::new(392, 299), Point::new(399, 299))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -162,12 +147,7 @@ mod tests {
         let mut display = Display4in2::default();
         display.set_rotation(DisplayRotation::Rotate270);
         let _ = Line::new(Point::new(299, 0), Point::new(299, 7))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();

@@ -92,7 +92,7 @@ where
 ///# use embedded_hal_mock::*;
 ///# fn main() -> Result<(), MockError> {
 ///use embedded_graphics::{
-///    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyleBuilder},
+///    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyle},
 ///};
 ///use epd_waveshare::{epd4in2::*, prelude::*};
 ///#
@@ -113,13 +113,8 @@ where
 ///
 ///// Use embedded graphics for drawing a line
 ///
-///let style = PrimitiveStyleBuilder::new()
-///  .stroke_color(Black)
-///  .stroke_width(1)
-///  .build();
-///
 ///let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-///    .into_styled(style)
+///    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
 ///    .draw(&mut display);
 ///
 ///    // Display updated frame
@@ -254,7 +249,7 @@ where
 ///# use embedded_hal_mock::*;
 ///# fn main() -> Result<(), MockError> {
 ///# use embedded_graphics::{
-///#   pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyleBuilder},
+///#   pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyle},
 ///# };
 ///# use epd_waveshare::{epd4in2::*, prelude::*};
 ///# use epd_waveshare::graphics::VarDisplay;

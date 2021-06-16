@@ -70,7 +70,7 @@ mod tests {
     use crate::graphics::{Display, DisplayRotation};
     use embedded_graphics::{
         prelude::*,
-        primitives::{Line, PrimitiveStyleBuilder},
+        primitives::{Line, PrimitiveStyle},
     };
 
     // test buffer length
@@ -94,12 +94,7 @@ mod tests {
         let mut display = Display2in13::default();
 
         let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -120,12 +115,7 @@ mod tests {
             Point::new(0, (WIDTH - 8) as i32),
             Point::new(0, (WIDTH - 1) as i32),
         )
-        .into_styled(
-            PrimitiveStyleBuilder::new()
-                .stroke_color(Black)
-                .stroke_width(1)
-                .build(),
-        )
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
 
         let buffer = display.buffer();
@@ -146,12 +136,7 @@ mod tests {
             Point::new((WIDTH - 8) as i32, (HEIGHT - 1) as i32),
             Point::new((WIDTH - 1) as i32, (HEIGHT - 1) as i32),
         )
-        .into_styled(
-            PrimitiveStyleBuilder::new()
-                .stroke_color(Black)
-                .stroke_width(1)
-                .build(),
-        )
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
 
         let buffer = display.buffer();
@@ -172,12 +157,7 @@ mod tests {
             Point::new((HEIGHT - 1) as i32, 0),
             Point::new((HEIGHT - 1) as i32, 7),
         )
-        .into_styled(
-            PrimitiveStyleBuilder::new()
-                .stroke_color(Black)
-                .stroke_width(1)
-                .build(),
-        )
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
 
         let buffer = display.buffer();

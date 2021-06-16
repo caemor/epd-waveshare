@@ -241,7 +241,7 @@ pub trait OctDisplay: DrawTarget<Color = OctColor> {
 /// # use epd_waveshare::graphics::VarDisplay;
 /// # use epd_waveshare::color::Black;
 /// # use embedded_graphics::prelude::*;
-/// # use embedded_graphics::primitives::{Circle, Line, PrimitiveStyleBuilder};
+/// # use embedded_graphics::primitives::{Circle, Line, PrimitiveStyle};
 /// let width = 128;
 /// let height = 296;
 ///
@@ -250,13 +250,8 @@ pub trait OctDisplay: DrawTarget<Color = OctColor> {
 ///
 /// display.set_rotation(DisplayRotation::Rotate90);
 ///
-///let style = PrimitiveStyleBuilder::new()
-///  .stroke_color(Black)
-///  .stroke_width(1)
-///  .build();
-///
 /// let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-///         .into_styled(style)
+///         .into_styled(PrimitiveStyle::with_stroke(Black, 1))
 ///         .draw(&mut display);
 /// ```
 pub struct VarDisplay<'a> {
@@ -395,7 +390,7 @@ mod tests {
     use crate::color::Color;
     use embedded_graphics::{
         prelude::*,
-        primitives::{Line, PrimitiveStyleBuilder},
+        primitives::{Line, PrimitiveStyle},
     };
 
     #[test]
@@ -453,12 +448,7 @@ mod tests {
         let mut display = VarDisplay::new(width, height, &mut buffer);
 
         let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
@@ -482,12 +472,7 @@ mod tests {
         display.set_rotation(DisplayRotation::Rotate90);
 
         let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-            .into_styled(
-                PrimitiveStyleBuilder::new()
-                    .stroke_color(Black)
-                    .stroke_width(1)
-                    .build(),
-            )
+            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
         let buffer = display.buffer();
