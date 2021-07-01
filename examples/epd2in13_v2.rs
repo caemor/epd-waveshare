@@ -1,17 +1,16 @@
 #![deny(warnings)]
 
 use embedded_graphics::{
-    fonts::{Font12x16, Font6x8, Text},
+    mono_font::MonoTextStyleBuilder,
     prelude::*,
-    primitives::{Circle, Line},
-    style::PrimitiveStyle,
-    text_style,
+    primitives::{Circle, Line, PrimitiveStyle},
+    text::{Baseline, Text, TextStyleBuilder},
 };
 use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
     epd2in13_v2::{Display2in13, Epd2in13},
-    graphics::{Display, DisplayRotation},
+    graphics::DisplayRotation,
     prelude::*,
 };
 use linux_embedded_hal::{
@@ -90,7 +89,7 @@ fn main() -> Result<(), std::io::Error> {
     display.clear_buffer(Color::White);
 
     // draw a analog clock
-    let _ = Circle::new(Point::new(64, 64), 40)
+    let _ = Circle::with_center(Point::new(64, 64), 80)
         .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(30, 40))
@@ -101,21 +100,24 @@ fn main() -> Result<(), std::io::Error> {
         .draw(&mut display);
 
     // draw white on black background
-    let _ = Text::new("It's working-WoB!", Point::new(90, 10))
-        .into_styled(text_style!(
-            font = Font6x8,
-            text_color = White,
-            background_color = Black
-        ))
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
+        .text_color(White)
+        .background_color(Black)
+        .build();
+    let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
+
+    let _ = Text::with_text_style("It's working-WoB!", Point::new(90, 10), style, text_style)
         .draw(&mut display);
 
     // use bigger/different font
-    let _ = Text::new("It's working-WoB!", Point::new(90, 40))
-        .into_styled(text_style!(
-            font = Font12x16,
-            text_color = White,
-            background_color = Black
-        ))
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_10X20)
+        .text_color(White)
+        .background_color(Black)
+        .build();
+
+    let _ = Text::with_text_style("It's working\nWoB!", Point::new(90, 40), style, text_style)
         .draw(&mut display);
 
     // Demonstrating how to use the partial refresh feature of the screen.
@@ -157,11 +159,13 @@ fn main() -> Result<(), std::io::Error> {
 }
 
 fn draw_text(display: &mut Display2in13, text: &str, x: i32, y: i32) {
-    let _ = Text::new(text, Point::new(x, y))
-        .into_styled(text_style!(
-            font = Font6x8,
-            text_color = Black,
-            background_color = White
-        ))
-        .draw(display);
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
+        .text_color(White)
+        .background_color(Black)
+        .build();
+
+    let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
+
+    let _ = Text::with_text_style(text, Point::new(x, y), style, text_style).draw(display);
 }

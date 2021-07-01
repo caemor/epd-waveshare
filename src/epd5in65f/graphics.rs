@@ -1,7 +1,7 @@
 use crate::color::OctColor;
 use crate::epd5in65f::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{DisplayRotation, OctDisplay};
-use embedded_graphics::prelude::*;
+use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 5in65f EPD
 ///
@@ -22,13 +22,22 @@ impl Default for Display5in65f {
     }
 }
 
-impl DrawTarget<OctColor> for Display5in65f {
+impl DrawTarget for Display5in65f {
+    type Color = OctColor;
     type Error = core::convert::Infallible;
 
-    fn draw_pixel(&mut self, pixel: Pixel<OctColor>) -> Result<(), Self::Error> {
-        self.draw_helper(WIDTH, HEIGHT, pixel)
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        for pixel in pixels {
+            self.draw_helper(WIDTH, HEIGHT, pixel)?;
+        }
+        Ok(())
     }
+}
 
+impl OriginDimensions for Display5in65f {
     fn size(&self) -> Size {
         Size::new(WIDTH, HEIGHT)
     }
@@ -57,7 +66,10 @@ mod tests {
     use super::*;
     use crate::epd5in65f;
     use crate::graphics::{DisplayRotation, OctDisplay};
-    use embedded_graphics::{primitives::Line, style::PrimitiveStyle};
+    use embedded_graphics::{
+        prelude::*,
+        primitives::{Line, PrimitiveStyle},
+    };
 
     // test buffer length
     #[test]

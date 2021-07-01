@@ -1,7 +1,7 @@
 use crate::color::TriColor;
 use crate::epd2in13bc::{DEFAULT_BACKGROUND_COLOR, HEIGHT, NUM_DISPLAY_BITS, WIDTH};
 use crate::graphics::{DisplayRotation, TriDisplay};
-use embedded_graphics::prelude::*;
+use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 2.13" b/c EPD
 ///
@@ -23,13 +23,21 @@ impl Default for Display2in13bc {
     }
 }
 
-impl DrawTarget<TriColor> for Display2in13bc {
+impl DrawTarget for Display2in13bc {
+    type Color = TriColor;
     type Error = core::convert::Infallible;
-
-    fn draw_pixel(&mut self, pixel: Pixel<TriColor>) -> Result<(), Self::Error> {
-        self.draw_helper_tri(WIDTH, HEIGHT, pixel)
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        for pixel in pixels {
+            self.draw_helper_tri(WIDTH, HEIGHT, pixel)?;
+        }
+        Ok(())
     }
+}
 
+impl OriginDimensions for Display2in13bc {
     fn size(&self) -> Size {
         Size::new(WIDTH, HEIGHT)
     }

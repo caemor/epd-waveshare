@@ -7,8 +7,8 @@
 //!```rust, no_run
 //!# use embedded_hal_mock::*;
 //!# fn main() -> Result<(), MockError> {
-//!use embedded_graphics::{prelude::*, primitives::Line, style::PrimitiveStyle};
-//!use epd_waveshare::{epd2in13bc::*, prelude::*, color::TriColor};
+//!use embedded_graphics::{prelude::*, primitives::{Line, PrimitiveStyle, PrimitiveStyleBuilder}};
+//!use epd_waveshare::{epd2in13bc::*, prelude::*};
 //!#
 //!# let expectations = [];
 //!# let mut spi = spi::Mock::new(&expectations);

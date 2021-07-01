@@ -1,7 +1,7 @@
 use crate::epd1in54b::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics::pixelcolor::BinaryColor;
-use embedded_graphics::prelude::*;
+use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 1in54 EPD
 ///
@@ -21,13 +21,22 @@ impl Default for Display1in54b {
     }
 }
 
-impl DrawTarget<BinaryColor> for Display1in54b {
+impl DrawTarget for Display1in54b {
+    type Color = BinaryColor;
     type Error = core::convert::Infallible;
 
-    fn draw_pixel(&mut self, pixel: Pixel<BinaryColor>) -> Result<(), Self::Error> {
-        self.draw_helper(WIDTH, HEIGHT, pixel)
+    fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
+    where
+        I: IntoIterator<Item = Pixel<Self::Color>>,
+    {
+        for pixel in pixels {
+            self.draw_helper(WIDTH, HEIGHT, pixel)?;
+        }
+        Ok(())
     }
+}
 
+impl OriginDimensions for Display1in54b {
     fn size(&self) -> Size {
         Size::new(WIDTH, HEIGHT)
     }
