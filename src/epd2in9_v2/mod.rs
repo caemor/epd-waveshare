@@ -1,6 +1,6 @@
 //! A simple Driver for the Waveshare 2.9" E-Ink Display V2 via SPI
 //!
-//! Specification: https://www.waveshare.com/w/upload/7/79/2.9inch-e-paper-v2-specification.pdf
+//! Specification: <https://www.waveshare.com/w/upload/7/79/2.9inch-e-paper-v2-specification.pdf>
 //!
 //! # Example for the 2.9 in E-Ink Display V2
 //!

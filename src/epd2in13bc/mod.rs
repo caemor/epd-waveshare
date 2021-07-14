@@ -1,5 +1,5 @@
 //! A simple Driver for the Waveshare 2.13" (B/C) E-Ink Display via SPI
-//! More information on this display can be found at the [Waveshare Wiki]:(https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_(B))
+//! More information on this display can be found at the [Waveshare Wiki](https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT_(B))
 //! This driver was build and tested for 212x104, 2.13inch E-Ink display HAT for Raspberry Pi, three-color, SPI interface
 //!
 //! # Example for the 2.13" E-Ink Display
