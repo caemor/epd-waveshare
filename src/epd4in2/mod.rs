@@ -482,21 +482,24 @@ where
         Ok(())
     }
 
-    /// This function is not needed for this display
-    #[allow(unused)]
+    /// This is wrapper around `display_frame` for using this device as a true
+    /// `QuickRefresh` device.
     fn display_new_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        unimplemented!()
+        self.display_frame(spi, delay)
     }
 
-    /// This function is not needed for this display
-    #[allow(unused)]
+    /// This is wrapper around `update_new_frame` and `display_frame` for using
+    /// this device as a true `QuickRefresh` device.
+    ///
+    /// To be used immediately after `update_old_frame`.
     fn update_and_display_new_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        unimplemented!()
+        self.update_new_frame(spi, buffer, delay)?;
+        self.display_frame(spi, delay)
     }
 
     fn update_partial_old_frame(
