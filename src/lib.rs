@@ -109,9 +109,9 @@ pub mod prelude {
 ///  unused
 ///  bits        width
 /// <----><------------------------>
-/// [XXXXX210][76543210]...[76543210] ^
-/// [XXXXX210][76543210]...[76543210] | height
-/// [XXXXX210][76543210]...[76543210] v
+/// \[XXXXX210\]\[76543210\]...\[76543210\] ^
+/// \[XXXXX210\]\[76543210\]...\[76543210\] | height
+/// \[XXXXX210\]\[76543210\]...\[76543210\] v
 pub const fn buffer_len(width: usize, height: usize) -> usize {
     (width + 7) / 8 * height
 }
