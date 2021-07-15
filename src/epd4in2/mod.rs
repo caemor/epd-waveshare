@@ -482,7 +482,7 @@ where
         Ok(())
     }
 
-    /// This is wrapper around `display_frame` for using this device as a true
+    /// This is a wrapper around `display_frame` for using this device as a true
     /// `QuickRefresh` device.
     fn display_new_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.display_frame(spi, delay)
