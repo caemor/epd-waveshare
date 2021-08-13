@@ -57,10 +57,10 @@ where
     ///
     /// Enables direct interaction with the device with the help of [command()](Epd4in2::command())
     pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
-        for val in data.iter().copied() {
-            // high for data
-            let _ = self.dc.set_high();
+        // high for data
+        let _ = self.dc.set_high();
 
+        for val in data.iter().copied() {
             // Transfer data one u8 at a time over spi
             self.write(spi, &[val])?;
         }
@@ -90,9 +90,11 @@ where
         val: u8,
         repetitions: u32,
     ) -> Result<(), SPI::Error> {
+        // high for data
+        let _ = self.dc.set_high();
         // Transfer data (u8) over spi
         for _ in 0..repetitions {
-            self.data(spi, &[val])?;
+            self.write(spi, &[val])?;
         }
         Ok(())
     }
