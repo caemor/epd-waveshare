@@ -2,7 +2,7 @@
 
 use crate::buffer_len;
 use crate::color::{Color, OctColor, TriColor};
-use embedded_graphics::pixelcolor::BinaryColor;
+use embedded_graphics_core::pixelcolor::BinaryColor;
 use embedded_graphics_core::prelude::*;
 
 /// Displayrotation

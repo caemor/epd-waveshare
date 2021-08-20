@@ -1,9 +1,9 @@
 //! B/W Color for EPDs
 
 #[cfg(feature = "graphics")]
-use embedded_graphics::pixelcolor::BinaryColor;
+use embedded_graphics_core::pixelcolor::BinaryColor;
 #[cfg(feature = "graphics")]
-use embedded_graphics::pixelcolor::PixelColor;
+use embedded_graphics_core::pixelcolor::PixelColor;
 
 #[cfg(feature = "graphics")]
 pub use BinaryColor::Off as White;

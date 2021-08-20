@@ -1,7 +1,7 @@
 use crate::buffer_len;
 use crate::epd2in13_v2::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
-use embedded_graphics::pixelcolor::BinaryColor;
+use embedded_graphics_core::pixelcolor::BinaryColor;
 use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 2in13 v2 EPD
