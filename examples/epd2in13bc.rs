@@ -94,7 +94,7 @@ fn main() -> Result<(), std::io::Error> {
     // the bw-buffer of this tri-color screen
 
     epd2in13
-        .update_and_display_frame(&mut spi, &display.bw_buffer(), &mut delay)
+        .update_and_display_frame(&mut spi, display.bw_buffer(), &mut delay)
         .expect("display frame new graphics");
 
     println!("First frame done. Waiting 5s");
