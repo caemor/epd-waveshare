@@ -80,7 +80,7 @@ fn main() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
-    epd2in13.update_frame(&mut spi, &display.buffer(), &mut delay)?;
+    epd2in13.update_frame(&mut spi, display.buffer(), &mut delay)?;
     epd2in13
         .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
@@ -131,7 +131,7 @@ fn main() -> Result<(), std::io::Error> {
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd2in13
-            .update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
+            .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
             .expect("display frame new graphics");
         delay.delay_ms(1_000u16);
     }
@@ -140,7 +140,7 @@ fn main() -> Result<(), std::io::Error> {
     // the screen can refresh for this kind of change (small single character)
     display.clear_buffer(Color::White);
     epd2in13
-        .update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
+        .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
         .unwrap();
 
     let spinner = ["|", "/", "-", "\\"];
@@ -148,7 +148,7 @@ fn main() -> Result<(), std::io::Error> {
         display.clear_buffer(Color::White);
         draw_text(&mut display, spinner[i % spinner.len()], 10, 100);
         epd2in13
-            .update_and_display_frame(&mut spi, &display.buffer(), &mut delay)
+            .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
             .unwrap();
     }
 
