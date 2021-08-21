@@ -79,7 +79,7 @@ fn main() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
-    epd4in2.update_frame(&mut spi, &display.buffer(), &mut delay)?;
+    epd4in2.update_frame(&mut spi, display.buffer(), &mut delay)?;
     epd4in2
         .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
@@ -135,7 +135,7 @@ fn main() -> Result<(), std::io::Error> {
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd4in2
-            .update_frame(&mut spi, &display.buffer(), &mut delay)
+            .update_frame(&mut spi, display.buffer(), &mut delay)
             .unwrap();
         epd4in2
             .display_frame(&mut spi, &mut delay)
