@@ -84,7 +84,7 @@ fn main() -> Result<(), std::io::Error> {
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
     epd4in2
-        .update_partial_frame(&mut spi, &display.buffer(), x, y, width, height)
+        .update_partial_frame(&mut spi, display.buffer(), x, y, width, height)
         .unwrap();
     epd4in2
         .display_frame(&mut spi, &mut delay)
@@ -140,7 +140,7 @@ fn main() -> Result<(), std::io::Error> {
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd4in2
-            .update_partial_frame(&mut spi, &display.buffer(), x, y, width, height)
+            .update_partial_frame(&mut spi, display.buffer(), x, y, width, height)
             .unwrap();
         epd4in2
             .display_frame(&mut spi, &mut delay)
