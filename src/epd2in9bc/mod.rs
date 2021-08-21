@@ -258,7 +258,7 @@ where
     ) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
-        self.interface.data(spi, &buffer)?;
+        self.interface.data(spi, buffer)?;
 
         // Clear the chromatic layer
         let color = self.color.get_byte_value();

@@ -208,7 +208,7 @@ impl<'a> DrawTarget<BinaryColor> for VarDisplay<'a> {
 
 impl<'a> Display for VarDisplay<'a> {
     fn buffer(&self) -> &[u8] {
-        &self.buffer
+        self.buffer
     }
 
     fn get_mut_buffer(&mut self) -> &mut [u8] {
