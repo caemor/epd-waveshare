@@ -73,8 +73,69 @@ impl From<()> for OctColor {
 }
 
 #[cfg(feature = "graphics")]
+impl From<BinaryColor> for OctColor {
+    fn from(b: BinaryColor) -> OctColor {
+        match b {
+            BinaryColor::On => OctColor::Black,
+            BinaryColor::Off => OctColor::White,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<OctColor> for embedded_graphics_core::pixelcolor::Rgb888 {
+    fn from(b: OctColor) -> Self {
+        let (r, b, g) = b.rgb();
+        Self::new(r, b, g)
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb888> for OctColor {
+    fn from(p: embedded_graphics_core::pixelcolor::Rgb888) -> OctColor {
+        use embedded_graphics_core::prelude::RgbColor;
+        let colors = [
+            OctColor::Black,
+            OctColor::White,
+            OctColor::Green,
+            OctColor::Blue,
+            OctColor::Red,
+            OctColor::Yellow,
+            OctColor::Orange,
+            OctColor::HiZ,
+        ];
+        // if the user has already mapped to the right color space, it will just be in the list
+        if let Some(found) = colors.iter().find(|c| c.rgb() == (p.r(), p.g(), p.b())) {
+            return *found;
+        }
+
+        // This is not ideal but just pick the nearest color
+        *colors
+            .iter()
+            .map(|c| (c, c.rgb()))
+            .map(|(c, (r, g, b))| {
+                let dist = (i32::from(r) - i32::from(p.r())).pow(2)
+                    + (i32::from(g) - i32::from(p.g())).pow(2)
+                    + (i32::from(b) - i32::from(p.b())).pow(2);
+                (c, dist)
+            })
+            .min_by_key(|(_c, dist)| *dist)
+            .map(|(c, _)| c)
+            .unwrap_or(&OctColor::White)
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::raw::RawU4> for OctColor {
+    fn from(b: embedded_graphics_core::pixelcolor::raw::RawU4) -> Self {
+        use embedded_graphics_core::prelude::RawData;
+        OctColor::from_nibble(b.into_inner()).unwrap()
+    }
+}
+
+#[cfg(feature = "graphics")]
 impl PixelColor for OctColor {
-    type Raw = ();
+    type Raw = embedded_graphics_core::pixelcolor::raw::RawU4;
 }
 
 impl OctColor {
