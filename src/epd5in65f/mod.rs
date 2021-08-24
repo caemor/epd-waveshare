@@ -60,7 +60,7 @@ where
         self.cmd_with_data(spi, Command::BoosterSoftStart, &[0xC7, 0xC7, 0x1D])?;
         self.cmd_with_data(spi, Command::PllControl, &[0x3C])?;
         self.cmd_with_data(spi, Command::TemperatureSensor, &[0x00])?;
-        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x37])?;
+        self.update_vcom(spi)?;
         self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
         self.send_resolution(spi)?;
 
@@ -68,7 +68,7 @@ where
 
         delay.delay_ms(100);
 
-        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x37])?;
+        self.update_vcom(spi)?;
         Ok(())
     }
 }
@@ -118,6 +118,7 @@ where
         _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.wait_busy_high();
+        self.update_vcom(spi)?;
         self.send_resolution(spi)?;
         self.cmd_with_data(spi, Command::DataStartTransmission1, buffer)?;
         Ok(())
@@ -160,6 +161,7 @@ where
     fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         let bg = OctColor::colors_byte(self.color, self.color);
         self.wait_busy_high();
+        self.update_vcom(spi)?;
         self.send_resolution(spi)?;
         self.command(spi, Command::DataStartTransmission1)?;
         self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;
@@ -237,6 +239,12 @@ where
         self.send_data(spi, &[w as u8])?;
         self.send_data(spi, &[(h >> 8) as u8])?;
         self.send_data(spi, &[h as u8])
+    }
+
+    fn update_vcom(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        let bg_color = (self.color.get_nibble() & 0b111) << 5;
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x17 | bg_color])?;
+        Ok(())
     }
 }
 
