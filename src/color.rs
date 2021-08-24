@@ -1,9 +1,9 @@
 //! B/W Color for EPDs
 
 #[cfg(feature = "graphics")]
-use embedded_graphics::pixelcolor::BinaryColor;
+use embedded_graphics_core::pixelcolor::BinaryColor;
 #[cfg(feature = "graphics")]
-use embedded_graphics::pixelcolor::PixelColor;
+use embedded_graphics_core::pixelcolor::PixelColor;
 
 #[cfg(feature = "graphics")]
 pub use BinaryColor::Off as White;
@@ -83,7 +83,7 @@ impl From<BinaryColor> for OctColor {
 }
 
 #[cfg(feature = "graphics")]
-impl From<OctColor> for embedded_graphics::pixelcolor::Rgb888 {
+impl From<OctColor> for embedded_graphics_core::pixelcolor::Rgb888 {
     fn from(b: OctColor) -> Self {
         let (r, b, g) = b.rgb();
         Self::new(r, b, g)
@@ -91,9 +91,9 @@ impl From<OctColor> for embedded_graphics::pixelcolor::Rgb888 {
 }
 
 #[cfg(feature = "graphics")]
-impl From<embedded_graphics::pixelcolor::Rgb888> for OctColor {
-    fn from(p: embedded_graphics::pixelcolor::Rgb888) -> OctColor {
-        use embedded_graphics::prelude::RgbColor;
+impl From<embedded_graphics_core::pixelcolor::Rgb888> for OctColor {
+    fn from(p: embedded_graphics_core::pixelcolor::Rgb888) -> OctColor {
+        use embedded_graphics_core::prelude::RgbColor;
         let colors = [
             OctColor::Black,
             OctColor::White,
@@ -126,16 +126,16 @@ impl From<embedded_graphics::pixelcolor::Rgb888> for OctColor {
 }
 
 #[cfg(feature = "graphics")]
-impl From<embedded_graphics::pixelcolor::raw::RawU4> for OctColor {
-    fn from(b: embedded_graphics::pixelcolor::raw::RawU4) -> Self {
-        use embedded_graphics::prelude::RawData;
+impl From<embedded_graphics_core::pixelcolor::raw::RawU4> for OctColor {
+    fn from(b: embedded_graphics_core::pixelcolor::raw::RawU4) -> Self {
+        use embedded_graphics_core::prelude::RawData;
         OctColor::from_nibble(b.into_inner()).unwrap()
     }
 }
 
 #[cfg(feature = "graphics")]
 impl PixelColor for OctColor {
-    type Raw = embedded_graphics::pixelcolor::raw::RawU4;
+    type Raw = embedded_graphics_core::pixelcolor::raw::RawU4;
 }
 
 impl OctColor {
