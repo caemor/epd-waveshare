@@ -85,8 +85,8 @@ impl From<BinaryColor> for OctColor {
 #[cfg(feature = "graphics")]
 impl From<OctColor> for embedded_graphics_core::pixelcolor::Rgb888 {
     fn from(b: OctColor) -> Self {
-        let (r, b, g) = b.rgb();
-        Self::new(r, b, g)
+        let (r, g, b) = b.rgb();
+        Self::new(r, g, b)
     }
 }
 
