@@ -114,9 +114,9 @@ impl From<embedded_graphics_core::pixelcolor::Rgb888> for OctColor {
             .iter()
             .map(|c| (c, c.rgb()))
             .map(|(c, (r, g, b))| {
-                let dist = ((r - p.r()) as u32).pow(2)
-                    + ((g - p.g()) as u32).pow(2)
-                    + ((b - p.b()) as u32).pow(2);
+                let dist = (i32::from(r) - i32::from(p.r())).pow(2)
+                    + (i32::from(g) - i32::from(p.g())).pow(2)
+                    + (i32::from(b) - i32::from(p.b())).pow(2);
                 (c, dist)
             })
             .min_by_key(|(_c, dist)| *dist)
