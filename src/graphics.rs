@@ -24,6 +24,15 @@ impl Default for DisplayRotation {
     }
 }
 
+/// Display specific pixel output configuration
+#[derive(Clone, Copy)]
+pub enum DisplayColorRendering {
+    /// Positive: chromatic doesn't override white, white bit cleared for black, white bit set for white, both bits set for chromatic
+    Positive,
+    /// Negative: chromatic does override white, both bits cleared for black, white bit set for white, red bit set for black
+    Negative,
+}
+
 /// Necessary traits for all displays to implement for drawing
 ///
 /// Adds support for:
@@ -129,6 +138,7 @@ pub trait TriDisplay: DrawTarget<Color = TriColor> {
         width: u32,
         height: u32,
         pixel: Pixel<TriColor>,
+        rendering: DisplayColorRendering,
     ) -> Result<(), Self::Error> {
         let rotation = self.rotation();
 
@@ -149,20 +159,46 @@ pub trait TriDisplay: DrawTarget<Color = TriColor> {
             TriColor::Black => {
                 // clear bit in bw-buffer -> black
                 buffer[index] &= !bit;
-                // set bit in chromatic-buffer -> white
-                buffer[index + offset] |= bit;
+                match rendering {
+                    DisplayColorRendering::Positive => {
+                        // set bit in chromatic-buffer -> white
+                        buffer[index + offset] |= bit;
+                    }
+                    DisplayColorRendering::Negative => {
+                        // clear bit in chromatic-buffer -> white
+                        buffer[index + offset] &= !bit;
+                    }
+                }
             }
             TriColor::White => {
                 // set bit in bw-buffer -> white
                 buffer[index] |= bit;
-                // set bit in chromatic-buffer -> white
-                buffer[index + offset] |= bit;
+                match rendering {
+                    DisplayColorRendering::Positive => {
+                        // set bit in chromatic-buffer -> white
+                        buffer[index + offset] |= bit;
+                    }
+                    DisplayColorRendering::Negative => {
+                        // clear bit in chromatic-buffer -> white
+                        buffer[index + offset] &= !bit;
+                    }
+                }
             }
             TriColor::Chromatic => {
-                // set bit in b/w buffer (white)
-                buffer[index] |= bit;
-                // clear bit in chromatic buffer -> chromatic
-                buffer[index + offset] &= !bit;
+                match rendering {
+                    DisplayColorRendering::Positive => {
+                        // set bit in b/w buffer (white)
+                        buffer[index] |= bit;
+                        // clear bit in chromatic buffer -> chromatic
+                        buffer[index + offset] &= !bit;
+                    }
+                    DisplayColorRendering::Negative => {
+                        // set bit in b/w buffer (white)
+                        buffer[index] |= bit;
+                        // set bit in chromatic-buffer -> chromatic
+                        buffer[index + offset] |= bit;
+                    }
+                }
             }
         }
         Ok(())
