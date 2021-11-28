@@ -60,8 +60,12 @@ where
         // high for data
         let _ = self.dc.set_high();
 
-        // Transfer data (u8-array) over spi
-        self.write(spi, data)
+        for val in data.iter().copied() {
+            // Transfer data one u8 at a time over spi
+            self.write(spi, &[val])?;
+        }
+
+        Ok(())
     }
 
     /// Basic function for sending [Commands](Command) and the data belonging to it.
