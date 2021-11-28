@@ -1,6 +1,7 @@
 #![deny(warnings)]
 
-use epd_waveshare::{epd1in54::EPD1in54, prelude::*};
+use embedded_hal::prelude::*;
+use epd_waveshare::{epd1in54::Epd1in54, prelude::*};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
@@ -57,25 +58,25 @@ fn main() -> Result<(), std::io::Error> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = EPD1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
+    let mut epd = Epd1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
 
     // Clear the full screen
-    epd.clear_frame(&mut spi)?;
-    epd.display_frame(&mut spi)?;
+    epd.clear_frame(&mut spi, &mut delay)?;
+    epd.display_frame(&mut spi, &mut delay)?;
 
     // Speeddemo
-    epd.set_lut(&mut spi, Some(RefreshLUT::QUICK))?;
+    epd.set_lut(&mut spi, Some(RefreshLut::Quick))?;
     let small_buffer = [Color::Black.get_byte_value(); 32]; //16x16
     let number_of_runs = 1;
     for i in 0..number_of_runs {
         let offset = i * 8 % 150;
         epd.update_partial_frame(&mut spi, &small_buffer, 25 + offset, 25 + offset, 16, 16)?;
-        epd.display_frame(&mut spi)?;
+        epd.display_frame(&mut spi, &mut delay)?;
     }
 
     // Clear the full screen
-    epd.clear_frame(&mut spi)?;
-    epd.display_frame(&mut spi)?;
+    epd.clear_frame(&mut spi, &mut delay)?;
+    epd.display_frame(&mut spi, &mut delay)?;
 
     // Draw some squares
     let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
@@ -88,11 +89,11 @@ fn main() -> Result<(), std::io::Error> {
     epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8)?;
 
     // Display updated frame
-    epd.display_frame(&mut spi)?;
+    epd.display_frame(&mut spi, &mut delay)?;
     delay.delay_ms(5000u16);
 
     // Set the EPD to sleep
-    epd.sleep(&mut spi)?;
+    epd.sleep(&mut spi, &mut delay)?;
 
     Ok(())
 }

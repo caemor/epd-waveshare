@@ -5,57 +5,56 @@ use crate::traits;
 extern crate bit_field;
 use bit_field::BitField;
 
-/// EPD2in13 v2
+/// Epd2in13 v2
 ///
 /// For more infos about the addresses and what they are doing look into the pdfs
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
-    DRIVER_OUTPUT_CONTROL = 0x01,
-    GATE_DRIVING_VOLTAGE_CTRL = 0x03,
-    SOURCE_DRIVING_VOLTAGE_CTRL = 0x04,
-    BOOSTER_SOFT_START_CONTROL = 0x0C,
-    GATE_SCAN_START_POSITION = 0x0F,
-    DEEP_SLEEP_MODE = 0x10,
-    DATA_ENTRY_MODE_SETTING = 0x11,
-    SW_RESET = 0x12,
-    HV_READY_DETECTION = 0x14,
-    VCI_DETECTION = 0x15,
-    TEMPERATURE_SENSOR_CONTROL_WRITE = 0x1A,
-    TEMPERATURE_SENSOR_CONTROL_READ = 0x1B,
-    TEMPERATURE_SENSOR_EXT_CONTROL_WRITE = 0x1C,
-    MASTER_ACTIVATION = 0x20,
-    DISPLAY_UPDATE_CONTROL_1 = 0x21,
-    DISPLAY_UPDATE_CONTROL_2 = 0x22,
-    WRITE_RAM = 0x24,
-    WRITE_RAM_RED = 0x26,
-    READ_RAM = 0x27,
-    VCOM_SENSE = 0x28,
-    VCOM_SENSE_DURATION = 0x29,
-    PROGRAM_VCOM_OPT = 0x2A,
-    WRITE_VCOM_REGISTER = 0x2C,
-    OTP_REGISTER_READ = 0x2D,
-    STATUS_BIT_READ = 0x2F,
-    PROGRAM_WS_OTP = 0x30,
-    LOAD_WS_OTP = 0x31,
-    WRITE_LUT_REGISTER = 0x32,
-    PROGRAM_OTP_SELECTION = 0x36,
-    WRITE_OTP_SELECTION = 0x37,
-    SET_DUMMY_LINE_PERIOD = 0x3A,
-    SET_GATE_LINE_WIDTH = 0x3B,
-    BORDER_WAVEFORM_CONTROL = 0x3C,
-    READ_RAM_OPTION = 0x41,
-    SET_RAM_X_ADDRESS_START_END_POSITION = 0x44,
-    SET_RAM_Y_ADDRESS_START_END_POSITION = 0x45,
-    AUTO_WRITE_RED_RAM_REGULAR_PATTERN = 0x46,
-    AUTO_WRITE_BW_RAM_REGULAR_PATTERN = 0x47,
-    SET_RAM_X_ADDRESS_COUNTER = 0x4E,
-    SET_RAM_Y_ADDRESS_COUNTER = 0x4F,
-    SET_ANALOG_BLOCK_CONTROL = 0x74,
-    SET_DIGITAL_BLOCK_CONTROL = 0x7E,
+    DriverOutputControl = 0x01,
+    GateDrivingVoltageCtrl = 0x03,
+    SourceDrivingVoltageCtrl = 0x04,
+    BoosterSoftStartControl = 0x0C,
+    GateScanStartPosition = 0x0F,
+    DeepSleepMode = 0x10,
+    DataEntryModeSetting = 0x11,
+    SwReset = 0x12,
+    HvReadyDetection = 0x14,
+    VciDetection = 0x15,
+    TemperatureSensorControlWrite = 0x1A,
+    TemperatureSensorControlRead = 0x1B,
+    TemperatureSensorExtControlWrite = 0x1C,
+    MasterActivation = 0x20,
+    DisplayUpdateControl1 = 0x21,
+    DisplayUpdateControl2 = 0x22,
+    WriteRam = 0x24,
+    WriteRamRed = 0x26,
+    ReadRam = 0x27,
+    VcomSense = 0x28,
+    VcomSenseDuration = 0x29,
+    ProgramVcomOpt = 0x2A,
+    WriteVcomRegister = 0x2C,
+    OtpRegisterRead = 0x2D,
+    StatusBitRead = 0x2F,
+    ProgramWsOtp = 0x30,
+    LoadWsOtp = 0x31,
+    WriteLutRegister = 0x32,
+    ProgramOtpSelection = 0x36,
+    WriteOtpSelection = 0x37,
+    SetDummyLinePeriod = 0x3A,
+    SetGateLineWidth = 0x3B,
+    BorderWaveformControl = 0x3C,
+    ReadRamOption = 0x41,
+    SetRamXAddressStartEndPosition = 0x44,
+    SetRamYAddressStartEndPosition = 0x45,
+    AutoWriteRedRamRegularPattern = 0x46,
+    AutoWriteBwRamRegularPattern = 0x47,
+    SetRamXAddressCounter = 0x4E,
+    SetRamYAddressCounter = 0x4F,
+    SetAnalogBlockControl = 0x74,
+    SetDigitalBlockControl = 0x7E,
 
-    NOP = 0x7F,
+    Nop = 0x7F,
 }
 
 pub(crate) struct DriverOutput {
@@ -135,54 +134,51 @@ impl DisplayUpdateControl2 {
 }
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
+
 pub(crate) enum DataEntryModeIncr {
-    X_DECR_Y_DECR = 0x0,
-    X_INCR_Y_DECR = 0x1,
-    X_DECR_Y_INCR = 0x2,
-    X_INCR_Y_INCR = 0x3,
+    XDecrYDecr = 0x0,
+    XIncrYDecr = 0x1,
+    XDecrYIncr = 0x2,
+    XIncrYIncr = 0x3,
 }
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
+
 pub(crate) enum DataEntryModeDir {
-    X_DIR = 0x0,
-    Y_DIR = 0x4,
+    XDir = 0x0,
+    YDir = 0x4,
 }
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
-pub(crate) enum BorderWaveFormVBD {
-    GS = 0x0,
-    FIX_LEVEL = 0x1,
-    VCOM = 0x2,
+pub(crate) enum BorderWaveFormVbd {
+    Gs = 0x0,
+    FixLevel = 0x1,
+    Vcom = 0x2,
 }
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
 pub(crate) enum BorderWaveFormFixLevel {
-    VSS = 0x0,
-    VSH1 = 0x1,
-    VSL = 0x2,
-    VSH2 = 0x3,
+    Vss = 0x0,
+    Vsh1 = 0x1,
+    Vsl = 0x2,
+    Vsh2 = 0x3,
 }
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
-pub(crate) enum BorderWaveFormGS {
-    LUT0 = 0x0,
-    LUT1 = 0x1,
-    LUT2 = 0x2,
-    LUT3 = 0x3,
+pub(crate) enum BorderWaveFormGs {
+    Lut0 = 0x0,
+    Lut1 = 0x1,
+    Lut2 = 0x2,
+    Lut3 = 0x3,
 }
 
 pub(crate) struct BorderWaveForm {
-    pub vbd: BorderWaveFormVBD,
+    pub vbd: BorderWaveFormVbd,
     pub fix_level: BorderWaveFormFixLevel,
-    pub gs_trans: BorderWaveFormGS,
+    pub gs_trans: BorderWaveFormGs,
 }
 
 impl BorderWaveForm {
@@ -194,25 +190,24 @@ impl BorderWaveForm {
 }
 
 #[allow(dead_code)]
-#[allow(non_camel_case_types)]
 #[derive(Copy, Clone)]
 pub enum DeepSleepMode {
     // Sleeps and keeps access to RAM and controller
-    NORMAL = 0x00,
+    Normal = 0x00,
 
     // Sleeps without access to RAM/controller but keeps RAM content
-    MODE_1 = 0x01,
+    Mode1 = 0x01,
 
     // Same as MODE_1 but RAM content is not kept
-    MODE_2 = 0x11,
+    Mode2 = 0x11,
 }
 
 pub(crate) struct GateDrivingVoltage(pub u8);
 pub(crate) struct SourceDrivingVoltage(pub u8);
-pub(crate) struct VCOM(pub u8);
+pub(crate) struct Vcom(pub u8);
 
 pub(crate) trait I32Ext {
-    fn vcom(self) -> VCOM;
+    fn vcom(self) -> Vcom;
     fn gate_driving_decivolt(self) -> GateDrivingVoltage;
     fn source_driving_decivolt(self) -> SourceDrivingVoltage;
 }
@@ -220,8 +215,8 @@ pub(crate) trait I32Ext {
 impl I32Ext for i32 {
     // This is really not very nice. Until I find something better, this will be
     // a placeholder.
-    fn vcom(self) -> VCOM {
-        assert!(self >= -30 && self <= -2);
+    fn vcom(self) -> Vcom {
+        assert!((-30..=-2).contains(&self));
         let u = match -self {
             2 => 0x08,
             3 => 0x0B,
@@ -254,24 +249,20 @@ impl I32Ext for i32 {
             30 => 0x78,
             _ => 0,
         };
-        VCOM(u)
+        Vcom(u)
     }
 
     fn gate_driving_decivolt(self) -> GateDrivingVoltage {
-        assert!(self >= 100 && self <= 210 && self % 5 == 0);
+        assert!((100..=210).contains(&self) && self % 5 == 0);
         GateDrivingVoltage(((self - 100) / 5 + 0x03) as u8)
     }
 
     fn source_driving_decivolt(self) -> SourceDrivingVoltage {
-        assert!(
-            (self >= 24 && self <= 88)
-                || (self >= 90 && self <= 180 && self % 5 == 0)
-                || (self >= -180 && self <= -90 && self % 5 == 0)
-        );
+        assert!((24..=88).contains(&self) || (self % 5 == 0 && (90..=180).contains(&self.abs())));
 
-        if self >= 24 && self <= 88 {
+        if (24..=88).contains(&self) {
             SourceDrivingVoltage(((self - 24) + 0x8E) as u8)
-        } else if self >= 90 && self <= 180 {
+        } else if (90..=180).contains(&self) {
             SourceDrivingVoltage(((self - 90) / 2 + 0x23) as u8)
         } else {
             SourceDrivingVoltage((((-self - 90) / 5) * 2 + 0x1A) as u8)

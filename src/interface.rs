@@ -7,30 +7,34 @@ use embedded_hal::{
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
-pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST> {
+pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
     /// SPI
     _spi: PhantomData<SPI>,
+    /// DELAY
+    _delay: PhantomData<DELAY>,
     /// CS for SPI
     cs: CS,
     /// Low for busy, Wait until display is ready!
     busy: BUSY,
     /// Data/Command Control Pin (High for data, Low for command)
     dc: DC,
-    /// Pin for Reseting
+    /// Pin for Resetting
     rst: RST,
 }
 
-impl<SPI, CS, BUSY, DC, RST> DisplayInterface<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
         DisplayInterface {
             _spi: PhantomData::default(),
+            _delay: PhantomData::default(),
             cs,
             busy,
             dc,
@@ -51,13 +55,17 @@ where
 
     /// Basic function for sending an array of u8-values of data over spi
     ///
-    /// Enables direct interaction with the device with the help of [command()](EPD4in2::command())
+    /// Enables direct interaction with the device with the help of [command()](Epd4in2::command())
     pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
         // high for data
         let _ = self.dc.try_set_high();
 
-        // Transfer data (u8-array) over spi
-        self.write(spi, data)
+        for val in data.iter().copied() {
+            // Transfer data one u8 at a time over spi
+            self.write(spi, &[val])?;
+        }
+
+        Ok(())
     }
 
     /// Basic function for sending [Commands](Command) and the data belonging to it.
@@ -107,7 +115,7 @@ where
             spi.try_write(data)?;
         }
 
-        // deativate spi with cs high
+        // deactivate spi with cs high
         let _ = self.cs.try_set_high();
 
         Ok(())
@@ -127,13 +135,12 @@ where
     /// Most likely there was a mistake with the 2in9 busy connection
     /// //TODO: use the #cfg feature to make this compile the right way for the certain types
     pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
-        //tested: worked without the delay for all tested devices
-        //self.delay_ms(1);
-
+        // //tested: worked without the delay for all tested devices
+        // //self.delay_ms(1);
         while self.is_busy(is_busy_low) {
-            //tested: REMOVAL of DELAY: it's only waiting for the signal anyway and should continue work asap
-            //old: shorten the time? it was 100 in the beginning
-            //self.delay_ms(5);
+            // //tested: REMOVAL of DELAY: it's only waiting for the signal anyway and should continue work asap
+            // //old: shorten the time? it was 100 in the beginning
+            // //self.delay_ms(5);
         }
     }
 
@@ -157,12 +164,12 @@ where
 
     /// Resets the device.
     ///
-    /// Often used to awake the module from deep sleep. See [EPD4in2::sleep()](EPD4in2::sleep())
+    /// Often used to awake the module from deep sleep. See [Epd4in2::sleep()](Epd4in2::sleep())
     ///
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset<DELAY: DelayMs<u8>>(&mut self, delay: &mut DELAY, duration: u8) {
+    pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u8) {
         let _ = self.rst.try_set_high();
         delay.try_delay_ms(10);
 

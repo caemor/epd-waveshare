@@ -14,7 +14,7 @@
 //!# use embedded_hal_mock::*;
 //!# fn main() -> Result<(), MockError> {
 //!use embedded_graphics::{
-//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyle},
 //!};
 //!use epd_waveshare::{epd1in54::*, prelude::*};
 //!#
@@ -28,22 +28,23 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = EPD1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display1in54::default();
 //!
 //!// Use embedded graphics for drawing a line
+//!
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
 //!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
 //!    .draw(&mut display);
 //!
 //!    // Display updated frame
-//!epd.update_frame(&mut spi, &display.buffer())?;
-//!epd.display_frame(&mut spi)?;
+//!epd.update_frame(&mut spi, &display.buffer(), &mut delay)?;
+//!epd.display_frame(&mut spi, &mut delay)?;
 //!
 //!// Set the EPD to sleep
-//!epd.sleep(&mut spi)?;
+//!epd.sleep(&mut spi, &mut delay)?;
 //!# Ok(())
 //!# }
 //!```
@@ -74,23 +75,32 @@ mod interface;
 
 pub mod epd1in54;
 pub mod epd1in54b;
+pub mod epd1in54c;
 pub mod epd2in13_v2;
+pub mod epd2in13bc;
+pub mod epd2in7b;
 pub mod epd2in9;
+pub mod epd2in9_v2;
 pub mod epd2in9bc;
 pub mod epd4in2;
+pub mod epd5in65f;
 pub mod epd7in5;
+pub mod epd7in5_hd;
 pub mod epd7in5_v2;
+
 pub(crate) mod type_a;
 
 /// Includes everything important besides the chosen Display
 pub mod prelude {
-    pub use crate::color::{Color, TriColor};
-    pub use crate::traits::{RefreshLUT, WaveshareDisplay, WaveshareThreeColorDisplay};
+    pub use crate::color::{Color, OctColor, TriColor};
+    pub use crate::traits::{
+        QuickRefresh, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
+    };
 
     pub use crate::SPI_MODE;
 
     #[cfg(feature = "graphics")]
-    pub use crate::graphics::{Display, DisplayRotation};
+    pub use crate::graphics::{Display, DisplayRotation, OctDisplay, TriDisplay};
 }
 
 /// Computes the needed buffer length. Takes care of rounding up in case width
@@ -99,9 +109,9 @@ pub mod prelude {
 ///  unused
 ///  bits        width
 /// <----><------------------------>
-/// [XXXXX210][76543210]...[76543210] ^
-/// [XXXXX210][76543210]...[76543210] | height
-/// [XXXXX210][76543210]...[76543210] v
+/// \[XXXXX210\]\[76543210\]...\[76543210\] ^
+/// \[XXXXX210\]\[76543210\]...\[76543210\] | height
+/// \[XXXXX210\]\[76543210\]...\[76543210\] v
 pub const fn buffer_len(width: usize, height: usize) -> usize {
     (width + 7) / 8 * height
 }

@@ -1,17 +1,16 @@
 #![deny(warnings)]
 
 use embedded_graphics::{
-    fonts::{Font12x16, Font6x8, Text},
+    mono_font::MonoTextStyleBuilder,
     prelude::*,
-    primitives::{Circle, Line},
-    style::PrimitiveStyle,
-    text_style,
+    primitives::{Circle, Line, PrimitiveStyle},
+    text::{Baseline, Text, TextStyleBuilder},
 };
 use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
-    epd2in13_v2::{Display2in13, EPD2in13},
-    graphics::{Display, DisplayRotation},
+    epd2in13_v2::{Display2in13, Epd2in13},
+    graphics::DisplayRotation,
     prelude::*,
 };
 use linux_embedded_hal::{
@@ -63,7 +62,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd2in13 =
-        EPD2in13::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+        Epd2in13::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
 
     //println!("Test all the rotations");
     let mut display = Display2in13::default();
@@ -80,9 +79,9 @@ fn main() -> Result<(), std::io::Error> {
     display.set_rotation(DisplayRotation::Rotate270);
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
-    epd2in13.update_frame(&mut spi, &display.buffer())?;
+    epd2in13.update_frame(&mut spi, display.buffer(), &mut delay)?;
     epd2in13
-        .display_frame(&mut spi)
+        .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
     delay.delay_ms(5000u16);
 
@@ -90,7 +89,7 @@ fn main() -> Result<(), std::io::Error> {
     display.clear_buffer(Color::White);
 
     // draw a analog clock
-    let _ = Circle::new(Point::new(64, 64), 40)
+    let _ = Circle::with_center(Point::new(64, 64), 80)
         .into_styled(PrimitiveStyle::with_stroke(Black, 1))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(30, 40))
@@ -101,29 +100,32 @@ fn main() -> Result<(), std::io::Error> {
         .draw(&mut display);
 
     // draw white on black background
-    let _ = Text::new("It's working-WoB!", Point::new(90, 10))
-        .into_styled(text_style!(
-            font = Font6x8,
-            text_color = White,
-            background_color = Black
-        ))
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
+        .text_color(White)
+        .background_color(Black)
+        .build();
+    let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
+
+    let _ = Text::with_text_style("It's working-WoB!", Point::new(90, 10), style, text_style)
         .draw(&mut display);
 
     // use bigger/different font
-    let _ = Text::new("It's working-WoB!", Point::new(90, 40))
-        .into_styled(text_style!(
-            font = Font12x16,
-            text_color = White,
-            background_color = Black
-        ))
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_10X20)
+        .text_color(White)
+        .background_color(Black)
+        .build();
+
+    let _ = Text::with_text_style("It's working\nWoB!", Point::new(90, 40), style, text_style)
         .draw(&mut display);
 
     // Demonstrating how to use the partial refresh feature of the screen.
     // Real animations can be used.
     epd2in13
-        .set_refresh(&mut spi, &mut delay, RefreshLUT::QUICK)
+        .set_refresh(&mut spi, &mut delay, RefreshLut::Quick)
         .unwrap();
-    epd2in13.clear_frame(&mut spi).unwrap();
+    epd2in13.clear_frame(&mut spi, &mut delay).unwrap();
 
     // a moving `Hello World!`
     let limit = 10;
@@ -131,7 +133,7 @@ fn main() -> Result<(), std::io::Error> {
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd2in13
-            .update_and_display_frame(&mut spi, &display.buffer())
+            .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
             .expect("display frame new graphics");
         delay.delay_ms(1_000u16);
     }
@@ -140,7 +142,7 @@ fn main() -> Result<(), std::io::Error> {
     // the screen can refresh for this kind of change (small single character)
     display.clear_buffer(Color::White);
     epd2in13
-        .update_and_display_frame(&mut spi, &display.buffer())
+        .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
         .unwrap();
 
     let spinner = ["|", "/", "-", "\\"];
@@ -148,20 +150,22 @@ fn main() -> Result<(), std::io::Error> {
         display.clear_buffer(Color::White);
         draw_text(&mut display, spinner[i % spinner.len()], 10, 100);
         epd2in13
-            .update_and_display_frame(&mut spi, &display.buffer())
+            .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
             .unwrap();
     }
 
     println!("Finished tests - going to sleep");
-    epd2in13.sleep(&mut spi)
+    epd2in13.sleep(&mut spi, &mut delay)
 }
 
 fn draw_text(display: &mut Display2in13, text: &str, x: i32, y: i32) {
-    let _ = Text::new(text, Point::new(x, y))
-        .into_styled(text_style!(
-            font = Font6x8,
-            text_color = Black,
-            background_color = White
-        ))
-        .draw(display);
+    let style = MonoTextStyleBuilder::new()
+        .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
+        .text_color(White)
+        .background_color(Black)
+        .build();
+
+    let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
+
+    let _ = Text::with_text_style(text, Point::new(x, y), style, text_style).draw(display);
 }

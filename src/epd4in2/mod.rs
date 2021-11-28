@@ -11,7 +11,7 @@
 //!# use embedded_hal_mock::*;
 //!# fn main() -> Result<(), MockError> {
 //!use embedded_graphics::{
-//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::Line, style::PrimitiveStyle,
+//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyle},
 //!};
 //!use epd_waveshare::{epd4in2::*, prelude::*};
 //!#
@@ -25,7 +25,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = EPD4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display4in2::default();
@@ -36,11 +36,11 @@
 //!    .draw(&mut display);
 //!
 //!    // Display updated frame
-//!epd.update_frame(&mut spi, &display.buffer())?;
-//!epd.display_frame(&mut spi)?;
+//!epd.update_frame(&mut spi, &display.buffer(), &mut delay)?;
+//!epd.display_frame(&mut spi, &mut delay)?;
 //!
 //!// Set the EPD to sleep
-//!epd.sleep(&mut spi)?;
+//!epd.sleep(&mut spi, &mut delay)?;
 //!# Ok(())
 //!# }
 //!```
@@ -55,7 +55,7 @@ use embedded_hal::{
 };
 
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLUT, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, QuickRefresh, RefreshLut, WaveshareDisplay};
 
 //The Lookup Tables for the Display
 mod constants;
@@ -79,58 +79,64 @@ mod graphics;
 #[cfg(feature = "graphics")]
 pub use self::graphics::Display4in2;
 
-/// EPD4in2 driver
+/// Epd4in2 driver
 ///
-pub struct EPD4in2<SPI, CS, BUSY, DC, RST> {
+pub struct Epd4in2<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
     /// Background Color
     color: Color,
     /// Refresh LUT
-    refresh: RefreshLUT,
+    refresh: RefreshLut,
 }
 
-impl<SPI, CS, BUSY, DC, RST> InternalWiAdditions<SPI, CS, BUSY, DC, RST>
-    for EPD4in2<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
-    fn init<DELAY: DelayMs<u8>>(
-        &mut self,
-        spi: &mut SPI,
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
         self.interface.reset(delay, 10);
 
         // set the power settings
         self.interface.cmd_with_data(
             spi,
-            Command::POWER_SETTING,
+            Command::PowerSetting,
             &[0x03, 0x00, 0x2b, 0x2b, 0xff],
         )?;
 
         // start the booster
         self.interface
-            .cmd_with_data(spi, Command::BOOSTER_SOFT_START, &[0x17, 0x17, 0x17])?;
+            .cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])?;
 
         // power on
-        self.command(spi, Command::POWER_ON)?;
+        self.command(spi, Command::PowerOn)?;
         delay.try_delay_ms(5);
         self.wait_until_idle();
 
         // set the panel settings
-        self.cmd_with_data(spi, Command::PANEL_SETTING, &[0x3F])?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x3F])?;
 
         // Set Frequency, 200 Hz didn't work on my board
         // 150Hz and 171Hz wasn't tested yet
         // TODO: Test these other frequencies
         // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
-        self.cmd_with_data(spi, Command::PLL_CONTROL, &[0x3A])?;
+        self.cmd_with_data(spi, Command::PllControl, &[0x3A])?;
+
+        self.send_resolution(spi)?;
+
+        self.interface
+            .cmd_with_data(spi, Command::VcmDcSetting, &[0x12])?;
+
+        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
+        self.interface
+            .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])?;
 
         self.set_lut(spi, None)?;
 
@@ -139,16 +145,18 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> WaveshareDisplay<SPI, CS, BUSY, DC, RST>
-    for EPD4in2<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
-    fn new<DELAY: DelayMs<u8>>(
+    type DisplayColor = Color;
+    fn new(
         spi: &mut SPI,
         cs: CS,
         busy: BUSY,
@@ -159,10 +167,10 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = EPD4in2 {
+        let mut epd = Epd4in2 {
             interface,
             color,
-            refresh: RefreshLUT::FULL,
+            refresh: RefreshLut::Full,
         };
 
         epd.init(spi, delay)?;
@@ -170,53 +178,44 @@ where
         Ok(epd)
     }
 
-    fn wake_up<DELAY: DelayMs<u8>>(
-        &mut self,
-        spi: &mut SPI,
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.interface
-            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x17])?; //border floating
-        self.command(spi, Command::VCM_DC_SETTING)?; // VCOM to 0V
-        self.command(spi, Command::PANEL_SETTING)?;
+            .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x17])?; //border floating
+        self.command(spi, Command::VcmDcSetting)?; // VCOM to 0V
+        self.command(spi, Command::PanelSetting)?;
 
-        self.command(spi, Command::POWER_SETTING)?; //VG&VS to 0V fast
+        self.command(spi, Command::PowerSetting)?; //VG&VS to 0V fast
         for _ in 0..4 {
             self.send_data(spi, &[0x00])?;
         }
 
-        self.command(spi, Command::POWER_OFF)?;
+        self.command(spi, Command::PowerOff)?;
         self.wait_until_idle();
         self.interface
-            .cmd_with_data(spi, Command::DEEP_SLEEP, &[0xA5])?;
+            .cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
     }
 
-    fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
+    fn update_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        _delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         let color_value = self.color.get_byte_value();
 
-        self.send_resolution(spi)?;
-
-        self.interface
-            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
-
-        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.interface
-            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
-
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
         self.interface
-            .cmd_with_data(spi, Command::DATA_START_TRANSMISSION_2, buffer)?;
+            .cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
         Ok(())
     }
 
@@ -235,8 +234,8 @@ where
             //return Err("Wrong buffersize");
         }
 
-        self.command(spi, Command::PARTIAL_IN)?;
-        self.command(spi, Command::PARTIAL_WINDOW)?;
+        self.command(spi, Command::PartialIn)?;
+        self.command(spi, Command::PartialWindow)?;
         self.send_data(spi, &[(x >> 8) as u8])?;
         let tmp = x & 0xf8;
         self.send_data(spi, &[tmp as u8])?; // x should be the multiple of 8, the last 3 bit will always be ignored
@@ -255,42 +254,45 @@ where
         //TODO: handle dtm somehow
         let is_dtm1 = false;
         if is_dtm1 {
-            self.command(spi, Command::DATA_START_TRANSMISSION_1)? //TODO: check if data_start transmission 1 also needs "old"/background data here
+            self.command(spi, Command::DataStartTransmission1)? //TODO: check if data_start transmission 1 also needs "old"/background data here
         } else {
-            self.command(spi, Command::DATA_START_TRANSMISSION_2)?
+            self.command(spi, Command::DataStartTransmission2)?
         }
 
         self.send_data(spi, buffer)?;
 
-        self.command(spi, Command::PARTIAL_OUT)?;
+        self.command(spi, Command::PartialOut)?;
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+        self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
-    fn update_and_display_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer)?;
-        self.command(spi, Command::DISPLAY_REFRESH)?;
+    fn update_and_display_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer, delay)?;
+        self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.send_resolution(spi)?;
 
         let color_value = self.color.get_byte_value();
 
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_2)?;
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
         Ok(())
@@ -315,16 +317,16 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
-        refresh_rate: Option<RefreshLUT>,
+        refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
         match self.refresh {
-            RefreshLUT::FULL => {
+            RefreshLut::Full => {
                 self.set_lut_helper(spi, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
             }
-            RefreshLUT::QUICK => self.set_lut_helper(
+            RefreshLut::Quick => self.set_lut_helper(
                 spi,
                 &LUT_VCOM0_QUICK,
                 &LUT_WW_QUICK,
@@ -340,13 +342,14 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST> EPD4in2<SPI, CS, BUSY, DC, RST>
+impl<SPI, CS, BUSY, DC, RST, DELAY> Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
+    DELAY: DelayMs<u8>,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
@@ -366,14 +369,14 @@ where
     }
 
     fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW)
+        let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
         let h = self.height();
 
-        self.command(spi, Command::RESOLUTION_SETTING)?;
+        self.command(spi, Command::ResolutionSetting)?;
         self.send_data(spi, &[(w >> 8) as u8])?;
         self.send_data(spi, &[w as u8])?;
         self.send_data(spi, &[(h >> 8) as u8])?;
@@ -391,19 +394,196 @@ where
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         // LUT VCOM
-        self.cmd_with_data(spi, Command::LUT_FOR_VCOM, lut_vcom)?;
+        self.cmd_with_data(spi, Command::LutForVcom, lut_vcom)?;
 
         // LUT WHITE to WHITE
-        self.cmd_with_data(spi, Command::LUT_WHITE_TO_WHITE, lut_ww)?;
+        self.cmd_with_data(spi, Command::LutWhiteToWhite, lut_ww)?;
 
         // LUT BLACK to WHITE
-        self.cmd_with_data(spi, Command::LUT_BLACK_TO_WHITE, lut_bw)?;
+        self.cmd_with_data(spi, Command::LutBlackToWhite, lut_bw)?;
 
         // LUT WHITE to BLACK
-        self.cmd_with_data(spi, Command::LUT_WHITE_TO_BLACK, lut_wb)?;
+        self.cmd_with_data(spi, Command::LutWhiteToBlack, lut_wb)?;
 
         // LUT BLACK to BLACK
-        self.cmd_with_data(spi, Command::LUT_BLACK_TO_BLACK, lut_bb)?;
+        self.cmd_with_data(spi, Command::LutBlackToBlack, lut_bb)?;
+        Ok(())
+    }
+
+    /// Helper function. Sets up the display to send pixel data to a custom
+    /// starting point.
+    pub fn shift_display(
+        &mut self,
+        spi: &mut SPI,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error> {
+        self.send_data(spi, &[(x >> 8) as u8])?;
+        let tmp = x & 0xf8;
+        self.send_data(spi, &[tmp as u8])?; // x should be the multiple of 8, the last 3 bit will always be ignored
+        let tmp = tmp + width - 1;
+        self.send_data(spi, &[(tmp >> 8) as u8])?;
+        self.send_data(spi, &[(tmp | 0x07) as u8])?;
+
+        self.send_data(spi, &[(y >> 8) as u8])?;
+        self.send_data(spi, &[y as u8])?;
+
+        self.send_data(spi, &[((y + height - 1) >> 8) as u8])?;
+        self.send_data(spi, &[(y + height - 1) as u8])?;
+
+        self.send_data(spi, &[0x01])?; // Gates scan both inside and outside of the partial window. (default)
+
+        Ok(())
+    }
+}
+
+impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+    DELAY: DelayMs<u8>,
+{
+    /// To be followed immediately after by `update_old_frame`.
+    fn update_old_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        _delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
+
+        self.interface.data(spi, buffer)?;
+
+        Ok(())
+    }
+
+    /// To be used immediately after `update_old_frame`.
+    fn update_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        _delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+        // self.send_resolution(spi)?;
+
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
+
+        self.interface.data(spi, buffer)?;
+
+        Ok(())
+    }
+
+    /// This is a wrapper around `display_frame` for using this device as a true
+    /// `QuickRefresh` device.
+    fn display_new_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.display_frame(spi, delay)
+    }
+
+    /// This is wrapper around `update_new_frame` and `display_frame` for using
+    /// this device as a true `QuickRefresh` device.
+    ///
+    /// To be used immediately after `update_old_frame`.
+    fn update_and_display_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.update_new_frame(spi, buffer, delay)?;
+        self.display_frame(spi, delay)
+    }
+
+    fn update_partial_old_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+
+        if buffer.len() as u32 != width / 8 * height {
+            //TODO: panic!! or sth like that
+            //return Err("Wrong buffersize");
+        }
+
+        self.interface.cmd(spi, Command::PartialIn)?;
+        self.interface.cmd(spi, Command::PartialWindow)?;
+
+        self.shift_display(spi, x, y, width, height)?;
+
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
+
+        self.interface.data(spi, buffer)?;
+
+        Ok(())
+    }
+
+    /// Always call `update_partial_old_frame` before this, with buffer-updating code
+    /// between the calls.
+    fn update_partial_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+        if buffer.len() as u32 != width / 8 * height {
+            //TODO: panic!! or sth like that
+            //return Err("Wrong buffersize");
+        }
+
+        self.shift_display(spi, x, y, width, height)?;
+
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
+
+        self.interface.data(spi, buffer)?;
+
+        self.interface.cmd(spi, Command::PartialOut)?;
+        Ok(())
+    }
+
+    fn clear_partial_frame(
+        &mut self,
+        spi: &mut SPI,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle();
+        self.send_resolution(spi)?;
+
+        let color_value = self.color.get_byte_value();
+
+        self.interface.cmd(spi, Command::PartialIn)?;
+        self.interface.cmd(spi, Command::PartialWindow)?;
+
+        self.shift_display(spi, x, y, width, height)?;
+
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
+        self.interface
+            .data_x_times(spi, color_value, width / 8 * height)?;
+
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
+        self.interface
+            .data_x_times(spi, color_value, width / 8 * height)?;
+
+        self.interface.cmd(spi, Command::PartialOut)?;
         Ok(())
     }
 }
