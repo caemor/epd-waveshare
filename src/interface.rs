@@ -1,9 +1,6 @@
 use crate::traits::Command;
 use core::marker::PhantomData;
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::*,
-};
+use crate::eh_prelude::*;
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
@@ -29,7 +26,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
         DisplayInterface {
@@ -47,7 +44,7 @@ where
     /// Enables direct interaction with the device with the help of [data()](DisplayInterface::data())
     pub(crate) fn cmd<T: Command>(&mut self, spi: &mut SPI, command: T) -> Result<(), SPI::Error> {
         // low for commands
-        let _ = self.dc.try_set_low();
+        let _ = self.dc.set_low();
 
         // Transfer the command over spi
         self.write(spi, &[command.address()])
@@ -58,7 +55,7 @@ where
     /// Enables direct interaction with the device with the help of [command()](Epd4in2::command())
     pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
         // high for data
-        let _ = self.dc.try_set_high();
+        let _ = self.dc.set_high();
 
         for val in data.iter().copied() {
             // Transfer data one u8 at a time over spi
@@ -91,7 +88,7 @@ where
         repetitions: u32,
     ) -> Result<(), SPI::Error> {
         // high for data
-        let _ = self.dc.try_set_high();
+        let _ = self.dc.set_high();
         // Transfer data (u8) over spi
         for _ in 0..repetitions {
             self.write(spi, &[val])?;
@@ -102,21 +99,21 @@ where
     // spi write helper/abstraction function
     fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
         // activate spi with cs low
-        let _ = self.cs.try_set_low();
+        let _ = self.cs.set_low();
 
         // transfer spi data
         // Be careful!! Linux has a default limit of 4096 bytes per spi transfer
         // see https://raspberrypi.stackexchange.com/questions/65595/spi-transfer-fails-with-buffer-size-greater-than-4096
         if cfg!(target_os = "linux") {
             for data_chunk in data.chunks(4096) {
-                spi.try_write(data_chunk)?;
+                spi.write(data_chunk)?;
             }
         } else {
-            spi.try_write(data)?;
+            spi.write(data)?;
         }
 
         // deactivate spi with cs high
-        let _ = self.cs.try_set_high();
+        let _ = self.cs.set_high();
 
         Ok(())
     }
@@ -158,8 +155,8 @@ where
     /// Most likely there was a mistake with the 2in9 busy connection
     /// //TODO: use the #cfg feature to make this compile the right way for the certain types
     pub(crate) fn is_busy(&self, is_busy_low: bool) -> bool {
-        (is_busy_low && self.busy.try_is_low().unwrap_or(false))
-            || (!is_busy_low && self.busy.try_is_high().unwrap_or(false))
+        (is_busy_low && self.busy.is_low().unwrap_or(false))
+            || (!is_busy_low && self.busy.is_high().unwrap_or(false))
     }
 
     /// Resets the device.
@@ -169,15 +166,15 @@ where
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u8) {
-        let _ = self.rst.try_set_high();
-        delay.try_delay_ms(10);
+    pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u32) {
+        let _ = self.rst.set_high();
+        delay.delay_ms(10);
 
-        let _ = self.rst.try_set_low();
-        delay.try_delay_ms(duration);
-        let _ = self.rst.try_set_high();
+        let _ = self.rst.set_low();
+        delay.delay_ms(duration);
+        let _ = self.rst.set_high();
         //TODO: the upstream libraries always sleep for 200ms here
         // 10ms works fine with just for the 7in5_v2 but this needs to be validated for other devices
-        delay.try_delay_ms(200);
+        delay.delay_ms(200);
     }
 }

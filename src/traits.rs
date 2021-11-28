@@ -1,8 +1,5 @@
 use core::marker::Sized;
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::*,
-};
+use crate::eh_prelude::*;
 
 /// All commands need to have this trait which gives the address of the command
 /// which needs to be send via SPI with activated CommandsPin (Data/Command Pin in CommandMode)
@@ -33,7 +30,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -57,7 +54,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -133,7 +130,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// The Color Type used by the Display
     type DisplayColor;
@@ -288,7 +285,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// Updates the old frame.
     fn update_old_frame(

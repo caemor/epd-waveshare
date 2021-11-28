@@ -49,11 +49,7 @@ pub const HEIGHT: u32 = 296;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::*,
-};
-
+use crate::eh_prelude::*;
 use crate::type_a::{
     command::Command,
     constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE},
@@ -88,7 +84,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10);
@@ -140,7 +136,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -292,7 +288,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     fn wait_until_idle(&mut self) {
         let _ = self.interface.wait_until_idle(IS_BUSY_LOW);

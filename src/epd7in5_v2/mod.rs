@@ -10,11 +10,7 @@
 //! Revision V2 has been released on 2019.11, the resolution is upgraded to 800×480, from 640×384 of V1.
 //! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::{InputPin, OutputPin},
-};
-
+use crate::eh_prelude::*;
 use crate::color::Color;
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
@@ -52,7 +48,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
@@ -86,7 +82,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     type DisplayColor = Color;
     fn new(
@@ -209,7 +205,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)

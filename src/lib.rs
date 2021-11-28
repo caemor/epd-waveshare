@@ -103,6 +103,10 @@ pub mod prelude {
     pub use crate::graphics::{Display, DisplayRotation, OctDisplay, TriDisplay};
 }
 
+pub(crate) mod eh_prelude {
+    pub(crate) use embedded_hal::{delay::blocking::DelayUs, spi::blocking::Write, digital::blocking::{InputPin, OutputPin}};
+}
+
 /// Computes the needed buffer length. Takes care of rounding up in case width
 /// is not divisible by 8.
 ///

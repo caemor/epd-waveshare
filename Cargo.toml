@@ -16,7 +16,7 @@ edition = "2018"
 # travis-ci = { repository = "caemor/epd-waveshare" }
 
 [dependencies]
-embedded-hal = "1.0.0-alpha.2"
+embedded-hal = "1.0.0-alpha.6"
 embedded-graphics-core = { version = "0.3.2", optional = true}
 bit_field = "0.10.1"
 

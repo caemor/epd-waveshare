@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Updated to embedded hal 1.0 a6
+
 ### Fixed
 
 ## [v0.5.0] - 2021-11-28

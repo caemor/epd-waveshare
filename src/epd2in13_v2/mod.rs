@@ -8,11 +8,7 @@
 //! - [Controller Datasheet SS1780](http://www.e-paper-display.com/download_detail/downloadsId=682.html)
 //!
 
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::{InputPin, OutputPin},
-};
-
+use crate::eh_prelude::*;
 use crate::buffer_len;
 use crate::color::Color;
 use crate::interface::DisplayInterface;
@@ -64,7 +60,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // HW reset
@@ -158,7 +154,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     type DisplayColor = Color;
     fn new(
@@ -368,7 +364,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// When using partial refresh, the controller uses the provided buffer for
     /// comparison with new buffer.

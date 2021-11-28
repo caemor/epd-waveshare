@@ -53,11 +53,8 @@
 //!# Ok(())
 //!# }
 //!```
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::*,
-};
-
+//! 
+use crate::eh_prelude::*;
 use crate::interface::DisplayInterface;
 use crate::traits::{
     InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
@@ -103,7 +100,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Values taken from datasheet and sample code
@@ -116,7 +113,7 @@ where
 
         // power on
         self.command(spi, Command::PowerOn)?;
-        delay.try_delay_ms(5);
+        delay.delay_ms(5);
         self.wait_until_idle();
 
         // set the panel settings
@@ -147,7 +144,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     fn update_color_frame(
         &mut self,
@@ -192,7 +189,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     type DisplayColor = Color;
     fn new(
@@ -339,7 +336,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
