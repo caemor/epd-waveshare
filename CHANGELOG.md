@@ -8,23 +8,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+## [v0.5.0] - 2021-11-28
+
+### Added
+
 - Added QuickRefresh Trait and implemented it for EPD4in2 in #62 (thanks to @David-OConnor)
 - Added Epd 2in7 (B) support in #60 (thanks to @pjsier)
 - Added Epd 7in5 HD support (thanks to @whiite)
 - Added Epd 2in9 V2 support in #73 & #74 (thanks to @andber1)
+- Added Epd 2in13 (BC) support in #75 (thanks to @Irbalt)
+- Added Color conversion methods in #87 & #88 (thanks to @crzysdrs)
+- Provide full QuickRefresh interface for 4.2 inch display in #81 (thanks to @sirhcel)
+
 
 ### Changed
 
+- Updated embedded-graphics to 0.7 and switch to e-g-core #78 (@Irbalt) & #85 (@jamwaffles)
 - Use specific ParseColorError instead of ()
 - Epd4in2: Don't set the resolution (and some more) over and over again (#48)
 - Removed `#[allow(non_camel_case_types)]` to fix various issues around it
 - Added Delay to QuickRefresh Trait due to #74 (thanks to @andber1)
+- Write data over SPI 1 byte at a time due to #82 (thanks to @belak)
+- Enable drawing in three colors for epd2in13bc in #76 (thanks to @Irbalt)
 
-
-
-## [v0.5.0]
-
-TODO!
 
 ## [v0.4.0] - 2020-04-06
 
