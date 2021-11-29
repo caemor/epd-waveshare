@@ -138,15 +138,6 @@ where
         self.interface
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])?;
 
-        self.send_resolution(spi)?;
-
-        self.interface
-            .cmd_with_data(spi, Command::VCM_DC_SETTING, &[0x12])?;
-
-        //VBDF 17|D7 VBDW 97  VBDB 57  VBDF F7  VBDW 77  VBDB 37  VBDR B7
-        self.interface
-            .cmd_with_data(spi, Command::VCOM_AND_DATA_INTERVAL_SETTING, &[0x97])?;
-
         self.set_lut(spi, None)?;
 
         self.wait_until_idle();
@@ -219,8 +210,7 @@ where
         self.wait_until_idle();
         let color_value = self.color.get_byte_value();
 
-        self.interface
-            .cmd(spi, Command::DATA_START_TRANSMISSION_1)?;
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
