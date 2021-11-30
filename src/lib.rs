@@ -104,7 +104,11 @@ pub mod prelude {
 }
 
 pub(crate) mod eh_prelude {
-    pub(crate) use embedded_hal::{delay::blocking::DelayUs, spi::blocking::Write, digital::blocking::{InputPin, OutputPin}};
+    pub(crate) use embedded_hal::{
+        delay::blocking::DelayUs,
+        digital::blocking::{InputPin, OutputPin},
+        spi::blocking::Write,
+    };
 }
 
 /// Computes the needed buffer length. Takes care of rounding up in case width

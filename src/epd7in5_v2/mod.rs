@@ -10,8 +10,8 @@
 //! Revision V2 has been released on 2019.11, the resolution is upgraded to 800×480, from 640×384 of V1.
 //! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
-use crate::eh_prelude::*;
 use crate::color::Color;
+use crate::eh_prelude::*;
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 

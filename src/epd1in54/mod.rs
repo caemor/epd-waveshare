@@ -56,7 +56,7 @@ const IS_BUSY_LOW: bool = false;
 use crate::eh_prelude::*;
 use crate::type_a::{
     command::Command,
-    constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE}
+    constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE},
 };
 
 use crate::color::Color;

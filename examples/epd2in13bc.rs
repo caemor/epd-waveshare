@@ -6,7 +6,7 @@ use embedded_graphics::{
     primitives::{Circle, Line, PrimitiveStyle},
     text::{Baseline, Text, TextStyleBuilder},
 };
-use embedded_hal::prelude::*;
+use embedded_hal::delay::blocking::DelayUs;
 use epd_waveshare::{
     color::*,
     epd2in13bc::{Display2in13bc, Epd2in13bc},
@@ -16,7 +16,7 @@ use epd_waveshare::{
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, Pin, Spidev,
+    Delay, Spidev, SysfsPin as Pin,
 };
 
 // activate spi, gpio in raspi-config
@@ -34,7 +34,7 @@ use linux_embedded_hal::{
 //
 // after finishing, put the display to sleep
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<(), linux_embedded_hal::SPIError> {
     let busy = Pin::new(24); // GPIO 24, board J-18
     busy.export().expect("busy export");
     while !busy.is_exported() {}
@@ -98,7 +98,7 @@ fn main() -> Result<(), std::io::Error> {
         .expect("display frame new graphics");
 
     println!("First frame done. Waiting 5s");
-    delay.delay_ms(5000u16);
+    delay.delay_ms(5000).expect("delay");
 
     println!("Now test new graphics with default rotation and three colors:");
     display.clear_buffer(TriColor::White);
@@ -143,7 +143,7 @@ fn main() -> Result<(), std::io::Error> {
         .expect("display frame new graphics");
 
     println!("Second frame done. Waiting 5s");
-    delay.delay_ms(5000u16);
+    delay.delay_ms(5000).expect("delay");
 
     // clear both bw buffer and chromatic buffer
     display.clear_buffer(TriColor::White);

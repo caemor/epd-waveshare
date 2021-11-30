@@ -1,6 +1,6 @@
+use crate::eh_prelude::*;
 use crate::traits::Command;
 use core::marker::PhantomData;
-use crate::eh_prelude::*;
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///

@@ -6,7 +6,7 @@ use embedded_graphics::{
     primitives::{Circle, Line, PrimitiveStyleBuilder},
     text::{Baseline, Text, TextStyleBuilder},
 };
-use embedded_hal::prelude::*;
+use embedded_hal::delay::blocking::DelayUs;
 use epd_waveshare::{
     color::*,
     epd4in2::{Display4in2, Epd4in2},
@@ -16,14 +16,14 @@ use epd_waveshare::{
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, Pin, Spidev,
+    Delay, Spidev, SysfsPin as Pin,
 };
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<(), linux_embedded_hal::SPIError> {
     // Configure SPI
     // Settings are taken from
     let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
@@ -83,7 +83,7 @@ fn main() -> Result<(), std::io::Error> {
     epd4in2
         .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
-    delay.delay_ms(5000u16);
+    delay.delay_ms(5000).expect("delay");
 
     println!("Now test new graphics with default rotation and some special stuff");
     display.clear_buffer(Color::White);
@@ -141,7 +141,7 @@ fn main() -> Result<(), std::io::Error> {
             .display_frame(&mut spi, &mut delay)
             .expect("display frame new graphics");
 
-        delay.delay_ms(1_000u16);
+        delay.delay_ms(1_000).expect("delay");
     }
 
     println!("Finished tests - going to sleep");

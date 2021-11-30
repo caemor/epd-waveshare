@@ -1,5 +1,5 @@
-use core::marker::Sized;
 use crate::eh_prelude::*;
+use core::marker::Sized;
 
 /// All commands need to have this trait which gives the address of the command
 /// which needs to be send via SPI with activated CommandsPin (Data/Command Pin in CommandMode)

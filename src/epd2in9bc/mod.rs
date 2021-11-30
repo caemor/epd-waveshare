@@ -53,7 +53,7 @@
 //!# Ok(())
 //!# }
 //!```
-//! 
+//!
 use crate::eh_prelude::*;
 use crate::interface::DisplayInterface;
 use crate::traits::{

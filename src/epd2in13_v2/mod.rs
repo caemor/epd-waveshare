@@ -8,9 +8,9 @@
 //! - [Controller Datasheet SS1780](http://www.e-paper-display.com/download_detail/downloadsId=682.html)
 //!
 
-use crate::eh_prelude::*;
 use crate::buffer_len;
 use crate::color::Color;
+use crate::eh_prelude::*;
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 

@@ -1,17 +1,18 @@
 #![deny(warnings)]
 
+use embedded_hal::delay::blocking::DelayUs;
 use epd_waveshare::{epd1in54::Epd1in54, prelude::*};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, Pin, Spidev,
+    Delay, Spidev, SysfsPin as Pin,
 };
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<(), linux_embedded_hal::SPIError> {
     // Configure SPI
     // SPI settings are from eink-waveshare-rs documenation
     let mut spi = Spidev::open("/dev/spidev0.0")?;
@@ -89,7 +90,7 @@ fn main() -> Result<(), std::io::Error> {
 
     // Display updated frame
     epd.display_frame(&mut spi, &mut delay)?;
-    delay.delay_ms(5000u16);
+    delay.delay_ms(5000).expect("delay");
 
     // Set the EPD to sleep
     epd.sleep(&mut spi, &mut delay)?;
