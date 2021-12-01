@@ -8,9 +8,9 @@
 //!
 //! - [Datasheet](https://www.waveshare.com/w/upload/2/27/7inch_HD_e-Paper_Specification.pdf)
 //! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epd7in5_HD.py)
-//!
+use crate::Error;
 use crate::color::Color;
-use crate::eh_prelude::*;
+use crate::{eh_prelude::*};
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 
@@ -49,9 +49,9 @@ where
     RST: OutputPin,
     DELAY: DelayUs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         // Reset the device
-        self.interface.reset(delay, 2);
+        self.interface.reset(delay, 2)?;
 
         // HD procedure as described here:
         // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epd7in5_HD.py
@@ -110,7 +110,7 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-    ) -> Result<Self, SPI::Error> {
+    ) -> Result<Self, Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
@@ -121,11 +121,11 @@ where
         Ok(epd)
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::DeepSleep, &[0x01])?;
         Ok(())
@@ -136,7 +136,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         _delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
         self.cmd_with_data(spi, Command::WriteRamBw, buffer)?;
@@ -152,11 +152,11 @@ where
         _y: u32,
         _width: u32,
         _height: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         unimplemented!();
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.command(spi, Command::MasterActivation)?;
         self.wait_until_idle();
         Ok(())
@@ -167,13 +167,13 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         let pixel_count = WIDTH * HEIGHT / 8;
         let background_color_byte = self.color.get_byte_value();
 
@@ -212,7 +212,7 @@ where
         &mut self,
         _spi: &mut SPI,
         _refresh_rate: Option<RefreshLut>,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         unimplemented!();
     }
 
@@ -230,7 +230,7 @@ where
     RST: OutputPin,
     DELAY: DelayUs,
 {
-    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
+    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.interface.cmd(spi, command)
     }
 
@@ -239,7 +239,7 @@ where
         spi: &mut SPI,
         command: Command,
         data: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.interface.cmd_with_data(spi, command, data)
     }
 

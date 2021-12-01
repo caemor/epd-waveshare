@@ -50,7 +50,7 @@
 //!# }
 //!```
 
-use crate::eh_prelude::*;
+use crate::{eh_prelude::*, Error};
 use crate::interface::DisplayInterface;
 use crate::traits::{
     InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
@@ -99,10 +99,10 @@ where
     RST: OutputPin,
     DELAY: DelayUs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         // Values taken from datasheet and sample code
 
-        self.interface.reset(delay, 10);
+        self.interface.reset(delay, 10)?;
 
         // start the booster
         self.interface
@@ -110,7 +110,7 @@ where
 
         // power on
         self.command(spi, Command::PowerOn)?;
-        delay.delay_ms(5);
+        delay.delay_ms(5).map_err(|e| Error::Delay(e))?;
         self.wait_until_idle();
 
         // set the panel settings
@@ -148,7 +148,7 @@ where
         spi: &mut SPI,
         black: &[u8],
         chromatic: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.update_achromatic_frame(spi, black)?;
         self.update_chromatic_frame(spi, chromatic)
     }
@@ -156,7 +156,7 @@ where
     /// Update only the black/white data of the display.
     ///
     /// Finish by calling `update_chromatic_frame`.
-    fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
+    fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface.data(spi, black)?;
         Ok(())
@@ -169,7 +169,7 @@ where
         &mut self,
         spi: &mut SPI,
         chromatic: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data(spi, chromatic)?;
 
@@ -196,7 +196,7 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-    ) -> Result<Self, SPI::Error> {
+    ) -> Result<Self, Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
@@ -207,7 +207,7 @@ where
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         // Section 8.2 from datasheet
         self.interface.cmd_with_data(
             spi,
@@ -224,7 +224,7 @@ where
         Ok(())
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.init(spi, delay)
     }
 
@@ -249,7 +249,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         _delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data(spi, buffer)?;
@@ -273,11 +273,11 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.command(spi, Command::DisplayRefresh)?;
 
         self.wait_until_idle();
@@ -289,13 +289,13 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.send_resolution(spi)?;
 
         let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
@@ -317,7 +317,7 @@ where
         &mut self,
         _spi: &mut SPI,
         _refresh_rate: Option<RefreshLut>,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         Ok(())
     }
 
@@ -335,11 +335,11 @@ where
     RST: OutputPin,
     DELAY: DelayUs,
 {
-    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
+    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.interface.cmd(spi, command)
     }
 
-    fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
+    fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.interface.data(spi, data)
     }
 
@@ -348,7 +348,7 @@ where
         spi: &mut SPI,
         command: Command,
         data: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.interface.cmd_with_data(spi, command, data)
     }
 
@@ -356,7 +356,7 @@ where
         let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
-    fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         let w = self.width();
         let h = self.height();
 
@@ -368,7 +368,7 @@ where
     }
 
     /// Set the outer border of the display to the chosen color.
-    pub fn set_border_color(&mut self, spi: &mut SPI, color: TriColor) -> Result<(), SPI::Error> {
+    pub fn set_border_color(&mut self, spi: &mut SPI, color: TriColor) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         let border = match color {
             TriColor::Black => BLACK_BORDER,
             TriColor::White => WHITE_BORDER,

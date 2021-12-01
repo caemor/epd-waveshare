@@ -124,7 +124,7 @@ pub const fn buffer_len(width: usize, height: usize) -> usize {
     (width + 7) / 8 * height
 }
 
-use embedded_hal::spi::{Mode, Phase, Polarity};
+use embedded_hal::{spi::{Mode, Phase, Polarity}};
 
 /// SPI mode -
 /// For more infos see [Requirements: SPI](index.html#spi)
@@ -132,3 +132,28 @@ pub const SPI_MODE: Mode = Mode {
     phase: Phase::CaptureOnFirstTransition,
     polarity: Polarity::IdleLow,
 };
+
+#[derive(Debug)]    
+/// Error
+pub enum Error<SPIError, CSError, BUSYError, DCError, RSTError, DELAYError> {
+    /// SPI Errors
+    Spi(SPIError),
+    /// Delay Errors
+    Delay(DELAYError),
+    /// CS Pin Error
+    CS(CSError),
+    /// Busy Pin Reading Error
+    BUSY(BUSYError),
+    /// Data Command Select Pin Error
+    DC(DCError),
+    /// Reset Pin Error
+    RST(RSTError),
+}
+
+impl <SPIError, CSError, BUSYError, DCError, RSTError, DELAYError> From<SPIError> for Error<SPIError, CSError, BUSYError, DCError, RSTError, DELAYError> {
+    fn from(spi: SPIError) -> Self {
+        Self::Spi(spi)
+    }
+}
+
+

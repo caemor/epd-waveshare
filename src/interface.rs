@@ -1,4 +1,4 @@
-use crate::eh_prelude::*;
+use crate::{eh_prelude::*, Error};
 use crate::traits::Command;
 use core::marker::PhantomData;
 
@@ -42,7 +42,7 @@ where
     /// Basic function for sending [Commands](Command).
     ///
     /// Enables direct interaction with the device with the help of [data()](DisplayInterface::data())
-    pub(crate) fn cmd<T: Command>(&mut self, spi: &mut SPI, command: T) -> Result<(), SPI::Error> {
+    pub(crate) fn cmd<T: Command>(&mut self, spi: &mut SPI, command: T) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         // low for commands
         let _ = self.dc.set_low();
 
@@ -53,7 +53,7 @@ where
     /// Basic function for sending an array of u8-values of data over spi
     ///
     /// Enables direct interaction with the device with the help of [command()](Epd4in2::command())
-    pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
+    pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         // high for data
         let _ = self.dc.set_high();
 
@@ -73,7 +73,7 @@ where
         spi: &mut SPI,
         command: T,
         data: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         self.cmd(spi, command)?;
         self.data(spi, data)
     }
@@ -86,7 +86,7 @@ where
         spi: &mut SPI,
         val: u8,
         repetitions: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         // high for data
         let _ = self.dc.set_high();
         // Transfer data (u8) over spi
@@ -97,7 +97,7 @@ where
     }
 
     // spi write helper/abstraction function
-    fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
+    fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
         // activate spi with cs low
         let _ = self.cs.set_low();
 
@@ -113,7 +113,7 @@ where
         }
 
         // deactivate spi with cs high
-        let _ = self.cs.set_high();
+        self.cs.set_high().map_err(|e| Error::CS(e))?;
 
         Ok(())
     }
@@ -166,15 +166,16 @@ where
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u32) {
-        let _ = self.rst.set_high();
-        delay.delay_ms(10);
+    pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u32) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>  {
+        self.rst.set_high().map_err(|e| Error::RST(e))?;
+        delay.delay_ms(10).map_err(|e| Error::Delay(e))?;
 
-        let _ = self.rst.set_low();
-        delay.delay_ms(duration);
-        let _ = self.rst.set_high();
+        self.rst.set_low().map_err(|e| Error::RST(e))?;
+        delay.delay_ms(duration).map_err(|e| Error::Delay(e))?;
+        self.rst.set_high().map_err(|e| Error::RST(e))?;
         //TODO: the upstream libraries always sleep for 200ms here
         // 10ms works fine with just for the 7in5_v2 but this needs to be validated for other devices
-        delay.delay_ms(200);
+        delay.delay_ms(200).map_err(|e| Error::Delay(e))?;
+        Ok(())
     }
 }
