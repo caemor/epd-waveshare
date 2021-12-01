@@ -1,5 +1,6 @@
 #![deny(warnings)]
 
+use core::convert::Infallible;
 use embedded_graphics::{
     mono_font::MonoTextStyleBuilder,
     prelude::*,
@@ -13,14 +14,12 @@ use epd_waveshare::{
     graphics::{DisplayRotation, TriDisplay},
     prelude::*,
 };
+use linux_embedded_hal::SPIError;
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
     Delay, Spidev, SysfsPin as Pin,
 };
-use core::convert::Infallible;
-use linux_embedded_hal::SPIError;
-
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
@@ -37,7 +36,17 @@ use linux_embedded_hal::SPIError;
 //
 // after finishing, put the display to sleep
 
-fn main() -> Result<(), epd_waveshare::Error<SPIError, linux_embedded_hal::sysfs_gpio::Error, linux_embedded_hal::sysfs_gpio::Error, linux_embedded_hal::sysfs_gpio::Error, linux_embedded_hal::sysfs_gpio::Error, Infallible>> {
+fn main() -> Result<
+    (),
+    epd_waveshare::Error<
+        SPIError,
+        linux_embedded_hal::sysfs_gpio::Error,
+        linux_embedded_hal::sysfs_gpio::Error,
+        linux_embedded_hal::sysfs_gpio::Error,
+        linux_embedded_hal::sysfs_gpio::Error,
+        Infallible,
+    >,
+> {
     let busy = Pin::new(24); // GPIO 24, board J-18
     busy.export().expect("busy export");
     while !busy.is_exported() {}

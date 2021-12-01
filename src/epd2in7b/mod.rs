@@ -2,11 +2,11 @@
 //!
 //! [Documentation](https://www.waveshare.com/wiki/2.7inch_e-Paper_HAT_(B))
 
-use crate::{eh_prelude::*, Error};
 use crate::interface::DisplayInterface;
 use crate::traits::{
     InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
+use crate::{eh_prelude::*, Error};
 
 // The Lookup Tables for the Display
 mod constants;
@@ -48,7 +48,12 @@ where
     RST: OutputPin,
     DELAY: DelayUs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn init(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         // reset the device
         self.interface.reset(delay, 2)?;
 
@@ -122,7 +127,8 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-    ) -> Result<Self, Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<Self, Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
@@ -133,11 +139,21 @@ where
         Ok(epd)
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn wake_up(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn sleep(
+        &mut self,
+        spi: &mut SPI,
+        _delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0xf7])?;
@@ -154,7 +170,8 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         _delay: &mut DELAY,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.send_buffer_helper(spi, buffer)?;
 
@@ -175,7 +192,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface
             .cmd(spi, Command::PartialDataStartTransmission1)?;
 
@@ -194,7 +212,12 @@ where
         self.interface.cmd(spi, Command::DataStop)
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn display_frame(
+        &mut self,
+        spi: &mut SPI,
+        _delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.command(spi, Command::DisplayRefresh)?;
         self.wait_until_idle();
         Ok(())
@@ -205,13 +228,19 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.update_frame(spi, buffer, delay)?;
         self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        _delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
 
         let color_value = self.color.get_byte_value();
@@ -248,7 +277,8 @@ where
         &mut self,
         spi: &mut SPI,
         _refresh_rate: Option<RefreshLut>,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         self.cmd_with_data(spi, Command::LutForVcom, &LUT_VCOM_DC)?;
         self.cmd_with_data(spi, Command::LutWhiteToWhite, &LUT_WW)?;
@@ -278,7 +308,8 @@ where
         spi: &mut SPI,
         black: &[u8],
         chromatic: &[u8],
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.update_achromatic_frame(spi, black)?;
         self.update_chromatic_frame(spi, chromatic)
     }
@@ -290,7 +321,8 @@ where
         &mut self,
         spi: &mut SPI,
         achromatic: &[u8],
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         self.send_buffer_helper(spi, achromatic)?;
@@ -305,7 +337,8 @@ where
         &mut self,
         spi: &mut SPI,
         chromatic: &[u8],
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
 
         self.send_buffer_helper(spi, chromatic)?;
@@ -326,15 +359,30 @@ where
     RST: OutputPin,
     DELAY: DelayUs,
 {
-    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn command(
+        &mut self,
+        spi: &mut SPI,
+        command: Command,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface.cmd(spi, command)
     }
 
-    fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn send_data(
+        &mut self,
+        spi: &mut SPI,
+        data: &[u8],
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface.data(spi, data)
     }
 
-    fn send_buffer_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn send_buffer_helper(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         // Based on the waveshare implementation, all data for color values is flipped. This helper
         // method makes that transmission easier
         for b in buffer.iter() {
@@ -348,7 +396,8 @@ where
         spi: &mut SPI,
         command: Command,
         data: &[u8],
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface.cmd_with_data(spi, command, data)
     }
 
@@ -364,7 +413,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.command(spi, Command::PartialDisplayRefresh)?;
         self.send_data(spi, &[(x >> 8) as u8])?;
         self.send_data(spi, &[(x & 0xf8) as u8])?;
@@ -387,7 +437,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface
             .cmd(spi, Command::PartialDataStartTransmission1)?;
         self.send_data(spi, &[(x >> 8) as u8])?;
@@ -417,7 +468,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface
             .cmd(spi, Command::PartialDataStartTransmission2)?;
         self.send_data(spi, &[(x >> 8) as u8])?;

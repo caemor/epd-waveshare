@@ -74,10 +74,10 @@ const LUT_PARTIAL_2IN9: [u8; 153] = [
     0x22, 0x0, 0x0, 0x0,
 ];
 
-use crate::{eh_prelude::*};
+use crate::color::Color;
+use crate::eh_prelude::*;
 use crate::type_a::command::Command;
 use crate::Error;
-use crate::color::Color;
 
 use crate::traits::*;
 
@@ -109,7 +109,12 @@ where
     RST: OutputPin,
     DELAY: DelayUs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn init(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.interface.reset(delay, 2)?;
 
         self.wait_until_idle();
@@ -167,7 +172,8 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-    ) -> Result<Self, Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<Self, Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
 
         let mut epd = Epd2in9 {
@@ -181,7 +187,12 @@ where
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn sleep(
+        &mut self,
+        spi: &mut SPI,
+        _delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         self.interface
@@ -189,7 +200,12 @@ where
         Ok(())
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn wake_up(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.init(spi, delay)?;
         Ok(())
     }
@@ -199,7 +215,8 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         _delay: &mut DELAY,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         self.interface.cmd_with_data(spi, Command::WriteRam, buffer)
     }
@@ -212,7 +229,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         //TODO This is copied from epd2in9 but it seems not working. Partial refresh supported by version 2?
         self.wait_until_idle();
         self.set_ram_area(spi, x, y, x + width, y + height)?;
@@ -223,7 +241,12 @@ where
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn display_frame(
+        &mut self,
+        spi: &mut SPI,
+        _delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         // Enable clock signal, Enable Analog, Load temperature value, DISPLAY with DISPLAY Mode 1, Disable Analog, Disable OSC
         self.interface
@@ -238,13 +261,19 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        _delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
 
         // clear the ram with the background color
@@ -266,7 +295,8 @@ where
         &mut self,
         _spi: &mut SPI,
         refresh_rate: Option<RefreshLut>,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
@@ -291,7 +321,11 @@ where
         self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
-    fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn use_full_frame(
+        &mut self,
+        spi: &mut SPI,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         // choose full frame/ram
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
@@ -306,7 +340,8 @@ where
         start_y: u32,
         end_x: u32,
         end_y: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         assert!(start_x < end_x);
         assert!(start_y < end_y);
 
@@ -331,7 +366,13 @@ where
         )
     }
 
-    fn set_ram_counter(&mut self, spi: &mut SPI, x: u32, y: u32) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn set_ram_counter(
+        &mut self,
+        spi: &mut SPI,
+        x: u32,
+        y: u32,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
@@ -348,7 +389,12 @@ where
     }
 
     /// Set your own LUT, this function is also used internally for set_lut
-    fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn set_lut_helper(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::WriteLutRegister, buffer)?;
@@ -373,7 +419,8 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         _delay: &mut DELAY,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
@@ -387,7 +434,8 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         self.interface.reset(delay, 2)?;
 
@@ -413,7 +461,12 @@ where
     }
 
     /// For a quick refresh of the new updated frame. To be used immediately after `update_new_frame`
-    fn display_new_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    fn display_new_frame(
+        &mut self,
+        spi: &mut SPI,
+        _delay: &mut DELAY,
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.wait_until_idle();
         self.interface
             .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0x0F])?;
@@ -428,7 +481,8 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         self.update_new_frame(spi, buffer, delay)?;
         self.display_new_frame(spi, delay)?;
         Ok(())
@@ -444,7 +498,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         //TODO supported by display?
         unimplemented!()
     }
@@ -459,7 +514,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         //TODO supported by display?
         unimplemented!()
     }
@@ -473,7 +529,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>{
+    ) -> Result<(), Error<SPI::Error, CS::Error, BUSY::Error, DC::Error, RST::Error, DELAY::Error>>
+    {
         //TODO supported by display?
         unimplemented!()
     }

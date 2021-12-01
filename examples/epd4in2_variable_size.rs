@@ -1,6 +1,7 @@
 #![deny(warnings)]
 #![deny(warnings)]
 
+use core::convert::Infallible;
 use embedded_graphics::{
     mono_font::MonoTextStyleBuilder,
     prelude::*,
@@ -14,21 +15,28 @@ use epd_waveshare::{
     graphics::{Display, DisplayRotation, VarDisplay},
     prelude::*,
 };
+use linux_embedded_hal::SPIError;
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
     Delay, Spidev, SysfsPin as Pin,
 };
-use core::convert::Infallible;
-use linux_embedded_hal::SPIError;
-
-
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-fn main() -> Result<(), epd_waveshare::Error<SPIError, linux_embedded_hal::sysfs_gpio::Error, linux_embedded_hal::sysfs_gpio::Error, linux_embedded_hal::sysfs_gpio::Error, linux_embedded_hal::sysfs_gpio::Error, Infallible>> {
+fn main() -> Result<
+    (),
+    epd_waveshare::Error<
+        SPIError,
+        linux_embedded_hal::sysfs_gpio::Error,
+        linux_embedded_hal::sysfs_gpio::Error,
+        linux_embedded_hal::sysfs_gpio::Error,
+        linux_embedded_hal::sysfs_gpio::Error,
+        Infallible,
+    >,
+> {
     // Configure SPI
     // Settings are taken from
     let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
