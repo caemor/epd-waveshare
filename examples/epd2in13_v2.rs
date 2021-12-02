@@ -19,6 +19,7 @@ use linux_embedded_hal::{
     Delay, Pin, Spidev,
 };
 
+// The pins in this example are for the Universal e-Paper Raw Panel Driver HAT
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
