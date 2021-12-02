@@ -41,19 +41,19 @@ fn main() -> Result<(), std::io::Error> {
     cs.set_direction(Direction::Out).expect("CS Direction");
     cs.set_value(1).expect("CS Value set to 1");
 
-    let busy = Pin::new(5); //pin 29
+    let busy = Pin::new(24); // GPIO 24, board J-18
     busy.export().expect("busy export");
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
     //busy.set_value(1).expect("busy Value set to 1");
 
-    let dc = Pin::new(6); //pin 31 //bcm6
+    let dc = Pin::new(25); // GPIO 25, board J-22
     dc.export().expect("dc export");
     while !dc.is_exported() {}
     dc.set_direction(Direction::Out).expect("dc Direction");
     dc.set_value(1).expect("dc Value set to 1");
 
-    let rst = Pin::new(16); //pin 36 //bcm16
+    let rst = Pin::new(17); // GPIO 17, board J-11
     rst.export().expect("rst export");
     while !rst.is_exported() {}
     rst.set_direction(Direction::Out).expect("rst Direction");
