@@ -80,10 +80,10 @@ impl TriDisplay for Display5in83 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::color::Black;
-    use crate::color::Color;
-    use crate::graphics::{Display, DisplayRotation};
-    use crate::{epd5in83b_v2, epd7in5};
+    use crate::color::TriColor::Black;
+    use crate::color::TriColor::Color;
+    use crate::graphics::DisplayRotation;
+    use crate::epd5in83b_v2;
     use embedded_graphics::{
         prelude::*,
         primitives::{Line, PrimitiveStyle},
