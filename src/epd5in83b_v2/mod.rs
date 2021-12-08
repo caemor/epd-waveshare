@@ -13,7 +13,7 @@ use embedded_hal::{
 
 use crate::color::Color;
 use crate::interface::DisplayInterface;
-use crate::prelude::{WaveshareDisplay, WaveshareThreeColorDisplay};
+use crate::prelude::{TriColor, WaveshareDisplay, WaveshareThreeColorDisplay};
 use crate::traits::{InternalWiAdditions, RefreshLut};
 
 pub(crate) mod command;
@@ -232,7 +232,7 @@ where
         self.command(spi, Command::DataStartTransmission1)?;
         self.send_data(spi, buffer)?;
 
-        let color = self.color.get_byte_value(); // Only black channel partial updates are supported ATM
+        let color = TriColor::Black.get_byte_value(); //We need it black, so red channel will be rendered transparent
         self.command(spi, Command::DataStartTransmission2)?;
         self.interface
             .data_x_times(spi, color, width * height / 8)?;
