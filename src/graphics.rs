@@ -304,7 +304,7 @@ impl<'a> Display for VarDisplay<'a> {
     }
 
     fn get_mut_buffer(&mut self) -> &mut [u8] {
-        &mut self.buffer
+        self.buffer
     }
 
     fn set_rotation(&mut self, rotation: DisplayRotation) {
