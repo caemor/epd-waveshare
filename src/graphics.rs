@@ -25,6 +25,14 @@ impl Default for DisplayRotation {
 }
 
 /// Display specific pixel output configuration
+///
+/// Different chromatic displays differently treat the bits in chromatic color planes.
+/// Some of them ([crate::epd2in13bc]) will render a color pixel if bit is set for that pixel,
+/// which is a [DisplayColorRendering::Positive] mode.
+///
+/// Other displays, like [crate::epd5in83b_v2] in opposite, will draw color pixel if bit is
+/// cleared for that pixel, which is a [DisplayColorRendering::Negative] mode.
+///
 #[derive(Clone, Copy)]
 pub enum DisplayColorRendering {
     /// Positive: chromatic doesn't override white, white bit cleared for black, white bit set for white, both bits set for chromatic
@@ -133,6 +141,15 @@ pub trait TriDisplay: DrawTarget<Color = TriColor> {
     /// Helperfunction for the Embedded Graphics draw trait
     ///
     /// Becomes uneccesary when const_generics become stablised
+    ///
+    /// # Arguments
+    ///
+    /// * `width` - Screen width in pixels
+    /// * `height` - Screen height in pixels
+    /// * `pixel` - Pixel to draw
+    /// * `rendering` - Chooses rendering mode for the color plane,
+    ///  whether it is positive or negative. Check [DisplayColorRendering] for details.
+    ///  This is a hardware defined setting, that needs to be checked from the datasheet.
     fn draw_helper_tri(
         &mut self,
         width: u32,

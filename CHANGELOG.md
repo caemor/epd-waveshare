@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Added support for positive and negatives modes of rendering in TriColor display in #92 (thanks to @akashihi)
+- Added Epd 5in83 V2 (B) support in #92 (thanks to @akashihi)
+
 ### Changed
 
 ### Fixed

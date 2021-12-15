@@ -82,8 +82,8 @@ mod tests {
     use super::*;
     use crate::color::TriColor::Black;
     use crate::color::TriColor::Color;
-    use crate::graphics::DisplayRotation;
     use crate::epd5in83b_v2;
+    use crate::graphics::DisplayRotation;
     use embedded_graphics::{
         prelude::*,
         primitives::{Line, PrimitiveStyle},
