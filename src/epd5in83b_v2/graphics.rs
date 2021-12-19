@@ -92,17 +92,23 @@ mod tests {
     #[test]
     fn graphics_size() {
         let display = Display5in83::default();
-        assert_eq!(display.buffer().len(), 38400);
+        assert_eq!(display.buffer().len(), 77760); // (77760 = 648 * 480/8) * 2
     }
 
     // test default background color on all bytes
     #[test]
     fn graphics_default() {
         let display = Display5in83::default();
-        for &byte in display.buffer() {
+        for &byte in display.bw_buffer() {
             assert_eq!(
                 byte,
                 epd5in83b_v2::DEFAULT_BACKGROUND_COLOR.get_byte_value()
+            );
+        }
+        for &byte in display.chromatic_buffer() {
+            assert_eq!(
+                byte,
+                0xFF
             );
         }
     }
@@ -114,7 +120,7 @@ mod tests {
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
-        let buffer = display.buffer();
+        let buffer = display.bw_buffer();
 
         assert_eq!(buffer[0], Black.get_byte_value());
 
@@ -134,7 +140,7 @@ mod tests {
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
-        let buffer = display.buffer();
+        let buffer = display.bw_buffer();
 
         assert_eq!(buffer[0], Black.get_byte_value());
 
@@ -154,7 +160,7 @@ mod tests {
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
-        let buffer = display.buffer();
+        let buffer = display.bw_buffer();
 
         assert_eq!(buffer[0], Black.get_byte_value());
 
@@ -174,7 +180,7 @@ mod tests {
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
-        let buffer = display.buffer();
+        let buffer = display.bw_buffer();
 
         assert_eq!(buffer[0], Black.get_byte_value());
 
