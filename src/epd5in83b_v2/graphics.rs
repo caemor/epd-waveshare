@@ -106,10 +106,7 @@ mod tests {
             );
         }
         for &byte in display.chromatic_buffer() {
-            assert_eq!(
-                byte,
-                0xFF
-            );
+            assert_eq!(byte, 0x00);
         }
     }
 
@@ -136,7 +133,7 @@ mod tests {
     fn graphics_rotation_90() {
         let mut display = Display5in83::default();
         display.set_rotation(DisplayRotation::Rotate90);
-        let _ = Line::new(Point::new(0, 632), Point::new(0, 639))
+        let _ = Line::new(Point::new(0, 640), Point::new(0, 647))
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
@@ -156,7 +153,7 @@ mod tests {
     fn graphics_rotation_180() {
         let mut display = Display5in83::default();
         display.set_rotation(DisplayRotation::Rotate180);
-        let _ = Line::new(Point::new(632, 383), Point::new(639, 383))
+        let _ = Line::new(Point::new(640, 479), Point::new(647, 479))
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
@@ -176,7 +173,7 @@ mod tests {
     fn graphics_rotation_270() {
         let mut display = Display5in83::default();
         display.set_rotation(DisplayRotation::Rotate270);
-        let _ = Line::new(Point::new(383, 0), Point::new(383, 7))
+        let _ = Line::new(Point::new(479, 0), Point::new(479, 7))
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
