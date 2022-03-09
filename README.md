@@ -1,4 +1,10 @@
-[![Build Status](https://travis-ci.com/caemor/epd-waveshare.svg?branch=master)](https://travis-ci.com/caemor/epd-waveshare)
+<p align="center">
+    <a href="https://github.com/caemor/epd-waveshare"><img src="https://github.com/caemor/epd-waveshare/actions/workflows/main.yml/badge.svg" alt="Github CI"></a>
+    <a href="https://crates.io/crates/epd-waveshare"><img src="https://img.shields.io/crates/v/epd-waveshare.svg" alt="Crates.io"></a>
+    <a href="https://docs.rs/epd-waveshare"><img src="https://docs.rs/epd-waveshare/badge.svg" alt="Docs.rs"></a>
+</p>
+
+# EPD Driver
 
 This library contains a driver for E-Paper Modules from Waveshare (which are basically the same as the Dalian Good
 Display ones).
