@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Made Examples and Linux embedded hal optional (linux only) and therefore allowed building on other hosts (#101, #94)
+
 ### Fixed
 
 ## [v0.5.0] - 2021-11-28
