@@ -38,7 +38,8 @@ impl DrawTarget for Display4in2 {
 
 impl OriginDimensions for Display4in2 {
     fn size(&self) -> Size {
-        Size::new(WIDTH, HEIGHT)
+        let (w, h) = self.dimensions();
+        Size::new(w.into(), h.into())
     }
 }
 
@@ -49,6 +50,13 @@ impl Display for Display4in2 {
 
     fn get_mut_buffer(&mut self) -> &mut [u8] {
         &mut self.buffer
+    }
+
+    fn dimensions(&self) -> (u32, u32) {
+        match self.rotation() {
+            DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => (WIDTH, HEIGHT),
+            DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => (HEIGHT, WIDTH),
+        }
     }
 
     fn set_rotation(&mut self, rotation: DisplayRotation) {
