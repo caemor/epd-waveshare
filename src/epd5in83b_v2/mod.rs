@@ -38,8 +38,6 @@ const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 pub struct Epd5in83<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -145,9 +143,8 @@ where
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd5in83 { interface, color };
+        let mut epd = Epd5in83 { interface };
 
         epd.init(spi, delay)?;
 
@@ -166,14 +163,6 @@ where
         self.init(spi, delay)
     }
 
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
-    }
-
     fn width(&self) -> u32 {
         WIDTH
     }
@@ -190,7 +179,7 @@ where
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.update_achromatic_frame(spi, buffer)?;
-        let color = self.color.get_byte_value();
+        let color = 0xff;
         self.command(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
         Ok(())
@@ -258,19 +247,6 @@ where
     ) -> Result<(), SPI::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
-        Ok(())
-    }
-
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-
-        // The Waveshare controllers all implement clear using 0x33
-        self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0xFF, NUM_DISPLAY_BITS)?;
-
-        self.command(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, 0x00, NUM_DISPLAY_BITS)?;
-
         Ok(())
     }
 

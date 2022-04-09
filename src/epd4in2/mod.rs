@@ -84,8 +84,6 @@ pub use self::graphics::Display4in2;
 pub struct Epd4in2<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
     /// Refresh LUT
     refresh: RefreshLut,
 }
@@ -165,11 +163,9 @@ where
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd4in2 {
             interface,
-            color,
             refresh: RefreshLut::Full,
         };
 
@@ -208,7 +204,7 @@ where
         _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        let color_value = self.color.get_byte_value();
+        let color_value = 0xff;
 
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
@@ -280,30 +276,6 @@ where
         self.update_frame(spi, buffer, delay)?;
         self.command(spi, Command::DisplayRefresh)?;
         Ok(())
-    }
-
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.send_resolution(spi)?;
-
-        let color_value = self.color.get_byte_value();
-
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
-        self.interface
-            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
-
-        self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface
-            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
-        Ok(())
-    }
-
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
     }
 
     fn width(&self) -> u32 {
@@ -552,36 +524,6 @@ where
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
 
         self.interface.data(spi, buffer)?;
-
-        self.interface.cmd(spi, Command::PartialOut)?;
-        Ok(())
-    }
-
-    fn clear_partial_frame(
-        &mut self,
-        spi: &mut SPI,
-        x: u32,
-        y: u32,
-        width: u32,
-        height: u32,
-    ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.send_resolution(spi)?;
-
-        let color_value = self.color.get_byte_value();
-
-        self.interface.cmd(spi, Command::PartialIn)?;
-        self.interface.cmd(spi, Command::PartialWindow)?;
-
-        self.shift_display(spi, x, y, width, height)?;
-
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
-        self.interface
-            .data_x_times(spi, color_value, width / 8 * height)?;
-
-        self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface
-            .data_x_times(spi, color_value, width / 8 * height)?;
 
         self.interface.cmd(spi, Command::PartialOut)?;
         Ok(())

@@ -36,8 +36,7 @@ const IS_BUSY_LOW: bool = true;
 pub struct Epd5in65f<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: OctColor,
+    border_color: OctColor,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -93,9 +92,11 @@ where
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd5in65f { interface, color };
+        let mut epd = Epd5in65f {
+            interface,
+            border_color: DEFAULT_BACKGROUND_COLOR,
+        };
 
         epd.init(spi, delay)?;
 
@@ -156,25 +157,6 @@ where
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
-    }
-
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        let bg = OctColor::colors_byte(self.color, self.color);
-        self.wait_busy_high();
-        self.update_vcom(spi)?;
-        self.send_resolution(spi)?;
-        self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;
-        self.display_frame(spi, delay)?;
-        Ok(())
-    }
-
-    fn set_background_color(&mut self, color: OctColor) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &OctColor {
-        &self.color
     }
 
     fn width(&self) -> u32 {
@@ -242,9 +224,19 @@ where
     }
 
     fn update_vcom(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        let bg_color = (self.color.get_nibble() & 0b111) << 5;
+        let bg_color = (self.border_color.get_nibble() & 0b111) << 5;
         self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x17 | bg_color])?;
         Ok(())
+    }
+
+    /// Set the outer border of the display to the chosen color.
+    ///
+    /// This will be applied on the next call to `update_frame`.
+    pub fn set_border_color(&mut self, color: OctColor) {
+        // FIXME: this is completely inconsistent with the other implementations of this (epd2in13bc and epd2in9bc),
+        // which immediately run `Command::VcomAndDataIntervalSetting`,
+        // but I don't have this hardware and I don't want to mess with the implementation without testing it.
+        self.border_color = color;
     }
 }
 
