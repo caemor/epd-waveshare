@@ -70,7 +70,7 @@ use crate::traits::{RefreshLut, WaveshareDisplay};
 use crate::interface::DisplayInterface;
 
 #[cfg(feature = "graphics")]
-mod graphics;
+pub mod graphics;
 #[cfg(feature = "graphics")]
 pub use crate::epd1in54::graphics::Display1in54;
 
