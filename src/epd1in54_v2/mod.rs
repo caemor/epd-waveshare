@@ -17,8 +17,10 @@ use embedded_hal::{
 
 use crate::type_a::{
     command::Command,
-    constants::{LUT_FULL_UPDATE_V2, LUT_PARTIAL_UPDATE_V2},
 };
+
+mod constants;
+use crate::epd1in54_v2::constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
 use crate::color::Color;
 
@@ -236,8 +238,8 @@ where
             self.refresh = refresh_lut;
         }
         match self.refresh {
-            RefreshLut::Full => self.set_lut_helper(spi, &LUT_FULL_UPDATE_V2),
-            RefreshLut::Quick => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE_V2),
+            RefreshLut::Full => self.set_lut_helper(spi, &LUT_FULL_UPDATE),
+            RefreshLut::Quick => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
         }?;
 
         // Additional configuration required only for partial updates
