@@ -15,9 +15,7 @@ use embedded_hal::{
     digital::v2::*,
 };
 
-use crate::type_a::{
-    command::Command,
-};
+use crate::type_a::command::Command;
 
 mod constants;
 use crate::epd1in54_v2::constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
