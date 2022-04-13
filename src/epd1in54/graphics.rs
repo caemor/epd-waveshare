@@ -1,3 +1,5 @@
+//! Embedded graphics display module for 1in54 display
+//!
 use crate::epd1in54::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
 use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics_core::pixelcolor::BinaryColor;
