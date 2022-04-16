@@ -151,4 +151,3 @@ mod tests {
         assert_eq!(Command::DisplayRefresh.address(), 0x12);
     }
 }
-

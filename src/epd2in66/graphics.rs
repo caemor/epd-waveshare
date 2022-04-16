@@ -110,11 +110,11 @@ mod tests {
         let mut display = Display2in66::default();
         display.set_rotation(DisplayRotation::Rotate90);
         let _ = Line::new(
-                Point::new(0, WIDTH as i32 - 8),
-                Point::new(0, WIDTH as i32 - 1),
-            )
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
-            .draw(&mut display);
+            Point::new(0, WIDTH as i32 - 8),
+            Point::new(0, WIDTH as i32 - 1),
+        )
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .draw(&mut display);
 
         let buffer = display.buffer();
 
@@ -147,11 +147,11 @@ mod tests {
         let mut display = Display2in66::default();
         display.set_rotation(DisplayRotation::Rotate270);
         let _ = Line::new(
-                Point::new((HEIGHT - 1) as i32, 0),
-                Point::new((HEIGHT - 1) as i32, 7),
-            )
-            .into_styled(PrimitiveStyle::with_stroke(Black, 1))
-            .draw(&mut display);
+            Point::new((HEIGHT - 1) as i32, 0),
+            Point::new((HEIGHT - 1) as i32, 7),
+        )
+        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .draw(&mut display);
 
         let buffer = display.buffer();
 

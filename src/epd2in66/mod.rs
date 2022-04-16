@@ -5,7 +5,6 @@
 //! - [Datasheet](https://www.waveshare.com/wiki/2.66inch_e-Paper_Module)
 //! no drivers available from waveshare for this specific model.
 
-
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::v2::{InputPin, OutputPin},
@@ -18,15 +17,15 @@ use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 pub(crate) mod command;
 use self::command::Command;
 
-#[cfg(feature="graphics")]
+#[cfg(feature = "graphics")]
 mod graphics;
-#[cfg(feature="graphics")]
+#[cfg(feature = "graphics")]
 pub use self::graphics::Display2in66;
 
 ///Width of the Display
-pub const WIDTH:u32 = 296;
+pub const WIDTH: u32 = 296;
 ///Height of the Display
-pub const HEIGHT:u32 = 152;
+pub const HEIGHT: u32 = 152;
 ///Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;

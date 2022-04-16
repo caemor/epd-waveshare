@@ -79,6 +79,7 @@ pub mod epd1in54b;
 pub mod epd1in54c;
 pub mod epd2in13_v2;
 pub mod epd2in13bc;
+pub mod epd2in66;
 pub mod epd2in7b;
 pub mod epd2in9;
 pub mod epd2in9_v2;
@@ -89,7 +90,6 @@ pub mod epd5in83b_v2;
 pub mod epd7in5;
 pub mod epd7in5_hd;
 pub mod epd7in5_v2;
-pub mod epd2in66;
 
 pub(crate) mod type_a;
 
