@@ -109,7 +109,10 @@ mod tests {
     fn graphics_rotation_90() {
         let mut display = Display2in66::default();
         display.set_rotation(DisplayRotation::Rotate90);
-        let _ = Line::new(Point::new(0, 289), Point::new(0, 295))
+        let _ = Line::new(
+                Point::new(0, WIDTH as i32 - 8),
+                Point::new(0, WIDTH as i32 - 1),
+            )
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
@@ -126,7 +129,7 @@ mod tests {
     fn graphics_rotation_180() {
         let mut display = Display2in66::default();
         display.set_rotation(DisplayRotation::Rotate180);
-        let _ = Line::new(Point::new(289, 151), Point::new(295, 151))
+        let _ = Line::new(Point::new(288, 151), Point::new(295, 151))
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
@@ -143,7 +146,10 @@ mod tests {
     fn graphics_rotation_270() {
         let mut display = Display2in66::default();
         display.set_rotation(DisplayRotation::Rotate270);
-        let _ = Line::new(Point::new(289, 0), Point::new(289, 7))
+        let _ = Line::new(
+                Point::new((HEIGHT - 1) as i32, 0),
+                Point::new((HEIGHT - 1) as i32, 7),
+            )
             .into_styled(PrimitiveStyle::with_stroke(Black, 1))
             .draw(&mut display);
 
