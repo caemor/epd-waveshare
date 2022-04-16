@@ -14,7 +14,7 @@ It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) libr
 A 2018-edition compatible version (Rust 1.31+) is needed.
 
 Other similar libraries with support for much more displays are [u8g2](https://github.com/olikraus/u8g2)
-and [GxEPD](https://github.com/ZinggJM/GxEPD) for arduino.
+and [GxEPD](https://github.com/ZinggJM/GxEPD) for Arduino.
 
 ## Examples
 
@@ -54,6 +54,8 @@ epd.update_and_display_frame( & mut spi, & display.buffer()) ?;
 | [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.13 Inch B/W (A) V2](https://www.waveshare.com/product/2.13inch-e-paper-hat.htm) | Black, White | ✕ | ✔ | ✔  | ✔  |
 | [2.13 Inch B/W/R (B/C) V2](https://www.waveshare.com/product/raspberry-pi/displays/e-paper/2.13inch-e-paper-hat-b.htm) | Black, White, Red | ✕ | ✕ | ✔  | ✔  |
+| [2.66 Inch B/W (A)](https://www.waveshare.com/product/2.66inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ~ | ~ |
+| [2.66 Inch B/W/R (B)](https://www.waveshare.com/product/2.66inch-e-paper-module-b.htm) | Black, White, Red | ✕ | ✕ | ~ | ~ |
 | [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.9 Inch B/W V2 (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [1.54 Inch B/W/R (B)](https://www.waveshare.com/product/modules/oleds-lcds/e-paper/1.54inch-e-paper-module-b.htm) | Black, White, Red | ✕ | ✕ | ✔ | ✔ |
