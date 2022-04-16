@@ -28,7 +28,7 @@ pub const WIDTH:u32 = 296;
 ///Height of the Display
 pub const HEIGHT:u32 = 152;
 ///Default Background Color
-pub const DEFAULT_BACKGROUD_COLOR: color = Color::White;
+pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
 /// Epd2in66 driver
