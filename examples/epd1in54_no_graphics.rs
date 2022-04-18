@@ -1,7 +1,11 @@
 #![deny(warnings)]
 
 use embedded_hal::prelude::*;
-use epd_waveshare::{epd1in54::Epd1in54, prelude::*};
+use epd_waveshare::{
+    buffer_len,
+    epd1in54::{Epd1in54, HEIGHT, WIDTH},
+    prelude::*,
+};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
@@ -11,6 +15,8 @@ use linux_embedded_hal::{
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
+
+const BUFFER_LEN: usize = buffer_len(WIDTH as usize, HEIGHT as usize);
 
 fn main() -> Result<(), std::io::Error> {
     // Configure SPI
@@ -61,7 +67,11 @@ fn main() -> Result<(), std::io::Error> {
     let mut epd = Epd1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay)?;
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)?;
+    epd.update_frame(
+        &mut spi,
+        &[Color::White.get_byte_value(); BUFFER_LEN],
+        &mut delay,
+    )?;
     epd.display_frame(&mut spi, &mut delay)?;
 
     // Speeddemo
@@ -75,7 +85,11 @@ fn main() -> Result<(), std::io::Error> {
     }
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)?;
+    epd.update_frame(
+        &mut spi,
+        &[Color::White.get_byte_value(); BUFFER_LEN],
+        &mut delay,
+    )?;
     epd.display_frame(&mut spi, &mut delay)?;
 
     // Draw some squares

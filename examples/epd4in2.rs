@@ -128,7 +128,6 @@ fn main() -> Result<(), std::io::Error> {
     // a moving `Hello World!`
     let limit = 10;
     epd4in2.set_lut(&mut spi, Some(RefreshLut::Quick)).unwrap();
-    epd4in2.clear_frame(&mut spi, &mut delay).unwrap();
     for i in 0..limit {
         //println!("Moving Hello World. Loop {} from {}", (i + 1), limit);
 
