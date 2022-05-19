@@ -1,48 +1,6 @@
 //! A simple Driver for the Waveshare 1.54" E-Ink Display via SPI
 //!
-//! # Example for the 1.54 in E-Ink Display
-//!
-//!```rust, no_run
-//!# use embedded_hal_mock::*;
-//!# fn main() -> Result<(), MockError> {
-//!use embedded_graphics::{
-//!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyleBuilder},
-//!};
-//!use epd_waveshare::{epd1in54::*, prelude::*};
-//!#
-//!# let expectations = [];
-//!# let mut spi = spi::Mock::new(&expectations);
-//!# let expectations = [];
-//!# let cs_pin = pin::Mock::new(&expectations);
-//!# let busy_in = pin::Mock::new(&expectations);
-//!# let dc = pin::Mock::new(&expectations);
-//!# let rst = pin::Mock::new(&expectations);
-//!# let mut delay = delay::MockNoop::new();
-//!
-//!// Setup EPD
-//!let mut epd = Epd1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
-//!
-//!// Use display graphics from embedded-graphics
-//!let mut display = Display1in54::default();
-//!
-//!// Use embedded graphics for drawing a line
-//!let style = PrimitiveStyleBuilder::new()
-//!    .stroke_color(Black)
-//!    .stroke_width(1)
-//!    .build();
-//!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-//!    .into_styled(style)
-//!    .draw(&mut display);
-//!
-//!// Display updated frame
-//!epd.update_frame(&mut spi, &display.buffer(), &mut delay)?;
-//!epd.display_frame(&mut spi, &mut delay)?;
-//!
-//!// Set the EPD to sleep
-//!epd.sleep(&mut spi, &mut delay)?;
-//!# Ok(())
-//!# }
-//!```
+//! GDEH0154D67
 
 /// Width of the display
 pub const WIDTH: u32 = 200;
@@ -50,7 +8,6 @@ pub const WIDTH: u32 = 200;
 pub const HEIGHT: u32 = 200;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
-//const DPI: u16 = 184;
 const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
@@ -58,10 +15,10 @@ use embedded_hal::{
     digital::v2::*,
 };
 
-use crate::type_a::{
-    command::Command,
-    constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE},
-};
+use crate::type_a::command::Command;
+
+mod constants;
+use crate::epd1in54_v2::constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
 use crate::color::Color;
 
@@ -69,8 +26,6 @@ use crate::traits::{RefreshLut, WaveshareDisplay};
 
 use crate::interface::DisplayInterface;
 
-#[cfg(feature = "graphics")]
-pub mod graphics;
 #[cfg(feature = "graphics")]
 pub use crate::epd1in54::graphics::Display1in54;
 
@@ -80,6 +35,7 @@ pub struct Epd1in54<SPI, CS, BUSY, DC, RST, DELAY> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
     /// Color
     background_color: Color,
+
     /// Refresh LUT
     refresh: RefreshLut,
 }
@@ -95,6 +51,9 @@ where
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10);
+        self.wait_until_idle();
+        self.interface.cmd(spi, Command::SwReset)?;
+        self.wait_until_idle();
 
         // 3 Databytes:
         // A[7:0]
@@ -104,35 +63,27 @@ where
         self.interface.cmd_with_data(
             spi,
             Command::DriverOutputControl,
-            &[HEIGHT as u8, (HEIGHT >> 8) as u8, 0x00],
+            &[(HEIGHT - 1) as u8, 0x0, 0x00],
         )?;
 
-        // 3 Databytes: (and default values from datasheet and arduino)
-        // 1 .. A[6:0]  = 0xCF | 0xD7
-        // 1 .. B[6:0]  = 0xCE | 0xD6
-        // 1 .. C[6:0]  = 0x8D | 0x9D
-        //TODO: test
         self.interface
-            .cmd_with_data(spi, Command::BoosterSoftStartControl, &[0xD7, 0xD6, 0x9D])?;
+            .cmd_with_data(spi, Command::DataEntryModeSetting, &[0x3])?;
 
-        // One Databyte with value 0xA8 for 7V VCOM
+        self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
+
         self.interface
-            .cmd_with_data(spi, Command::WriteVcomRegister, &[0xA8])?;
+            .cmd_with_data(spi, Command::BorderWaveformControl, &[0x1])?;
 
-        // One Databyte with default value 0x1A for 4 dummy lines per gate
+        self.interface.cmd_with_data(
+            spi,
+            Command::TemperatureSensorSelection,
+            &[0x80], // 0x80: internal temperature sensor
+        )?;
+
         self.interface
-            .cmd_with_data(spi, Command::SetDummyLinePeriod, &[0x1A])?;
+            .cmd_with_data(spi, Command::TemperatureSensorControl, &[0xB1, 0x20])?;
 
-        // One Databyte with default value 0x08 for 2us per line
-        self.interface
-            .cmd_with_data(spi, Command::SetGateLineWidth, &[0x08])?;
-
-        // One Databyte with default value 0x03
-        //  -> address: x increment, y increment, address counter is updated in x direction
-        self.interface
-            .cmd_with_data(spi, Command::DataEntryModeSetting, &[0x03])?;
-
-        self.set_lut(spi, None)?;
+        self.set_ram_counter(spi, 0, 0)?;
 
         self.wait_until_idle();
         Ok(())
@@ -226,10 +177,13 @@ where
 
     fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
-        //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
-        self.interface
-            .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xC4])?;
+        if self.refresh == RefreshLut::Full {
+            self.interface
+                .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xC7])?;
+        } else if self.refresh == RefreshLut::Quick {
+            self.interface
+                .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xCF])?;
+        }
 
         self.interface.cmd(spi, Command::MasterActivation)?;
         // MASTER Activation should not be interupted to avoid currption of panel images
@@ -259,6 +213,9 @@ where
         self.interface.cmd(spi, Command::WriteRam)?;
         self.interface
             .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
+        self.interface.cmd(spi, Command::WriteRam2)?;
+        self.interface
+            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
         Ok(())
     }
 
@@ -281,7 +238,25 @@ where
         match self.refresh {
             RefreshLut::Full => self.set_lut_helper(spi, &LUT_FULL_UPDATE),
             RefreshLut::Quick => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
+        }?;
+
+        // Additional configuration required only for partial updates
+        if self.refresh == RefreshLut::Quick {
+            self.interface.cmd_with_data(
+                spi,
+                Command::WriteOtpSelection,
+                &[0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x0, 0x0, 0x0, 0x0],
+            )?;
+            self.interface
+                .cmd_with_data(spi, Command::BorderWaveformControl, &[0x80])?;
+            self.interface
+                .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xc0])?;
+            self.interface.cmd(spi, Command::MasterActivation)?;
+            // MASTER Activation should not be interupted to avoid currption of panel images
+            // therefore a terminate command is send
+            self.interface.cmd(spi, Command::Nop)?;
         }
+        Ok(())
     }
 
     fn is_busy(&self) -> bool {
@@ -367,10 +342,27 @@ where
 
     fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        assert!(buffer.len() == 30);
+        assert!(buffer.len() == 159);
 
         self.interface
-            .cmd_with_data(spi, Command::WriteLutRegister, buffer)?;
+            .cmd_with_data(spi, Command::WriteLutRegister, &buffer[0..153])?;
+
+        self.interface
+            .cmd_with_data(spi, Command::WriteLutRegisterEnd, &[buffer[153]])?;
+
+        self.wait_until_idle();
+
+        self.interface
+            .cmd_with_data(spi, Command::GateDrivingVoltage, &[buffer[154]])?;
+
+        self.interface.cmd_with_data(
+            spi,
+            Command::SourceDrivingVoltage,
+            &[buffer[155], buffer[156], buffer[157]],
+        )?;
+        self.interface
+            .cmd_with_data(spi, Command::WriteVcomRegister, &[buffer[158]])?;
+
         Ok(())
     }
 }

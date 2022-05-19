@@ -1,6 +1,6 @@
 use crate::color::TriColor;
 use crate::epd2in13bc::{DEFAULT_BACKGROUND_COLOR, HEIGHT, NUM_DISPLAY_BITS, WIDTH};
-use crate::graphics::{DisplayRotation, TriDisplay};
+use crate::graphics::{DisplayColorRendering, DisplayRotation, TriDisplay};
 use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 2.13" b/c EPD
@@ -31,7 +31,7 @@ impl DrawTarget for Display2in13bc {
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
         for pixel in pixels {
-            self.draw_helper_tri(WIDTH, HEIGHT, pixel)?;
+            self.draw_helper_tri(WIDTH, HEIGHT, pixel, DisplayColorRendering::Positive)?;
         }
         Ok(())
     }

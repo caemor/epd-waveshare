@@ -1,4 +1,10 @@
-[![Build Status](https://travis-ci.com/caemor/epd-waveshare.svg?branch=master)](https://travis-ci.com/caemor/epd-waveshare)
+<p align="center">
+    <a href="https://github.com/caemor/epd-waveshare"><img src="https://github.com/caemor/epd-waveshare/actions/workflows/rust.yml/badge.svg" alt="Github CI"></a>
+    <a href="https://crates.io/crates/epd-waveshare"><img src="https://img.shields.io/crates/v/epd-waveshare.svg" alt="Crates.io"></a>
+    <a href="https://docs.rs/epd-waveshare"><img src="https://docs.rs/epd-waveshare/badge.svg" alt="Docs.rs"></a>
+</p>
+
+# EPD Driver
 
 This library contains a driver for E-Paper Modules from Waveshare (which are basically the same as the Dalian Good
 Display ones).
@@ -43,6 +49,7 @@ epd.update_and_display_frame( & mut spi, & display.buffer()) ?;
 | [7.5 Inch B/W HD (A)](https://www.waveshare.com/product/displays/e-paper/epaper-1/7.5inch-hd-e-paper-hat.htm) | Black, White | ✕ | ✕ | ✔ | ✔ |
 | [7.5 Inch B/W V2 (A)](https://www.waveshare.com/product/7.5inch-e-paper-hat.htm) [[1](#1-75-inch-bw-v2-a)] | Black, White | ✕ | ✕ | ✔ | ✔ |
 | [7.5 Inch B/W (A)](https://www.waveshare.com/product/7.5inch-e-paper-hat.htm) | Black, White | ✕ | ✕ | ✔ | ✔ |
+| [5.83 Inch B/W/R (b)](https://www.waveshare.com/5.83inch-e-Paper-B.htm) | Black, White, Red | ✕ | Not officially | ✔ | ✔ |
 | [4.2 Inch B/W (A)](https://www.waveshare.com/product/4.2inch-e-paper-module.htm) | Black, White | ✕ | Not officially [[2](#2-42-inch-e-ink-blackwhite---partial-refresh)] | ✔ | ✔ |
 | [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.13 Inch B/W (A) V2](https://www.waveshare.com/product/2.13inch-e-paper-hat.htm) | Black, White | ✕ | ✔ | ✔  | ✔  |

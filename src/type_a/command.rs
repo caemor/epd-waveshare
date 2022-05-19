@@ -17,6 +17,8 @@ pub(crate) enum Command {
     ///     0.. B[2:0]
     ///     Default: Set A[8:0] = 0x127 and B[2:0] = 0x0
     DriverOutputControl = 0x01,
+    GateDrivingVoltage = 0x03,
+    SourceDrivingVoltage = 0x04,
     /// Booster Soft start control
     ///     3 Databytes:
     ///     1.. A[6:0]
@@ -38,6 +40,8 @@ pub(crate) enum Command {
     DataEntryModeSetting = 0x11,
 
     SwReset = 0x12,
+
+    TemperatureSensorSelection = 0x18,
 
     TemperatureSensorControl = 0x1A,
 
@@ -62,6 +66,8 @@ pub(crate) enum Command {
     SetGateLineWidth = 0x3B,
 
     BorderWaveformControl = 0x3C,
+
+    WriteLutRegisterEnd = 0x3f,
 
     SetRamXAddressStartEndPosition = 0x44,
 

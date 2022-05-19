@@ -1,4 +1,4 @@
-[package]
+ [package]
 authors = ["Christoph Groß <caemor@mailbox.org>"]
 categories = ["embedded", "hardware-support", "no-std"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare formerly published as eink-waveshare-rs"
@@ -22,13 +22,38 @@ bit_field = "0.10.1"
 
 [dev-dependencies]
 embedded-graphics = "0.7.1"
-linux-embedded-hal = "0.3"
+
 embedded-hal-mock = "0.8"
 
+[target.'cfg(unix)'.dev-dependencies]
+linux-embedded-hal = "0.3"
+
+[[example]]
+name = "epd1in54_no_graphics"
+required-features = ["linux-dev"]
+
+[[example]]
+name = "epd2in13_v2"
+required-features = ["linux-dev"]
+
+[[example]]
+name = "epd2in13bc"
+required-features = ["linux-dev"]
+
+[[example]]
+name = "epd4in2_variable_size"
+required-features = ["linux-dev"]
+
+[[example]]
+name = "epd4in2"
+required-features = ["linux-dev"]
+
 [features]
-default = ["graphics"]
+# Remove the linux-dev feature to build the tests on non  unix systems
+default = ["graphics", "linux-dev"]
 
 graphics = ["embedded-graphics-core"]
+linux-dev = []
 
 # Offers an alternative fast full lut for type_a displays, but the refreshed screen isnt as clean looking
 type_a_alternative_faster_lut = []
