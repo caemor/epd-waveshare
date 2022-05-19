@@ -1,4 +1,4 @@
-//! SPI Commands for the Waveshare 7.5" E-Ink Display
+//! SPI Commands for the Waveshare 7.5" V3 E-Ink Display
 
 use crate::traits;
 
@@ -71,52 +71,63 @@ pub(crate) enum Command {
 
     /// This command builds the VCOM Look-Up Table (LUTC).
     LutForVcom = 0x20,
-    /// This command builds the White to White Look-Up Table (LUTWW).
-    LutWhiteToWhite = 0x21,
-    /// This command builds the Black to White Look-Up Table (LUTKW).
-    LutBlackToWhite = 0x22,
-    /// This command builds the White to Black Look-Up Table (LUTWK).
-    LutWhiteToBlack = 0x23,
-    /// This command builds the Black to Black Look-Up Table (LUTKK).
-    LutBlackToBlack = 0x24,
-    /// This command builds the Border? Look-Up Table (LUTR0).
-    LutBorder = 0x25,
-    
+    /// This command builds the Black Look-Up Table (LUTB).
+    LutBlack = 0x21,
+    /// This command builds the White Look-Up Table (LUTW).
+    LutWhite = 0x22,
+    /// This command builds the Gray1 Look-Up Table (LUTG1).
+    LutGray1 = 0x23,
+    /// This command builds the Gray2 Look-Up Table (LUTG2).
+    LutGray2 = 0x24,
+    /// This command builds the Red0 Look-Up Table (LUTR0).
+    LutRed0 = 0x25,
+    /// This command builds the Red1 Look-Up Table (LUTR1).
+    LutRed1 = 0x26,
+    /// This command builds the Red2 Look-Up Table (LUTR2).
+    LutRed2 = 0x27,
+    /// This command builds the Red3 Look-Up Table (LUTR3).
+    LutRed3 = 0x28,
     /// This command builds the XON Look-Up Table (LUTXON).
-    LutXon = 0x2A,
+    LutXon = 0x29,
 
     /// The command controls the PLL clock frequency.
     PllControl = 0x30,
 
     /// This command reads the temperature sensed by the temperature sensor.
     TemperatureSensor = 0x40,
+    /// This command selects the Internal or External temperature sensor.
+    TemperatureCalibration = 0x41,
+    /// This command could write data to the external temperature sensor.
+    TemperatureSensorWrite = 0x42,
+    /// This command could read data from the external temperature sensor.
+    TemperatureSensorRead = 0x43,
 
     /// This command indicates the interval of Vcom and data output. When setting the
     /// vertical back porch, the total blanking will be kept (20 Hsync).
     VcomAndDataIntervalSetting = 0x50,
+    /// This command indicates the input power condition. Host can read this flag to learn
+    /// the battery condition.
+    LowPowerDetection = 0x51,
 
     /// This command defines non-overlap period of Gate and Source.
     TconSetting = 0x60,
     /// This command defines alternative resolution and this setting is of higher priority
     /// than the RES\[1:0\] in R00H (PSR).
     TconResolution = 0x61,
-    //TODO /// This command defines MCU host direct access external memory mode.
-    GateSourceStart = 0x65,
+    /// This command defines MCU host direct access external memory mode.
+    SpiFlashControl = 0x65,
 
     /// The LUT_REV / Chip Revision is read from OTP address = 25001 and 25000.
     Revision = 0x70,
+    /// This command reads the IC status.
+    GetStatus = 0x71,
 
+    /// This command implements related VCOM sensing setting.
+    AutoMeasurementVcom = 0x80,
+    /// This command gets the VCOM value.
+    ReadVcomValue = 0x81,
     /// This command sets `VCOM_DC` value.
     VcmDcSetting = 0x82,
-    
-    // TODO
-    ProgramMode = 0xA0,
-    //
-    // TODO
-    ActiveProgram = 0xA1,
-
-    // TODO
-    ReadOtpData = 0xA2,
     // /// This is in all the Waveshare controllers for Epd7in5, but it's not documented
     // /// anywhere in the datasheet `¯\_(ツ)_/¯`
     // FlashMode = 0xE5,

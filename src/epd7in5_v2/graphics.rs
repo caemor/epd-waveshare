@@ -1,6 +1,5 @@
-use crate::color::TriColor;
-use crate::epd7in5_v2::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH, NUM_DISPLAY_BITS};
-use crate::graphics::{TriDisplay, DisplayRotation};
+use crate::epd7in5_v2::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH};
+use crate::graphics::{Display, DisplayRotation};
 use embedded_graphics_core::pixelcolor::BinaryColor;
 use embedded_graphics_core::prelude::*;
 
@@ -9,7 +8,7 @@ use embedded_graphics_core::prelude::*;
 /// Can also be manually constructed:
 /// `buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); WIDTH / 8 * HEIGHT]`
 pub struct Display7in5 {
-    buffer: [u8; 2 * NUM_DISPLAY_BITS as usize],
+    buffer: [u8; WIDTH as usize * HEIGHT as usize / 8],
     rotation: DisplayRotation,
 }
 
@@ -17,14 +16,14 @@ impl Default for Display7in5 {
     fn default() -> Self {
         Display7in5 {
             buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value();
-                2 * NUM_DISPLAY_BITS as usize],
+                WIDTH as usize * HEIGHT as usize / 8],
             rotation: DisplayRotation::default(),
         }
     }
 }
 
 impl DrawTarget for Display7in5 {
-    type Color = TriColor;
+    type Color = BinaryColor;
     type Error = core::convert::Infallible;
 
     fn draw_iter<I>(&mut self, pixels: I) -> Result<(), Self::Error>
@@ -32,7 +31,7 @@ impl DrawTarget for Display7in5 {
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
         for pixel in pixels {
-            self.draw_helper_tri(WIDTH, HEIGHT, pixel)?;
+            self.draw_helper(WIDTH, HEIGHT, pixel)?;
         }
         Ok(())
     }
@@ -44,7 +43,7 @@ impl OriginDimensions for Display7in5 {
     }
 }
 
-impl TriDisplay for Display7in5 {
+impl Display for Display7in5 {
     fn buffer(&self) -> &[u8] {
         &self.buffer
     }
@@ -60,33 +59,6 @@ impl TriDisplay for Display7in5 {
     fn rotation(&self) -> DisplayRotation {
         self.rotation
     }
-
-    fn chromatic_offset(&self) -> usize {
-        NUM_DISPLAY_BITS as usize
-    }
-
-    fn bw_buffer(&self) -> &[u8] {
-        &self.buffer[0..self.chromatic_offset()]
-    }
-
-    fn chromatic_buffer(&self) -> &[u8] {
-        &self.buffer[self.chromatic_offset()..]
-    }
-    /*fn buffer(&self) -> &[u8] {
-        &self.buffer
-    }
-
-    fn get_mut_buffer(&mut self) -> &mut [u8] {
-        &mut self.buffer
-    }
-
-    fn set_rotation(&mut self, rotation: DisplayRotation) {
-        self.rotation = rotation;
-    }
-
-    fn rotation(&self) -> DisplayRotation {
-        self.rotation
-    }*/
 }
 
 #[cfg(test)]

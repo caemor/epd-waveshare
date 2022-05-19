@@ -1,4 +1,4 @@
-//! A simple Driver for the Waveshare 7.5" E-Ink Display (V2) via SPI
+//! A simple Driver for the Waveshare 7.5" E-Ink Display (V3) via SPI
 //!
 //! # References
 //!
@@ -6,16 +6,13 @@
 //! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/702def0/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_7in5_V2.c)
 //! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/702def0/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5_V2.py)
 //!
-//! Important note for V2:
-//! Revision V2 has been released on 2019.11, the resolution is upgraded to 800×480, from 640×384 of V1.
-//! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
     digital::v2::{InputPin, OutputPin},
 };
 
-use crate::color::Color;
+use crate::color::TriColor;
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay};
 
@@ -32,20 +29,25 @@ pub const WIDTH: u32 = 800;
 /// Height of the display
 pub const HEIGHT: u32 = 480;
 /// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+//pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+
+pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
+
+/// Number of bits for b/w buffer and same for chromatic buffer
+const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 const IS_BUSY_LOW: bool = true;
 
 /// Epd7in5 (V3) driver
 ///
-pub struct Epd7in5_v3<SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
     /// Background Color
-    color: Color,
+    color: TriColor,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd7in5_v3<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -56,32 +58,31 @@ where
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
-        self.interface.reset(delay, 2);
+        self.interface.reset(delay, 4);
 
-        // V2 procedure as described per specs:
-        // https://www.waveshare.com/w/upload/8/8c/7.5inch-e-paper-b-v3-specification.pdf
+        // V2 procedure as described here:
+        // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5bc_V2.py
+        // and as per specs:
+        // https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
 
-        self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x27, 0x17])?;
-        self.cmd_with_data(spi, Command::PowerSetting, &[0x07, 0x17, 0x3F, 0x3F])?;
-
+        //self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x27, 0x17])?;
+        self.cmd_with_data(spi, Command::PowerSetting, &[0x07, 0x07, 0x3F, 0x3F])?;
         self.command(spi, Command::PowerOn)?;
-        
-        self.cmd_with_data(spi, Command::PanelSetting, &[0x1F])?;
-        self.cmd_with_data(spi, Command::PllControl, &[0x06])?;
+        self.wait_until_idle(spi, delay)?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x0F])?;
+        //self.cmd_with_data(spi, Command::PllControl, &[0x06])?;
         self.cmd_with_data(spi, Command::TconResolution, &[0x03, 0x20, 0x01, 0xE0])?;
         self.cmd_with_data(spi, Command::DualSpi, &[0x00])?;
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x11, 0x07])?;
         self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
-        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x10, 0x07])?;
-        
-        self.wait_until_idle(spi, delay)?;
-        self.command(spi, Command::DisplayRefresh)?;
+        self.cmd_with_data(spi, Command::SpiFlashControl, &[0x00, 0x00, 0x00, 0x00])?;
         self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd7in5_v3<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -96,60 +97,16 @@ where
         black: &[u8],
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
-        assert_eq!(black.len(), chromatic.len());
-
-        self.wait_until_idle_simple();
-
-        self.command(spi, Command::DataStartTransmission1)?;
-
-        for (data_black, data_chromatic) in black.iter().zip(chromatic.iter()) {
-            let mut temp_black = *data_black;
-            let mut temp_chromatic = *data_chromatic;
-
-            for _ in 0..4 {
-                let mut data = if temp_chromatic & 0x80 == 0 {
-                    0x04
-                } else if temp_black & 0x80 == 0 {
-                    0x00
-                } else {
-                    0x03
-                };
-                data <<= 4;
-                temp_black <<= 1;
-                temp_chromatic <<= 1;
-                data |= if temp_chromatic & 0x80 == 0 {
-                    0x04
-                } else if temp_black & 0x80 == 0 {
-                    0x00
-                } else {
-                    0x03
-                };
-                temp_black <<= 1;
-                temp_chromatic <<= 1;
-                self.send_data(spi, &[data])?;
-            }
-        }
-
-        Ok(())
+        self.update_achromatic_frame(spi, black)?;
+        self.update_chromatic_frame(spi, chromatic)
     }
 
     /// Update only the black/white data of the display.
     ///
     /// Finish by calling `update_chromatic_frame`.
     fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
-        self.wait_until_idle_simple();
-        self.command(spi, Command::DataStartTransmission1)?;
-        for byte in black {
-            let mut temp = *byte;
-            for _ in 0..4 {
-                let mut data = if temp & 0x80 == 0 { 0x00 } else { 0x03 };
-                data <<= 4;
-                temp <<= 1;
-                data |= if temp & 0x80 == 0 { 0x00 } else { 0x03 };
-                temp <<= 1;
-                self.send_data(spi, &[data])?;
-            }
-        }
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.data(spi, black)?;
         Ok(())
     }
 
@@ -161,25 +118,16 @@ where
         spi: &mut SPI,
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle_simple();
-        self.command(spi, Command::DataStartTransmission1)?;
-        for byte in chromatic {
-            let mut temp = *byte;
-            for _ in 0..4 {
-                let mut data = if temp & 0x80 == 0 { 0x04 } else { 0x03 };
-                data <<= 4;
-                temp <<= 1;
-                data |= if temp & 0x80 == 0 { 0x04 } else { 0x03 };
-                temp <<= 1;
-                self.send_data(spi, &[data])?;
-            }
-        }
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.data(spi, chromatic)?;
+
+        self.wait_until_idle_raw()?;
         Ok(())
     }
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd7in5_v3<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -188,7 +136,7 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
-    type DisplayColor = Color;
+    type DisplayColor = TriColor;
     fn new(
         spi: &mut SPI,
         cs: CS,
@@ -200,7 +148,7 @@ where
         let interface = DisplayInterface::new(cs, busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd7in5_v3 { interface, color };
+        let mut epd = Epd7in5 { interface, color };
 
         epd.init(spi, delay)?;
 
@@ -227,6 +175,17 @@ where
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
+
+        self.interface.data(spi, buffer)?;
+
+        // Clear the chromatic layer
+        let color = self.color.get_byte_value();
+
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
+
+        self.wait_until_idle(spi, delay)?;
+
         Ok(())
     }
 
@@ -273,11 +232,11 @@ where
         Ok(())
     }
 
-    fn set_background_color(&mut self, color: Color) {
+    fn set_background_color(&mut self, color: TriColor) {
         self.color = color;
     }
 
-    fn background_color(&self) -> &Color {
+    fn background_color(&self) -> &TriColor {
         &self.color
     }
 
@@ -302,7 +261,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd7in5_v3<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, CS, BUSY, DC, RST, DELAY> Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -330,14 +289,15 @@ where
 
     fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         while self.interface.is_busy(IS_BUSY_LOW) {
-            self.interface.cmd(spi, Command::Revision)?;
+            self.interface.cmd(spi, Command::GetStatus)?;
             delay.delay_ms(20);
         }
         Ok(())
     }
 
-    fn wait_until_idle_simple(&mut self) {
+    fn wait_until_idle_raw(&mut self) -> Result<(), SPI::Error> {
         let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
+        Ok(())
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
@@ -360,6 +320,6 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 800);
         assert_eq!(HEIGHT, 480);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
+        assert_eq!(DEFAULT_BACKGROUND_COLOR, TriColor::White);
     }
 }
