@@ -31,7 +31,7 @@ impl DrawTarget for Display7in5 {
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
         for pixel in pixels {
-            self.draw_helper_tri(WIDTH, HEIGHT, pixel, crate::graphics::DisplayColorRendering::Positive)?;
+            self.draw_helper_tri(WIDTH, HEIGHT, pixel, crate::graphics::DisplayColorRendering::Negative)?;
         }
         Ok(())
     }
