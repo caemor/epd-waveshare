@@ -169,9 +169,28 @@ where
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u8) {
+    /*pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u8) {
         let _ = self.rst.set_high();
+        delay.delay_ms(10);
+
+        let _ = self.rst.set_low();
+        delay.delay_ms(duration);
+        let _ = self.rst.set_high();
+        //TODO: the upstream libraries always sleep for 200ms here
+        // 10ms works fine with just for the 7in5_v2 but this needs to be validated for other devices
         delay.delay_ms(200);
+    }*/
+
+    /// Resets the device.
+    ///
+    /// Often used to awake the module from deep sleep. See [Epd4in2::sleep()](Epd4in2::sleep())
+    ///
+    /// The timing of keeping the reset pin low seems to be important and different per device.
+    /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
+    /// properly with 2ms
+    pub(crate) fn reset(&mut self, delay: &mut DELAY, initial_delay: u8, duration: u8) {
+        let _ = self.rst.set_high();
+        delay.delay_ms(initial_delay);
 
         let _ = self.rst.set_low();
         delay.delay_ms(duration);

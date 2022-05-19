@@ -102,7 +102,7 @@ where
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
-        self.interface.reset(delay, 10);
+        self.interface.reset(delay, 10, 10);
 
         // set the power settings
         self.interface.cmd_with_data(

@@ -114,7 +114,7 @@ where
     DELAY: DelayMs<u8>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.reset(delay, 2);
+        self.interface.reset(delay, 10, 2);
 
         self.wait_until_idle();
         self.interface.cmd(spi, Command::SwReset)?;
@@ -395,7 +395,7 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
-        self.interface.reset(delay, 2);
+        self.interface.reset(delay, 10, 2);
 
         self.set_lut_helper(spi, &LUT_PARTIAL_2IN9)?;
         self.interface.cmd_with_data(

@@ -51,7 +51,7 @@ where
         // https://www.waveshare.com/w/upload/a/ac/1.54inch_e-Paper_Module_C_Specification.pdf
         // and:
         // https://github.com/waveshare/e-Paper/blob/master/STM32/STM32-F103ZET6/User/e-Paper/EPD_1in54c.c
-        self.interface.reset(delay, 2);
+        self.interface.reset(delay, 10, 2);
 
         // start the booster
         self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])?;
