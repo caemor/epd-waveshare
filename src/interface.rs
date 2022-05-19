@@ -171,7 +171,7 @@ where
     /// properly with 2ms
     pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u8) {
         let _ = self.rst.set_high();
-        delay.delay_ms(10);
+        delay.delay_ms(200);
 
         let _ = self.rst.set_low();
         delay.delay_ms(duration);

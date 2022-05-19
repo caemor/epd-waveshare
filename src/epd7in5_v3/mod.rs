@@ -17,7 +17,7 @@ use embedded_hal::{
 
 use crate::color::Color;
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay};
 
 pub(crate) mod command;
 use self::command::Command;
@@ -61,10 +61,119 @@ where
         // V2 procedure as described per specs:
         // https://www.waveshare.com/w/upload/8/8c/7.5inch-e-paper-b-v3-specification.pdf
 
+        self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x27, 0x17])?;
+        self.cmd_with_data(spi, Command::PowerSetting, &[0x07, 0x17, 0x3F, 0x3F])?;
+
         self.command(spi, Command::PowerOn)?;
+        
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x1F])?;
+        self.cmd_with_data(spi, Command::PllControl, &[0x06])?;
+        self.cmd_with_data(spi, Command::TconResolution, &[0x03, 0x20, 0x01, 0xE0])?;
+        self.cmd_with_data(spi, Command::DualSpi, &[0x00])?;
+        self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x10, 0x07])?;
+        
         self.wait_until_idle(spi, delay)?;
         self.command(spi, Command::DisplayRefresh)?;
         self.wait_until_idle(spi, delay)?;
+        Ok(())
+    }
+}
+
+impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd7in5_v3<SPI, CS, BUSY, DC, RST, DELAY>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+    DELAY: DelayMs<u8>,
+{
+    fn update_color_frame(
+        &mut self,
+        spi: &mut SPI,
+        black: &[u8],
+        chromatic: &[u8],
+    ) -> Result<(), SPI::Error> {
+        assert_eq!(black.len(), chromatic.len());
+
+        self.wait_until_idle_simple();
+
+        self.command(spi, Command::DataStartTransmission1)?;
+
+        for (data_black, data_chromatic) in black.iter().zip(chromatic.iter()) {
+            let mut temp_black = *data_black;
+            let mut temp_chromatic = *data_chromatic;
+
+            for _ in 0..4 {
+                let mut data = if temp_chromatic & 0x80 == 0 {
+                    0x04
+                } else if temp_black & 0x80 == 0 {
+                    0x00
+                } else {
+                    0x03
+                };
+                data <<= 4;
+                temp_black <<= 1;
+                temp_chromatic <<= 1;
+                data |= if temp_chromatic & 0x80 == 0 {
+                    0x04
+                } else if temp_black & 0x80 == 0 {
+                    0x00
+                } else {
+                    0x03
+                };
+                temp_black <<= 1;
+                temp_chromatic <<= 1;
+                self.send_data(spi, &[data])?;
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Update only the black/white data of the display.
+    ///
+    /// Finish by calling `update_chromatic_frame`.
+    fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
+        self.wait_until_idle_simple();
+        self.command(spi, Command::DataStartTransmission1)?;
+        for byte in black {
+            let mut temp = *byte;
+            for _ in 0..4 {
+                let mut data = if temp & 0x80 == 0 { 0x00 } else { 0x03 };
+                data <<= 4;
+                temp <<= 1;
+                data |= if temp & 0x80 == 0 { 0x00 } else { 0x03 };
+                temp <<= 1;
+                self.send_data(spi, &[data])?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Update only chromatic data of the display.
+    ///
+    /// This data takes precedence over the black/white data.
+    fn update_chromatic_frame(
+        &mut self,
+        spi: &mut SPI,
+        chromatic: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle_simple();
+        self.command(spi, Command::DataStartTransmission1)?;
+        for byte in chromatic {
+            let mut temp = *byte;
+            for _ in 0..4 {
+                let mut data = if temp & 0x80 == 0 { 0x04 } else { 0x03 };
+                data <<= 4;
+                temp <<= 1;
+                data |= if temp & 0x80 == 0 { 0x04 } else { 0x03 };
+                temp <<= 1;
+                self.send_data(spi, &[data])?;
+            }
+        }
         Ok(())
     }
 }
@@ -225,6 +334,10 @@ where
             delay.delay_ms(20);
         }
         Ok(())
+    }
+
+    fn wait_until_idle_simple(&mut self) {
+        let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
