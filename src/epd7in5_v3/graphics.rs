@@ -89,7 +89,7 @@ impl TriDisplay for Display7in5 {
             else {
                 *elem = background_color.get_byte_value() ^ 0xFF;
             }
-            i = i + 1;
+            i += 1;
         }
     }
 }
@@ -97,13 +97,7 @@ impl TriDisplay for Display7in5 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::color::{Black, Color};
     use crate::epd7in5_v3;
-    use crate::graphics::DisplayRotation;
-    use embedded_graphics::{
-        prelude::*,
-        primitives::{Line, PrimitiveStyle},
-    };
 
     // test buffer length
     #[test]
