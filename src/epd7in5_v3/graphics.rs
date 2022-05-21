@@ -1,6 +1,6 @@
 use crate::color::TriColor;
-use crate::epd7in5_v3::{DEFAULT_BACKGROUND_COLOR, HEIGHT, WIDTH, NUM_DISPLAY_BITS};
-use crate::graphics::{TriDisplay, DisplayRotation};
+use crate::epd7in5_v3::{DEFAULT_BACKGROUND_COLOR, HEIGHT, NUM_DISPLAY_BITS, WIDTH};
+use crate::graphics::{DisplayRotation, TriDisplay};
 use embedded_graphics_core::prelude::*;
 
 /// Full size buffer for use with the 7in5 EPD
@@ -15,8 +15,7 @@ pub struct Display7in5 {
 impl Default for Display7in5 {
     fn default() -> Self {
         Display7in5 {
-            buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value();
-                2 * NUM_DISPLAY_BITS as usize],
+            buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 2 * NUM_DISPLAY_BITS as usize],
             rotation: DisplayRotation::default(),
         }
     }
@@ -31,7 +30,12 @@ impl DrawTarget for Display7in5 {
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
         for pixel in pixels {
-            self.draw_helper_tri(WIDTH, HEIGHT, pixel, crate::graphics::DisplayColorRendering::Negative)?;
+            self.draw_helper_tri(
+                WIDTH,
+                HEIGHT,
+                pixel,
+                crate::graphics::DisplayColorRendering::Negative,
+            )?;
         }
         Ok(())
     }
@@ -71,21 +75,23 @@ impl TriDisplay for Display7in5 {
     fn chromatic_buffer(&self) -> &[u8] {
         &self.buffer[self.chromatic_offset()..]
     }
-    /*fn buffer(&self) -> &[u8] {
-        &self.buffer
-    }
 
-    fn get_mut_buffer(&mut self) -> &mut [u8] {
-        &mut self.buffer
-    }
+    fn clear_buffer(&mut self, background_color: TriColor) {
+        let mut i: usize = 0;
+        let offset = self.chromatic_offset();
 
-    fn set_rotation(&mut self, rotation: DisplayRotation) {
-        self.rotation = rotation;
+        for elem in self.get_mut_buffer().iter_mut() {
+            if i < offset {
+                *elem = background_color.get_byte_value();
+            }
+            // for V3, white in the BW buffer is 255. But in the chromatic buffer 255 is red.
+            // This means that the chromatic buffer needs to be inverted when clearing
+            else {
+                *elem = background_color.get_byte_value() ^ 0xFF;
+            }
+            i = i + 1;
+        }
     }
-
-    fn rotation(&self) -> DisplayRotation {
-        self.rotation
-    }*/
 }
 
 #[cfg(test)]
