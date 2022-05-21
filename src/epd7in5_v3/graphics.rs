@@ -99,7 +99,7 @@ mod tests {
     use super::*;
     use crate::color::{Black, Color};
     use crate::epd7in5_v3;
-    use crate::graphics::{DisplayRotation};
+    use crate::graphics::DisplayRotation;
     use embedded_graphics::{
         prelude::*,
         primitives::{Line, PrimitiveStyle},
