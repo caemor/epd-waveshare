@@ -77,10 +77,9 @@ impl TriDisplay for Display7in5 {
     }
 
     fn clear_buffer(&mut self, background_color: TriColor) {
-        let mut i: usize = 0;
         let offset = self.chromatic_offset();
 
-        for elem in self.get_mut_buffer().iter_mut() {
+        for (i, elem) in self.get_mut_buffer().iter_mut().enumerate() {
             if i < offset {
                 *elem = background_color.get_byte_value();
             }
@@ -89,7 +88,6 @@ impl TriDisplay for Display7in5 {
             else {
                 *elem = background_color.get_byte_value() ^ 0xFF;
             }
-            i += 1;
         }
     }
 }
