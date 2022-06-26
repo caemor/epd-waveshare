@@ -77,7 +77,7 @@ mod tests {
 	use super::*;
 	use crate::color::Black;
 	use crate::color::Color;
-	use crate::epd4in2;
+	use crate::epd4in2bc;
 	use crate::graphics::{Display, DisplayRotation};
 	use embedded_graphics::{
 		prelude::*,
