@@ -54,7 +54,7 @@ use embedded_hal::{
     digital::v2::*,
 };
 
-use crate::interface::DisplayInterface;
+use crate::{interface::DisplayInterface, traits::WaveshareThreeColorDisplay};
 use crate::traits::{InternalWiAdditions, QuickRefresh, RefreshLut, WaveshareDisplay};
 
 //The Lookup Tables for the Display
@@ -67,6 +67,10 @@ pub const WIDTH: u32 = 400;
 pub const HEIGHT: u32 = 300;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
+
+/// Number of bits for b/w buffer and same for chromatic buffer
+const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
+
 const IS_BUSY_LOW: bool = true;
 
 use crate::color::TriColor;
@@ -77,7 +81,7 @@ use self::command::Command;
 #[cfg(feature = "graphics")]
 mod graphics;
 #[cfg(feature = "graphics")]
-pub use self::graphics::Display4in2;
+pub use self::graphics::Display4in2bc;
 
 /// Epd4in2bc driver
 ///
@@ -88,6 +92,16 @@ pub struct Epd4in2bc<SPI, CS, BUSY, DC, RST, DELAY> {
     color: TriColor,
     /// Refresh LUT
     refresh: RefreshLut,
+}
+
+// 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
+#[repr(u8)]
+enum RefreshFrequency {
+    _50hzDefault = 0x3C,
+    _100Hz = 0x3A,
+    _150Hz = 0x29,
+    _171Hz = 0x31,
+    _200Hz = 0x39,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -124,10 +138,7 @@ where
         self.cmd_with_data(spi, Command::PanelSetting, &[0x3F])?;
 
         // Set Frequency, 200 Hz didn't work on my board
-        // 150Hz and 171Hz wasn't tested yet
-        // TODO: Test these other frequencies
-        // 3A 100HZ   29 150Hz 39 200HZ  31 171HZ DEFAULT: 3c 50Hz
-        self.cmd_with_data(spi, Command::PllControl, &[0x3A])?;
+        self.cmd_with_data(spi, Command::PllControl, &[RefreshFrequency::_150Hz as u8])?;
 
         self.send_resolution(spi)?;
 
@@ -139,6 +150,51 @@ where
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])?;
 
         self.set_lut(spi, None)?;
+
+        self.wait_until_idle();
+        Ok(())
+    }
+}
+
+impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+    for Epd4in2bc<SPI, CS, BUSY, DC, RST, DELAY>
+where
+    SPI: Write<u8>,
+    CS: OutputPin,
+    BUSY: InputPin,
+    DC: OutputPin,
+    RST: OutputPin,
+    DELAY: DelayMs<u8>,
+{
+    fn update_color_frame(
+        &mut self,
+        spi: &mut SPI,
+        black: &[u8],
+        chromatic: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.update_achromatic_frame(spi, black)?;
+        self.update_chromatic_frame(spi, chromatic)
+    }
+
+    /// Update only the black/white data of the display.
+    ///
+    /// Finish by calling `update_chromatic_frame`.
+    fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
+        self.interface.cmd(spi, Command::DataStartTransmission1)?;
+        self.interface.data(spi, black)?;
+        Ok(())
+    }
+
+    /// Update only chromatic data of the display.
+    ///
+    /// This data takes precedence over the black/white data.
+    fn update_chromatic_frame(
+        &mut self,
+        spi: &mut SPI,
+        chromatic: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.data(spi, chromatic)?;
 
         self.wait_until_idle();
         Ok(())
@@ -207,15 +263,27 @@ where
         buffer: &[u8],
         _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        let color_value = self.color.get_byte_value();
+        // self.wait_until_idle();
+        // let color_value = self.color.get_byte_value();
 
+        // self.interface.cmd(spi, Command::DataStartTransmission1)?;
+        // self.interface
+        //     .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
+
+        // self.interface
+        //     .cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
+        // Ok(())
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
-        self.interface
-            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
-        self.interface
-            .cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
+        self.interface.data(spi, buffer)?;
+
+        // Clear the chromatic layer
+        let color = self.color.get_byte_value();
+
+        self.interface.cmd(spi, Command::DataStartTransmission2)?;
+        self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
+
+        self.wait_until_idle();
         Ok(())
     }
 
