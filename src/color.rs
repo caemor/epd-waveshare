@@ -253,6 +253,40 @@ impl PixelColor for TriColor {
     type Raw = ();
 }
 
+#[cfg(feature = "graphics")]
+impl From<BinaryColor> for TriColor {
+    fn from(b: BinaryColor) -> TriColor {
+        match b {
+            BinaryColor::On => TriColor::Black,
+            BinaryColor::Off => TriColor::White,
+        }
+    }
+}
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb888> for TriColor {
+    fn from(rgb: embedded_graphics_core::pixelcolor::Rgb888) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        if rgb == RgbColor::BLACK {
+            TriColor::Black
+        } else if rgb == RgbColor::WHITE {
+            TriColor::White
+        } else {
+            TriColor::Chromatic
+        }
+    }
+}
+#[cfg(feature = "graphics")]
+impl From<TriColor> for embedded_graphics_core::pixelcolor::Rgb888 {
+    fn from(tri_color: TriColor) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        match tri_color {
+            TriColor::Black => embedded_graphics_core::pixelcolor::Rgb888::BLACK,
+            TriColor::White => embedded_graphics_core::pixelcolor::Rgb888::WHITE,
+            TriColor::Chromatic => embedded_graphics_core::pixelcolor::Rgb888::new(255, 0, 0),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
