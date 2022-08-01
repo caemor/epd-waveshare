@@ -225,10 +225,10 @@ where
     }
 
     fn wait_busy_high(&mut self) {
-        let _ = self.interface.wait_until_idle(true);
+        self.interface.wait_until_idle(true);
     }
     fn wait_busy_low(&mut self) {
-        let _ = self.interface.wait_until_idle(false);
+        self.interface.wait_until_idle(false);
     }
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
