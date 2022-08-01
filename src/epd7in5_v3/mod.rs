@@ -298,7 +298,7 @@ where
     }
 
     fn wait_until_idle_raw(&mut self) -> Result<(), SPI::Error> {
-        let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
+        self.interface.wait_until_idle(IS_BUSY_LOW);
         Ok(())
     }
 
