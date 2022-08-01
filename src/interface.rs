@@ -169,9 +169,9 @@ where
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset(&mut self, delay: &mut DELAY, duration: u8) {
+    pub(crate) fn reset(&mut self, delay: &mut DELAY, initial_delay: u8, duration: u8) {
         let _ = self.rst.set_high();
-        delay.delay_ms(10);
+        delay.delay_ms(initial_delay);
 
         let _ = self.rst.set_low();
         delay.delay_ms(duration);

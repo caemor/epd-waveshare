@@ -50,7 +50,7 @@ where
     DELAY: DelayMs<u8>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.reset(delay, 10);
+        self.interface.reset(delay, 10, 10);
         self.wait_until_idle();
         self.interface.cmd(spi, Command::SwReset)?;
         self.wait_until_idle();
