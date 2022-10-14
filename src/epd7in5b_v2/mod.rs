@@ -19,8 +19,6 @@ use crate::color::TriColor;
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 
-
-
 pub(crate) mod command;
 use self::command::Command;
 
@@ -73,7 +71,8 @@ where
         // C driver adds a static 100ms delay here
         self.wait_until_idle(spi, delay)?;
         // Done, but this is also the default
-        self.cmd_with_data(spi, Command::PanelSetting, &[0x0F])?; // 0x1F = B/W mode ? doesnt seem to work
+        // 0x1F = B/W mode ? doesnt seem to work
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x0F])?;
         // Not done in C driver, this is the default
         //self.cmd_with_data(spi, Command::PllControl, &[0x06])?;
         self.cmd_with_data(spi, Command::TconResolution, &[0x03, 0x20, 0x01, 0xE0])?;
@@ -146,8 +145,16 @@ where
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         // (B) version sends one buffer for black and one for red
-        self.cmd_with_data(spi, Command::DataStartTransmission1, &buffer[.. NUM_DISPLAY_BYTES])?;
-        self.cmd_with_data(spi, Command::DataStartTransmission2, &buffer[NUM_DISPLAY_BYTES..])?;
+        self.cmd_with_data(
+            spi,
+            Command::DataStartTransmission1,
+            &buffer[..NUM_DISPLAY_BYTES],
+        )?;
+        self.cmd_with_data(
+            spi,
+            Command::DataStartTransmission2,
+            &buffer[NUM_DISPLAY_BYTES..],
+        )?;
         Ok(())
     }
 
@@ -260,7 +267,9 @@ where
         let pt_scan = 0x01; // Gates scan both inside and outside of the partial window. (default)
 
         self.command(spi, Command::PartialIn)?;
-        self.cmd_with_data(spi, Command::PartialWindow,
+        self.cmd_with_data(
+            spi,
+            Command::PartialWindow,
             &[
                 hrst_upper, hrst_lower, hred_upper, hred_lower, vrst_upper, vrst_lower, vred_upper,
                 vred_lower, pt_scan,

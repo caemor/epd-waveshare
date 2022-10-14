@@ -18,7 +18,7 @@ impl Default for Display7in5 {
     fn default() -> Self {
         Display7in5 {
             // This way of initializing doesn't work for bicolor buffer
-            buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 2*NUM_DISPLAY_BYTES],
+            buffer: [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 2 * NUM_DISPLAY_BYTES],
             rotation: DisplayRotation::default(),
         }
     }
@@ -31,7 +31,7 @@ impl Display7in5 {
         match DEFAULT_BACKGROUND_COLOR {
             // white and chromatic are both 1
             TriColor::White => self.buffer[NUM_DISPLAY_BYTES..].fill(0x00),
-            TriColor::Black => {},
+            TriColor::Black => {}
             TriColor::Chromatic => self.buffer[NUM_DISPLAY_BYTES..].fill(0xFF),
         }
     }
