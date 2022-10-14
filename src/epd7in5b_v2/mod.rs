@@ -241,6 +241,7 @@ where
     DELAY: DelayMs<u8>,
 {
     /// temporary replacement for missing delay in the trait to call wait_until_idle
+    #[allow(clippy::too_many_arguments)]
     pub fn update_partial_frame2(
         &mut self,
         spi: &mut SPI,
