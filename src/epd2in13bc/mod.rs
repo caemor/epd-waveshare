@@ -88,16 +88,15 @@ mod graphics;
 pub use self::graphics::Display2in13bc;
 
 /// Epd2in13bc driver
-pub struct Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY> {
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+pub struct Epd2in13bc<SPI, BUSY, DC, RST, DELAY> {
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY>,
     color: TriColor,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
@@ -139,11 +138,10 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
@@ -185,11 +183,10 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
@@ -199,13 +196,12 @@ where
     type DisplayColor = TriColor;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd2in13bc { interface, color };
@@ -334,10 +330,9 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,

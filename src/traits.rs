@@ -27,10 +27,9 @@ impl Default for RefreshLut {
     }
 }
 
-pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
+pub(crate) trait InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
@@ -50,11 +49,10 @@ where
 }
 
 /// Functions to interact with three color panels
-pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>:
-    WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>:
+    WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
@@ -127,10 +125,9 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
@@ -138,12 +135,11 @@ where
 {
     /// The Color Type used by the Display
     type DisplayColor;
-    /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
+    /// Creates a new driver from a SPI peripheral Pin, Busy InputPin, DC
     ///
     /// This already initialises the device.
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
@@ -282,10 +278,9 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait QuickRefresh<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,

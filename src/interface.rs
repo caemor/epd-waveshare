@@ -8,13 +8,11 @@ use embedded_hal::{
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
-pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
+pub(crate) struct DisplayInterface<SPI, BUSY, DC, RST, DELAY> {
     /// SPI
     _spi: PhantomData<SPI>,
     /// DELAY
     _delay: PhantomData<DELAY>,
-    /// CS for SPI
-    cs: CS,
     /// Low for busy, Wait until display is ready!
     busy: BUSY,
     /// Data/Command Control Pin (High for data, Low for command)
@@ -23,21 +21,19 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
     rst: RST,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> DisplayInterface<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
     SPI::Bus: SpiBusWrite<u8>,
 {
-    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
+    pub fn new(busy: BUSY, dc: DC, rst: RST) -> Self {
         DisplayInterface {
             _spi: PhantomData::default(),
             _delay: PhantomData::default(),
-            cs,
             busy,
             dc,
             rst,
@@ -103,9 +99,6 @@ where
 
     // spi write helper/abstraction function
     fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
-        // activate spi with cs low
-        let _ = self.cs.set_low();
-
         // transfer spi data
         // Be careful!! Linux has a default limit of 4096 bytes per spi transfer
         // see https://raspberrypi.stackexchange.com/questions/65595/spi-transfer-fails-with-buffer-size-greater-than-4096
@@ -116,9 +109,6 @@ where
         } else {
             spi.write(data)?;
         }
-
-        // deactivate spi with cs high
-        let _ = self.cs.set_high();
 
         Ok(())
     }

@@ -37,18 +37,17 @@ const IS_BUSY_LOW: bool = false;
 
 /// EPD7in5 (HD) driver
 ///
-pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct Epd7in5<SPI, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY>,
     /// Background Color
     color: Color,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
@@ -98,11 +97,10 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
@@ -112,13 +110,12 @@ where
     type DisplayColor = Color;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(busy, dc, rst);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd7in5 { interface, color };
@@ -228,10 +225,9 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
