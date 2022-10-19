@@ -50,8 +50,9 @@
 //! BE CAREFUL! The screen can get ghosting/burn-ins through the Partial Fast Update Drawing.
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    delay::*,
+    spi::{SpiDevice,SpiBusWrite},
+    digital::*,
 };
 
 use crate::interface::DisplayInterface;
@@ -93,12 +94,13 @@ pub struct Epd4in2<SPI, CS, BUSY, DC, RST, DELAY> {
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
@@ -117,7 +119,8 @@ where
 
         // power on
         self.command(spi, Command::PowerOn)?;
-        delay.delay_ms(5);
+        // we can only ignore this kind of error
+        delay.delay_ms(5).ok();
         self.wait_until_idle();
 
         // set the panel settings
@@ -148,12 +151,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     type DisplayColor = Color;
     fn new(
@@ -344,12 +348,13 @@ where
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
@@ -442,12 +447,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd4in2<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     /// To be followed immediately after by `update_old_frame`.
     fn update_old_frame(

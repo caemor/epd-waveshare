@@ -54,8 +54,9 @@ pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    delay::*,
+    spi::{SpiDevice,SpiBusWrite},
+    digital::*,
 };
 
 use crate::type_a::{
@@ -86,12 +87,13 @@ pub struct Epd1in54<SPI, CS, BUSY, DC, RST, DELAY> {
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> Epd1in54<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10, 10);
@@ -139,15 +141,16 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, E, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd1in54<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8, Error = E>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -291,12 +294,13 @@ where
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> Epd1in54<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn wait_until_idle(&mut self) {
         self.interface.wait_until_idle(IS_BUSY_LOW);

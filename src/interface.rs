@@ -1,8 +1,9 @@
 use crate::traits::Command;
 use core::marker::PhantomData;
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    delay::*,
+    spi::{SpiDevice,SpiBusWrite},
+    digital::*,
 };
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
@@ -24,12 +25,13 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
         DisplayInterface {
@@ -169,15 +171,18 @@ where
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset(&mut self, delay: &mut DELAY, initial_delay: u8, duration: u8) {
+    pub(crate) fn reset(&mut self, delay: &mut DELAY, initial_delay: u32, duration: u32) {
         let _ = self.rst.set_high();
-        delay.delay_ms(initial_delay);
+        // we can only ignore this kind of error
+        delay.delay_ms(initial_delay).ok();
 
         let _ = self.rst.set_low();
-        delay.delay_ms(duration);
+        // we can only ignore this kind of error
+        delay.delay_ms(duration).ok();
         let _ = self.rst.set_high();
         //TODO: the upstream libraries always sleep for 200ms here
         // 10ms works fine with just for the 7in5_v2 but this needs to be validated for other devices
-        delay.delay_ms(200);
+        // we can only ignore this kind of error
+        delay.delay_ms(200).ok();
     }
 }

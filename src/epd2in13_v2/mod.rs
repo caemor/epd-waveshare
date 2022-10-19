@@ -9,8 +9,9 @@
 //!
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    delay::*,
+    spi::{SpiDevice,SpiBusWrite},
+    digital::{InputPin, OutputPin},
 };
 
 use crate::buffer_len;
@@ -59,12 +60,13 @@ pub struct Epd2in13<SPI, CS, BUSY, DC, RST, DELAY> {
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // HW reset
@@ -153,12 +155,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     type DisplayColor = Color;
     fn new(
@@ -363,12 +366,13 @@ where
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     /// When using partial refresh, the controller uses the provided buffer for
     /// comparison with new buffer.

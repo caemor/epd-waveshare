@@ -7,8 +7,9 @@
 //! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epd5in83b_V2.py)
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    delay::*,
+    spi::{SpiDevice,SpiBusWrite},
+    digital::{InputPin, OutputPin},
 };
 
 use crate::color::Color;
@@ -45,12 +46,13 @@ pub struct Epd5in83<SPI, CS, BUSY, DC, RST, DELAY> {
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd5in83<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
@@ -64,7 +66,8 @@ where
 
         // Power on
         self.command(spi, Command::PowerOn)?;
-        delay.delay_ms(5);
+        // we can only ignore this kind of error
+        delay.delay_ms(5).ok();
         self.wait_until_idle();
 
         // Set the panel settings: BWROTP
@@ -90,12 +93,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd5in83<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn update_color_frame(
         &mut self,
@@ -128,12 +132,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd5in83<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     type DisplayColor = Color;
     fn new(
@@ -289,12 +294,13 @@ where
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> Epd5in83<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)

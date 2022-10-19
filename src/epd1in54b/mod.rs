@@ -1,8 +1,9 @@
 //! A simple Driver for the Waveshare 1.54" (B) E-Ink Display via SPI
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    delay::*,
+    spi::{SpiDevice,SpiBusWrite},
+    digital::*,
 };
 
 use crate::interface::DisplayInterface;
@@ -41,12 +42,13 @@ pub struct Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY> {
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10, 10);
@@ -61,7 +63,8 @@ where
 
         // power on
         self.command(spi, Command::PowerOn)?;
-        delay.delay_ms(5);
+        // we can only ignore this kind of error
+        delay.delay_ms(5).ok();
         self.wait_until_idle();
 
         // set the panel settings
@@ -88,12 +91,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn update_color_frame(
         &mut self,
@@ -132,12 +136,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     type DisplayColor = Color;
     fn new(
@@ -308,12 +313,13 @@ where
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)

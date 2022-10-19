@@ -75,8 +75,9 @@ const LUT_PARTIAL_2IN9: [u8; 159] = [
 ];
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    delay::*,
+    spi::{SpiDevice,SpiBusWrite},
+    digital::*,
 };
 
 use crate::type_a::command::Command;
@@ -106,12 +107,13 @@ pub struct Epd2in9<SPI, CS, BUSY, DC, RST, DELAY> {
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in9<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10, 2);
@@ -148,12 +150,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd2in9<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -288,12 +291,13 @@ where
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in9<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     fn wait_until_idle(&mut self) {
         self.interface.wait_until_idle(IS_BUSY_LOW);
@@ -368,12 +372,13 @@ where
 impl<SPI, CS, BUSY, DC, RST, DELAY> QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd2in9<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
+    SPI::Bus: SpiBusWrite<u8>,
 {
     /// To be followed immediately by `update_new_frame`.
     fn update_old_frame(

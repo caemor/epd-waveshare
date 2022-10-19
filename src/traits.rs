@@ -1,7 +1,8 @@
 use core::marker::Sized;
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    delay::*,
+    spi::SpiDevice,
+    digital::*,
 };
 
 /// All commands need to have this trait which gives the address of the command
@@ -28,12 +29,12 @@ impl Default for RefreshLut {
 
 pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -52,12 +53,12 @@ where
 pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>:
     WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -128,12 +129,12 @@ where
 ///```
 pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// The Color Type used by the Display
     type DisplayColor;
@@ -283,12 +284,12 @@ where
 ///```
 pub trait QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
+    SPI: SpiDevice,
     CS: OutputPin,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs,
 {
     /// Updates the old frame.
     fn update_old_frame(
