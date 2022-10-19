@@ -8,8 +8,8 @@
 
 use embedded_hal::{
     delay::*,
-    spi::{SpiDevice,SpiBusWrite},
     digital::{InputPin, OutputPin},
+    spi::{SpiBusWrite, SpiDevice},
 };
 
 use crate::color::Color;

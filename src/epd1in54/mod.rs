@@ -55,8 +55,8 @@ const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
     delay::*,
-    spi::{SpiDevice,SpiBusWrite},
     digital::*,
+    spi::{SpiBusWrite, SpiDevice},
 };
 
 use crate::type_a::{

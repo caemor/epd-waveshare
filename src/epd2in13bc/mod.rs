@@ -51,8 +51,8 @@
 //!```
 use embedded_hal::{
     delay::*,
-    spi::{SpiDevice,SpiBusWrite},
     digital::*,
+    spi::{SpiBusWrite, SpiDevice},
 };
 
 use crate::interface::DisplayInterface;
