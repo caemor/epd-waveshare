@@ -26,7 +26,7 @@ impl OutOfColorRangeParseError {
 }
 
 /// Only for the Black/White-Displays
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Color {
     /// Black color
     Black,
@@ -35,7 +35,7 @@ pub enum Color {
 }
 
 /// Only for the Black/White/Color-Displays
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum TriColor {
     /// Black color
     Black,
@@ -46,7 +46,7 @@ pub enum TriColor {
 }
 
 /// For the 5in65 7 Color Display
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum OctColor {
     /// Black Color
     Black = 0x00,
