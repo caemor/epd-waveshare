@@ -1,4 +1,4 @@
-//! SPI Commands for the Waveshare 7.5"(B) V2 E-Ink Display
+//! SPI Commands for the Waveshare 7.5"(B) V2 and V3 -Ink Display
 
 use crate::traits;
 
