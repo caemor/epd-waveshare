@@ -204,6 +204,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         if buffer.len() as u32 != width / 8 * height {

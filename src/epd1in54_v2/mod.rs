@@ -165,6 +165,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle();
         self.set_ram_area(spi, x, y, x + width, y + height)?;

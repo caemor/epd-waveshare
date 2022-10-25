@@ -179,6 +179,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.interface
             .cmd(spi, Command::PartialDataStartTransmission1)?;

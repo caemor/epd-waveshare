@@ -194,6 +194,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Displays the frame data from SRAM
@@ -326,6 +327,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Updates the new frame for a portion of the display.
@@ -337,6 +339,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Clears the partial frame buffer on the EPD with the declared background color
@@ -348,5 +351,6 @@ where
         y: u32,
         width: u32,
         height: u32,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 }

@@ -197,6 +197,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         unimplemented!()
     }

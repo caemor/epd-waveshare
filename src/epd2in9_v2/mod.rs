@@ -216,6 +216,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         //TODO This is copied from epd2in9 but it seems not working. Partial refresh supported by version 2?
         self.wait_until_idle();
@@ -450,6 +451,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         //TODO supported by display?
         unimplemented!()
@@ -465,6 +467,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         //TODO supported by display?
         unimplemented!()
@@ -479,6 +482,7 @@ where
         y: u32,
         width: u32,
         height: u32,
+        _delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         //TODO supported by display?
         unimplemented!()
