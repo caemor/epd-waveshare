@@ -70,7 +70,15 @@ fn main() -> Result<(), std::io::Error> {
     let number_of_runs = 1;
     for i in 0..number_of_runs {
         let offset = i * 8 % 150;
-        epd.update_partial_frame(&mut spi, &small_buffer, 25 + offset, 25 + offset, 16, 16)?;
+        epd.update_partial_frame(
+            &mut spi,
+            &small_buffer,
+            25 + offset,
+            25 + offset,
+            16,
+            16,
+            &mut delay,
+        )?;
         epd.display_frame(&mut spi, &mut delay)?;
     }
 
@@ -80,13 +88,13 @@ fn main() -> Result<(), std::io::Error> {
 
     // Draw some squares
     let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
-    epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160)?;
+    epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160, &mut delay)?;
 
     let small_buffer = [Color::White.get_byte_value(); 800]; //80x80
-    epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80)?;
+    epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80, &mut delay)?;
 
     let small_buffer = [Color::Black.get_byte_value(); 8]; //8x8
-    epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8)?;
+    epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8, &mut delay)?;
 
     // Display updated frame
     epd.display_frame(&mut spi, &mut delay)?;

@@ -272,13 +272,13 @@ where
 ///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];
 ///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer);
 ///
-///epd.update_partial_old_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
+///epd.update_partial_old_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height, &mut delay)
 ///  .ok();
 ///
 ///display.clear_buffer(Color::White);
 ///// Execute drawing commands here.
 ///
-///epd.update_partial_new_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
+///epd.update_partial_new_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height, &mut delay)
 ///  .ok();
 ///# Ok(())
 ///# }
