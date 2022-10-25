@@ -61,6 +61,9 @@ pub trait Display: DrawTarget<Color = BinaryColor> {
     /// Returns a mutable buffer
     fn get_mut_buffer(&mut self) -> &mut [u8];
 
+    /// Get display dimensions, taking into account the current rotation of the display
+    fn dimensions(&self) -> (u32, u32);
+
     /// Sets the rotation of the display
     fn set_rotation(&mut self, rotation: DisplayRotation);
 
@@ -122,6 +125,9 @@ pub trait TriDisplay: DrawTarget<Color = TriColor> {
 
     /// Returns a mutable buffer
     fn get_mut_buffer(&mut self) -> &mut [u8];
+
+    /// Get display dimensions, taking into account the current rotation of the display
+    fn dimensions(&self) -> (u32, u32);
 
     /// Sets the rotation of the display
     fn set_rotation(&mut self, rotation: DisplayRotation);
@@ -242,6 +248,9 @@ pub trait OctDisplay: DrawTarget<Color = OctColor> {
     /// Returns a mutable buffer
     fn get_mut_buffer(&mut self) -> &mut [u8];
 
+    /// Get display dimensions, taking into account the current rotation of the display
+    fn dimensions(&self) -> (u32, u32);
+
     /// Sets the rotation of the display
     fn set_rotation(&mut self, rotation: DisplayRotation);
 
@@ -347,7 +356,9 @@ impl<'a> DrawTarget for VarDisplay<'a> {
 
 impl<'a> OriginDimensions for VarDisplay<'a> {
     fn size(&self) -> Size {
-        Size::new(self.width, self.height)
+        let (w, h) = self.dimensions();
+
+        Size::new(w.into(), h.into())
     }
 }
 
@@ -358,6 +369,13 @@ impl<'a> Display for VarDisplay<'a> {
 
     fn get_mut_buffer(&mut self) -> &mut [u8] {
         self.buffer
+    }
+
+    fn dimensions(&self) -> (u32, u32) {
+        match self.rotation() {
+            DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => (self.width, self.height),
+            DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => (self.height, self.width),
+        }
     }
 
     fn set_rotation(&mut self, rotation: DisplayRotation) {
