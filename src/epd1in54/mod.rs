@@ -27,7 +27,7 @@
 //!
 //!// Use embedded graphics for drawing a line
 //!let style = PrimitiveStyleBuilder::new()
-//!    .stroke_color(Black)
+//!    .stroke_color(Color::Black)
 //!    .stroke_width(1)
 //!    .build();
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
@@ -71,7 +71,8 @@ use crate::interface::DisplayInterface;
 
 /// Full size buffer for use with the 1in54b EPD
 #[cfg(feature = "graphics")]
-pub type Display1in54 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
+pub type Display1in54 =
+    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
 
 /// Epd1in54 driver
 pub struct Epd1in54<SPI, CS, BUSY, DC, RST, DELAY> {

@@ -8,11 +8,6 @@ use embedded_graphics_core::pixelcolor::BinaryColor;
 #[cfg(feature = "graphics")]
 use embedded_graphics_core::pixelcolor::PixelColor;
 
-#[cfg(feature = "graphics")]
-pub use BinaryColor::Off as White;
-#[cfg(feature = "graphics")]
-pub use BinaryColor::On as Black;
-
 /// When trying to parse u8 to one of the color types
 #[derive(Debug, PartialEq, Eq)]
 pub struct OutOfColorRangeParseError(u8);
@@ -89,9 +84,6 @@ pub trait ColorType: PixelColor {
     /// * .0 is the mask used to exclude this pixel from the byte (eg: 0x7F in BiColor)
     /// * .1 are the bits used to set the color in the byte (eg: 0x80 in BiColor)
     ///      this is u16 because we set 2 bytes in case of split buffer
-    /// ```
-    /// let (mask, bits, split_buffer) = color.bitmask(true, x);
-    /// ```
     fn bitmask(&self, bwrbit: bool, pos: u32) -> (u8, u16);
 }
 
@@ -113,9 +105,16 @@ impl ColorType for TriColor {
     fn bitmask(&self, bwrbit: bool, pos: u32) -> (u8, u16) {
         let bit = 0x80 >> (pos % 8);
         match self {
-            TriColor::Black =>     (!bit, 0u16),
-            TriColor::White =>     (!bit, bit as u16),
-            TriColor::Chromatic => (!bit, if bwrbit { (bit as u16) << 8 } else { (bit as u16) << 8 | bit as u16 }),
+            TriColor::Black => (!bit, 0u16),
+            TriColor::White => (!bit, bit as u16),
+            TriColor::Chromatic => (
+                !bit,
+                if bwrbit {
+                    (bit as u16) << 8
+                } else {
+                    (bit as u16) << 8 | bit as u16
+                },
+            ),
         }
     }
 }
@@ -126,7 +125,7 @@ impl ColorType for OctColor {
     fn bitmask(&self, _bwrbit: bool, pos: u32) -> (u8, u16) {
         let mask = !(0xF0 >> (pos % 2));
         let bits = self.get_nibble() as u16;
-        (mask, if pos % 2 == 1 {bits} else {bits << 4})
+        (mask, if pos % 2 == 1 { bits } else { bits << 4 })
     }
 }
 
@@ -292,7 +291,6 @@ impl From<u8> for Color {
 impl PixelColor for Color {
     type Raw = ();
 }
-
 
 impl TriColor {
     /// Get the color encoding of the color for one bit

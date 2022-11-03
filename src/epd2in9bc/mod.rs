@@ -29,7 +29,7 @@
 //!// Use embedded graphics for drawing
 //!// A black line
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 200))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 //!    .draw(&mut mono_display);
 //!
 //!// Use a second display for red/yellow
@@ -37,7 +37,7 @@
 //!
 //!// We use `Black` but it will be shown as red/yellow
 //!let _ = Line::new(Point::new(15, 120), Point::new(15, 200))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 //!    .draw(&mut chromatic_display);
 //!
 //!// Display updated frame
@@ -87,7 +87,8 @@ use self::command::Command;
 /// Full size buffer for use with the 2in9b/c EPD
 /// TODO this should be a TriColor, but let's keep it as is at first
 #[cfg(feature = "graphics")]
-pub type Display2in9bc = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
+pub type Display2in9bc =
+    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
 
 /// Epd2in9bc driver
 pub struct Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY> {

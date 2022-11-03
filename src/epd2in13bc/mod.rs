@@ -83,7 +83,13 @@ use self::command::Command;
 
 /// Full size buffer for use with the 2.13" b/c EPD
 #[cfg(feature = "graphics")]
-pub type Display2in13bc = crate::graphics::Display<WIDTH,HEIGHT,true,{WIDTH as usize * HEIGHT as usize/8*2},TriColor>;
+pub type Display2in13bc = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    true,
+    { WIDTH as usize * HEIGHT as usize / 8 * 2 },
+    TriColor,
+>;
 
 /// Epd2in13bc driver
 pub struct Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY> {

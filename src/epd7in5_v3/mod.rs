@@ -23,7 +23,13 @@ use self::command::Command;
 
 /// Full size buffer for use with the 7in5 v3 EPD
 #[cfg(feature = "graphics")]
-pub type Display7in5 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},TriColor>;
+pub type Display7in5 = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    false,
+    { WIDTH as usize * HEIGHT as usize / 8 },
+    TriColor,
+>;
 
 /// Width of the display
 pub const WIDTH: u32 = 800;

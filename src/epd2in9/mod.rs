@@ -28,7 +28,7 @@
 //!
 //!// Use embedded graphics for drawing a line
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 //!    .draw(&mut display);
 //!
 //!    // Display updated frame
@@ -67,7 +67,8 @@ use crate::interface::DisplayInterface;
 
 /// Display with Fullsize buffer for use with the 2in9 EPD
 #[cfg(feature = "graphics")]
-pub type Display2in9 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
+pub type Display2in9 =
+    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
 
 /// Epd2in9 driver
 ///

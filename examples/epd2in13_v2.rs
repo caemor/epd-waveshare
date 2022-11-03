@@ -87,24 +87,24 @@ fn main() -> Result<(), std::io::Error> {
     delay.delay_ms(5000u16);
 
     //println!("Now test new graphics with default rotation and some special stuff:");
-    display.clear_buffer(Color::White);
+    display.clear(Color::White).ok();
 
     // draw a analog clock
     let _ = Circle::with_center(Point::new(64, 64), 80)
-        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(30, 40))
-        .into_styled(PrimitiveStyle::with_stroke(Black, 4))
+        .into_styled(PrimitiveStyle::with_stroke(Color::Black, 4))
         .draw(&mut display);
     let _ = Line::new(Point::new(64, 64), Point::new(80, 40))
-        .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+        .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
         .draw(&mut display);
 
     // draw white on black background
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
     let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
 
@@ -114,8 +114,8 @@ fn main() -> Result<(), std::io::Error> {
     // use bigger/different font
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_10X20)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
 
     let _ = Text::with_text_style("It's working\nWoB!", Point::new(90, 40), style, text_style)
@@ -141,14 +141,14 @@ fn main() -> Result<(), std::io::Error> {
 
     // Show a spinning bar without any delay between frames. Shows how «fast»
     // the screen can refresh for this kind of change (small single character)
-    display.clear_buffer(Color::White);
+    display.clear(Color::White).ok();
     epd2in13
         .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
         .unwrap();
 
     let spinner = ["|", "/", "-", "\\"];
     for i in 0..10 {
-        display.clear_buffer(Color::White);
+        display.clear(Color::White).ok();
         draw_text(&mut display, spinner[i % spinner.len()], 10, 100);
         epd2in13
             .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
@@ -162,8 +162,8 @@ fn main() -> Result<(), std::io::Error> {
 fn draw_text(display: &mut Display2in13, text: &str, x: i32, y: i32) {
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
 
     let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();

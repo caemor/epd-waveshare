@@ -21,7 +21,13 @@ use self::command::Command;
 
 /// Full size buffer for use with the 5in83b v2 EPD
 #[cfg(feature = "graphics")]
-pub type Display5in83 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8*2},TriColor>;
+pub type Display5in83 = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    false,
+    { WIDTH as usize * HEIGHT as usize / 8 * 2 },
+    TriColor,
+>;
 
 /// Width of the display
 pub const WIDTH: u32 = 648;

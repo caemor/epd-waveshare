@@ -11,7 +11,7 @@ use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
     epd4in2::{self, Epd4in2},
-    graphics::{Display, DisplayRotation, VarDisplay},
+    graphics::{DisplayRotation, VarDisplay},
     prelude::*,
 };
 use linux_embedded_hal::{
@@ -70,7 +70,7 @@ fn main() -> Result<(), std::io::Error> {
     let (x, y, width, height) = (50, 50, 250, 250);
 
     let mut buffer = [epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value(); 62500]; //250*250
-    let mut display = VarDisplay::new(width, height, &mut buffer);
+    let mut display = VarDisplay::new(width, height, &mut buffer, false).unwrap();
     display.set_rotation(DisplayRotation::Rotate0);
     draw_text(&mut display, "Rotate 0!", 5, 50);
 
@@ -93,11 +93,11 @@ fn main() -> Result<(), std::io::Error> {
 
     println!("Now test new graphics with default rotation and some special stuff:");
     display.set_rotation(DisplayRotation::Rotate0);
-    display.clear_buffer(Color::White);
+    display.clear(Color::White).ok();
 
     // draw a analog clock
     let style = PrimitiveStyleBuilder::new()
-        .stroke_color(Black)
+        .stroke_color(Color::Black)
         .stroke_width(1)
         .build();
 
@@ -114,8 +114,8 @@ fn main() -> Result<(), std::io::Error> {
     // draw white on black background
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
     let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
 
@@ -125,8 +125,8 @@ fn main() -> Result<(), std::io::Error> {
     // use bigger/different font
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_10X20)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
 
     let _ = Text::with_text_style("It's working-WoB!", Point::new(50, 200), style, text_style)
@@ -153,11 +153,11 @@ fn main() -> Result<(), std::io::Error> {
     epd4in2.sleep(&mut spi, &mut delay)
 }
 
-fn draw_text(display: &mut VarDisplay, text: &str, x: i32, y: i32) {
+fn draw_text(display: &mut impl DrawTarget<Color = Color>, text: &str, x: i32, y: i32) {
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
 
     let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();

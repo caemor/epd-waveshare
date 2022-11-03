@@ -10,7 +10,7 @@ use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
     epd2in13bc::{Display2in13bc, Epd2in13bc},
-    graphics::{DisplayRotation, TriDisplay},
+    graphics::DisplayRotation,
     prelude::*,
 };
 use linux_embedded_hal::{
@@ -76,7 +76,7 @@ fn main() -> Result<(), std::io::Error> {
 
     println!("Test all the rotations");
     let mut display = Display2in13bc::default();
-    display.clear_buffer(TriColor::White);
+    display.clear(TriColor::White).ok();
 
     display.set_rotation(DisplayRotation::Rotate0);
     draw_text(&mut display, "Rotation 0!", 5, 50);
@@ -101,7 +101,7 @@ fn main() -> Result<(), std::io::Error> {
     delay.delay_ms(5000u16);
 
     println!("Now test new graphics with default rotation and three colors:");
-    display.clear_buffer(TriColor::White);
+    display.clear(TriColor::White).ok();
 
     // draw a analog clock
     let _ = Circle::with_center(Point::new(64, 64), 80)
@@ -146,7 +146,7 @@ fn main() -> Result<(), std::io::Error> {
     delay.delay_ms(5000u16);
 
     // clear both bw buffer and chromatic buffer
-    display.clear_buffer(TriColor::White);
+    display.clear(TriColor::White).ok();
     epd2in13.update_color_frame(&mut spi, display.bw_buffer(), display.chromatic_buffer())?;
     epd2in13.display_frame(&mut spi, &mut delay)?;
 

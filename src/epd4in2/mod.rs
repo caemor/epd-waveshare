@@ -32,7 +32,7 @@
 //!
 //!// Use embedded graphics for drawing a line
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 //!    .draw(&mut display);
 //!
 //!    // Display updated frame
@@ -76,7 +76,8 @@ use self::command::Command;
 
 /// Full size buffer for use with the 4in2 EPD
 #[cfg(feature = "graphics")]
-pub type Display4in2 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
+pub type Display4in2 =
+    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
 
 /// Epd4in2 driver
 ///
