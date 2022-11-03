@@ -84,10 +84,10 @@ use crate::color::{Color, TriColor};
 pub(crate) mod command;
 use self::command::Command;
 
+/// Full size buffer for use with the 2in9b/c EPD
+/// TODO this should be a TriColor, but let's keep it as is at first
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use self::graphics::Display2in9bc;
+pub type Display2in9bc = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
 
 /// Epd2in9bc driver
 pub struct Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY> {

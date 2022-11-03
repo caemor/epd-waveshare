@@ -28,10 +28,10 @@ use self::command::{
 pub(crate) mod constants;
 use self::constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
+/// Full size buffer for use with the 2in13 v2 EPD
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use self::graphics::Display2in13;
+pub type Display2in13 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
+
 
 /// Width of the display.
 pub const WIDTH: u32 = 122;

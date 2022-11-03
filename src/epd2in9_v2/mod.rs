@@ -88,10 +88,9 @@ use crate::traits::*;
 use crate::interface::DisplayInterface;
 use crate::traits::QuickRefresh;
 
+/// Display with Fullsize buffer for use with the 2in9 EPD V2
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use crate::epd2in9_v2::graphics::Display2in9;
+pub type Display2in9 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
 
 /// Epd2in9 driver
 ///

@@ -69,10 +69,9 @@ use crate::traits::{RefreshLut, WaveshareDisplay};
 
 use crate::interface::DisplayInterface;
 
+/// Full size buffer for use with the 1in54b EPD
 #[cfg(feature = "graphics")]
-pub mod graphics;
-#[cfg(feature = "graphics")]
-pub use crate::epd1in54::graphics::Display1in54;
+pub type Display1in54 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
 
 /// Epd1in54 driver
 pub struct Epd1in54<SPI, CS, BUSY, DC, RST, DELAY> {

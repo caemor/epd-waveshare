@@ -22,10 +22,9 @@ use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 pub(crate) mod command;
 use self::command::Command;
 
+/// Full size buffer for use with the 7in5 v2 EPD
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use self::graphics::Display7in5;
+pub type Display7in5 = crate::graphics::Display<WIDTH,HEIGHT,false,{WIDTH as usize * HEIGHT as usize /8},Color>;
 
 /// Width of the display
 pub const WIDTH: u32 = 800;

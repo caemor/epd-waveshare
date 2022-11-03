@@ -81,10 +81,9 @@ use crate::color::TriColor;
 pub(crate) mod command;
 use self::command::Command;
 
+/// Full size buffer for use with the 2.13" b/c EPD
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use self::graphics::Display2in13bc;
+pub type Display2in13bc = crate::graphics::Display<WIDTH,HEIGHT,true,{WIDTH as usize * HEIGHT as usize/8*2},TriColor>;
 
 /// Epd2in13bc driver
 pub struct Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY> {

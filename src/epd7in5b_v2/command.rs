@@ -134,6 +134,8 @@ pub(crate) enum Command {
     PartialIn = 0x91,
     /// Quits partial update mode
     PartialOut = 0x92,
+    /// Read OTP
+    ReadOTP = 0xA2,
 }
 
 impl traits::Command for Command {
