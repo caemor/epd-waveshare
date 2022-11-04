@@ -123,7 +123,10 @@ impl<
     > OriginDimensions for Display<WIDTH, HEIGHT, BWRBIT, BYTECOUNT, COLOR>
 {
     fn size(&self) -> Size {
-        Size::new(WIDTH, HEIGHT)
+        match self.rotation {
+            DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => Size::new(WIDTH, HEIGHT),
+            DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => Size::new(HEIGHT, WIDTH),
+        }
     }
 }
 
@@ -236,7 +239,14 @@ impl<'a, COLOR: ColorType> DrawTarget for VarDisplay<'a, COLOR> {
 /// For use with embedded_grahics
 impl<'a, COLOR: ColorType> OriginDimensions for VarDisplay<'a, COLOR> {
     fn size(&self) -> Size {
-        Size::new(self.width, self.height)
+        match self.rotation {
+            DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
+                Size::new(self.width, self.height)
+            }
+            DisplayRotation::Rotate90 | DisplayRotation::Rotate270 => {
+                Size::new(self.height, self.width)
+            }
+        }
     }
 }
 
@@ -267,20 +277,20 @@ impl<'a, COLOR: ColorType> VarDisplay<'a, COLOR> {
             _color: PhantomData,
         };
         // enfore some constraints dynamicly
-        if myself.size() > myself.buffer.len() {
+        if myself.buffer_size() > myself.buffer.len() {
             return Err(VarDisplayError::BufferTooSmall);
         }
         Ok(myself)
     }
 
     /// get the number of used bytes in the buffer
-    fn size(&self) -> usize {
+    fn buffer_size(&self) -> usize {
         self.height as usize * line_bytes(self.width, COLOR::BITS_PER_PIXEL_PER_BUFFER)
     }
 
     /// get internal buffer to use it (to draw in epd)
     pub fn buffer(&self) -> &[u8] {
-        &self.buffer[..self.size()]
+        &self.buffer[..self.buffer_size()]
     }
 
     /// Set the display rotation.
@@ -362,5 +372,105 @@ fn set_pixel<COLOR: ColorType>(
         buffer[index] = buffer[index] & mask | (bits >> 1) as u8;
     } else {
         buffer[index] = buffer[index] & mask | bits as u8;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::color::*;
+    use embedded_graphics::{
+        prelude::*,
+        primitives::{Line, PrimitiveStyle},
+    };
+
+    // test buffer length
+    #[test]
+    fn graphics_size() {
+        // example definition taken from epd1in54
+        let display = Display::<200, 200, false, { 200 * 200 / 8 }, Color>::default();
+        assert_eq!(display.buffer().len(), 5000);
+    }
+
+    // test default background color on all bytes
+    #[test]
+    fn graphics_default() {
+        let display = Display::<200, 200, false, { 200 * 200 / 8 }, Color>::default();
+        for &byte in display.buffer() {
+            assert_eq!(byte, 0);
+        }
+    }
+
+    #[test]
+    fn graphics_rotation_0() {
+        let mut display = Display::<200, 200, false, { 200 * 200 / 8 }, Color>::default();
+        let _ = Line::new(Point::new(0, 0), Point::new(7, 0))
+            .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
+            .draw(&mut display);
+
+        let buffer = display.buffer();
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, 0);
+        }
+    }
+
+    #[test]
+    fn graphics_rotation_90() {
+        let mut display = Display::<200, 200, false, { 200 * 200 / 8 }, Color>::default();
+        display.set_rotation(DisplayRotation::Rotate90);
+        let _ = Line::new(Point::new(0, 192), Point::new(0, 199))
+            .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
+            .draw(&mut display);
+
+        let buffer = display.buffer();
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, 0);
+        }
+    }
+
+    #[test]
+    fn graphics_rotation_180() {
+        let mut display = Display::<200, 200, false, { 200 * 200 / 8 }, Color>::default();
+        display.set_rotation(DisplayRotation::Rotate180);
+        let _ = Line::new(Point::new(192, 199), Point::new(199, 199))
+            .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
+            .draw(&mut display);
+
+        let buffer = display.buffer();
+
+        extern crate std;
+        std::println!("{:?}", buffer);
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, 0);
+        }
+    }
+
+    #[test]
+    fn graphics_rotation_270() {
+        let mut display = Display::<200, 200, false, { 200 * 200 / 8 }, Color>::default();
+        display.set_rotation(DisplayRotation::Rotate270);
+        let _ = Line::new(Point::new(199, 0), Point::new(199, 7))
+            .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
+            .draw(&mut display);
+
+        let buffer = display.buffer();
+
+        extern crate std;
+        std::println!("{:?}", buffer);
+
+        assert_eq!(buffer[0], Color::Black.get_byte_value());
+
+        for &byte in buffer.iter().skip(1) {
+            assert_eq!(byte, 0);
+        }
     }
 }
