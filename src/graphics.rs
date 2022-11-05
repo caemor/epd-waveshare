@@ -156,40 +156,16 @@ impl<
         self.rotation
     }
 
-    /// Get device coordinates from Display coordinate by rotatin appropriately
-    fn rotate_coordinates(&self, x: i32, y: i32) -> (i32, i32) {
-        match self.rotation {
-            // as i32 = never use more than 2 billion pixel per line or per column
-            DisplayRotation::Rotate0 => (x, y),
-            DisplayRotation::Rotate90 => (WIDTH as i32 - 1 - y, x),
-            DisplayRotation::Rotate180 => (WIDTH as i32 - 1 - x, HEIGHT as i32 - 1 - y),
-            DisplayRotation::Rotate270 => (y, HEIGHT as i32 - 1 - x),
-        }
-    }
-
     /// Set a specific pixel color on this display
     pub fn set_pixel(&mut self, pixel: Pixel<COLOR>) {
-        let Pixel(point, color) = pixel;
-        // final coordinates
-        let (x, y) = self.rotate_coordinates(point.x, point.y);
-        // Out of range check
-        if (x < 0) || (x >= WIDTH as i32) || (y < 0) || (y > HEIGHT as i32) {
-            // don't do anything in case of out of range
-            return;
-        }
-
-        let index = x as usize * COLOR::BITS_PER_PIXEL_PER_BUFFER / 8
-            + y as usize * line_bytes(WIDTH, COLOR::BITS_PER_PIXEL_PER_BUFFER);
-        let (mask, bits) = color.bitmask(BWRBIT, x as u32);
-
-        if COLOR::BUFFER_COUNT == 2 {
-            // split buffer is for tricolor displays that use 2 buffer for 2 bits per pixel
-            self.buffer[index] = self.buffer[index] & mask | (bits & 1) as u8;
-            let index = index + self.buffer.len() / 2;
-            self.buffer[index] = self.buffer[index] & mask | (bits >> 1) as u8;
-        } else {
-            self.buffer[index] = self.buffer[index] & mask | bits as u8;
-        }
+        set_pixel(
+            &mut self.buffer,
+            WIDTH,
+            HEIGHT,
+            self.rotation,
+            BWRBIT,
+            pixel,
+        );
     }
 }
 
@@ -285,7 +261,11 @@ impl<'a, COLOR: ColorType> VarDisplay<'a, COLOR> {
 
     /// get the number of used bytes in the buffer
     fn buffer_size(&self) -> usize {
-        self.height as usize * line_bytes(self.width, COLOR::BITS_PER_PIXEL_PER_BUFFER)
+        self.height as usize
+            * line_bytes(
+                self.width,
+                COLOR::BITS_PER_PIXEL_PER_BUFFER * COLOR::BUFFER_COUNT,
+            )
     }
 
     /// get internal buffer to use it (to draw in epd)
@@ -308,8 +288,9 @@ impl<'a, COLOR: ColorType> VarDisplay<'a, COLOR> {
 
     /// Set a specific pixel color on this display
     pub fn set_pixel(&mut self, pixel: Pixel<COLOR>) {
+        let size = self.buffer_size();
         set_pixel(
-            self.buffer,
+            &mut self.buffer[..size],
             self.width,
             self.height,
             self.rotation,
@@ -323,12 +304,12 @@ impl<'a, COLOR: ColorType> VarDisplay<'a, COLOR> {
 impl<'a> VarDisplay<'a, TriColor> {
     /// get black/white internal buffer to use it (to draw in epd)
     pub fn bw_buffer(&self) -> &[u8] {
-        &self.buffer[..self.buffer.len() / 2]
+        &self.buffer[..self.buffer_size() / 2]
     }
 
     /// get chromatic internal buffer to use it (to draw in epd)
     pub fn chromatic_buffer(&self) -> &[u8] {
-        &self.buffer[self.buffer.len() / 2..]
+        &self.buffer[self.buffer_size() / 2..self.buffer_size()]
     }
 }
 
@@ -367,9 +348,9 @@ fn set_pixel<COLOR: ColorType>(
 
     if COLOR::BUFFER_COUNT == 2 {
         // split buffer is for tricolor displays that use 2 buffer for 2 bits per pixel
-        buffer[index] = buffer[index] & mask | (bits & 1) as u8;
+        buffer[index] = buffer[index] & mask | (bits & 0xFF) as u8;
         let index = index + buffer.len() / 2;
-        buffer[index] = buffer[index] & mask | (bits >> 1) as u8;
+        buffer[index] = buffer[index] & mask | (bits >> 8) as u8;
     } else {
         buffer[index] = buffer[index] & mask | bits as u8;
     }
