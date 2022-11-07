@@ -20,6 +20,8 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
     dc: DC,
     /// Pin for Resetting
     rst: RST,
+    /// number of ms the idle loop should sleep on
+    delay_ms: u8,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>
@@ -31,7 +33,7 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
-    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST) -> Self {
+    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST, delay_ms: u8) -> Self {
         DisplayInterface {
             _spi: PhantomData::default(),
             _delay: PhantomData::default(),
@@ -39,6 +41,7 @@ where
             busy,
             dc,
             rst,
+            delay_ms,
         }
     }
 
@@ -134,13 +137,17 @@ where
     ///
     /// Most likely there was a mistake with the 2in9 busy connection
     /// //TODO: use the #cfg feature to make this compile the right way for the certain types
-    pub(crate) fn wait_until_idle(&mut self, is_busy_low: bool) {
-        // //tested: worked without the delay for all tested devices
-        // //self.delay_ms(1);
+    pub(crate) fn wait_until_idle(&mut self, delay: &mut DELAY, is_busy_low: bool) {
         while self.is_busy(is_busy_low) {
-            // //tested: REMOVAL of DELAY: it's only waiting for the signal anyway and should continue work asap
-            // //old: shorten the time? it was 100 in the beginning
-            // //self.delay_ms(5);
+            // This has been removed and added many time :
+            // - it is faster to not have it
+            // - it is complicated to pass the delay everywhere all the time
+            // - busy waiting can consume more power that delaying
+            // - delay waiting enables task switching on realtime OS
+            // -> keep it and leave the decision to the user
+            if self.delay_ms > 0 {
+                delay.delay_ms(self.delay_ms);
+            }
         }
     }
 

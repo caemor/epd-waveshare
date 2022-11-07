@@ -68,7 +68,7 @@ where
         // Power on
         self.command(spi, Command::PowerOn)?;
         delay.delay_ms(5);
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         // Set the clock frequency to 50Hz (default)
         self.cmd_with_data(spi, Command::PllControl, &[0x3C])?;
@@ -91,7 +91,7 @@ where
         // This is in all the Waveshare controllers for Epd7in5
         self.cmd_with_data(spi, Command::FlashMode, &[0x03])?;
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 }
@@ -114,8 +114,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: u8,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd7in5 { interface, color };
@@ -125,78 +126,16 @@ where
         Ok(epd)
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.init(spi, delay)
-    }
-
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.command(spi, Command::PowerOff)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
     }
 
-    fn update_frame(
-        &mut self,
-        spi: &mut SPI,
-        buffer: &[u8],
-        _delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.command(spi, Command::DataStartTransmission1)?;
-        for byte in buffer {
-            let mut temp = *byte;
-            for _ in 0..4 {
-                let mut data = if temp & 0x80 == 0 { 0x00 } else { 0x03 };
-                data <<= 4;
-                temp <<= 1;
-                data |= if temp & 0x80 == 0 { 0x00 } else { 0x03 };
-                temp <<= 1;
-                self.send_data(spi, &[data])?;
-            }
-        }
-        Ok(())
-    }
-
-    fn update_partial_frame(
-        &mut self,
-        _spi: &mut SPI,
-        _buffer: &[u8],
-        _x: u32,
-        _y: u32,
-        _width: u32,
-        _height: u32,
-    ) -> Result<(), SPI::Error> {
-        unimplemented!();
-    }
-
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.command(spi, Command::DisplayRefresh)?;
-        Ok(())
-    }
-
-    fn update_and_display_frame(
-        &mut self,
-        spi: &mut SPI,
-        buffer: &[u8],
-        delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer, delay)?;
-        self.command(spi, Command::DisplayRefresh)?;
-        Ok(())
-    }
-
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.send_resolution(spi)?;
-
-        // The Waveshare controllers all implement clear using 0x33
-        self.command(spi, Command::DataStartTransmission1)?;
-        self.interface
-            .data_x_times(spi, 0x33, WIDTH / 8 * HEIGHT * 4)?;
-        Ok(())
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.init(spi, delay)
     }
 
     fn set_background_color(&mut self, color: Color) {
@@ -215,16 +154,81 @@ where
         HEIGHT
     }
 
+    fn update_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
+        self.command(spi, Command::DataStartTransmission1)?;
+        for byte in buffer {
+            let mut temp = *byte;
+            for _ in 0..4 {
+                let mut data = if temp & 0x80 == 0 { 0x00 } else { 0x03 };
+                data <<= 4;
+                temp <<= 1;
+                data |= if temp & 0x80 == 0 { 0x00 } else { 0x03 };
+                temp <<= 1;
+                self.send_data(spi, &[data])?;
+            }
+        }
+        Ok(())
+    }
+
+    fn update_partial_frame(
+        &mut self,
+        _spi: &mut SPI,
+        _delay: &mut DELAY,
+        _buffer: &[u8],
+        _x: u32,
+        _y: u32,
+        _width: u32,
+        _height: u32,
+    ) -> Result<(), SPI::Error> {
+        unimplemented!();
+    }
+
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
+        self.command(spi, Command::DisplayRefresh)?;
+        Ok(())
+    }
+
+    fn update_and_display_frame(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.update_frame(spi, buffer, delay)?;
+        self.command(spi, Command::DisplayRefresh)?;
+        Ok(())
+    }
+
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
+        self.send_resolution(spi)?;
+
+        // The Waveshare controllers all implement clear using 0x33
+        self.command(spi, Command::DataStartTransmission1)?;
+        self.interface
+            .data_x_times(spi, 0x33, WIDTH / 8 * HEIGHT * 4)?;
+        Ok(())
+    }
+
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -252,10 +256,6 @@ where
         data: &[u8],
     ) -> Result<(), SPI::Error> {
         self.interface.cmd_with_data(spi, command, data)
-    }
-
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {

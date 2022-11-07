@@ -119,8 +119,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: u8,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd7in5 { interface, color };
@@ -166,6 +167,7 @@ where
     fn update_partial_frame(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         _buffer: &[u8],
         _x: u32,
         _y: u32,
@@ -226,13 +228,24 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    /// wait
+    fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        // C driver first sends the command
+        self.interface.cmd(spi, Command::GetStatus)?;
+        while self.interface.is_busy(IS_BUSY_LOW) {
+            self.interface.cmd(spi, Command::GetStatus)?;
+            // C driver doesn't wait here but we have to
+            // because be want to be able to give back control if we are in a RT thread
+            delay.delay_ms(10);
+        }
+        // C driver add 200ms here
+        Ok(())
     }
 }
 
@@ -307,20 +320,6 @@ where
         data: &[u8],
     ) -> Result<(), SPI::Error> {
         self.interface.cmd_with_data(spi, command, data)
-    }
-
-    /// wait
-    pub fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        // C driver first sends the command
-        self.interface.cmd(spi, Command::GetStatus)?;
-        while self.interface.is_busy(IS_BUSY_LOW) {
-            self.interface.cmd(spi, Command::GetStatus)?;
-            // C driver doesn't wait here but we have to
-            // because be want to be able to give back control if we are in a RT thread
-            delay.delay_ms(10);
-        }
-        // C driver add 200ms here
-        Ok(())
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {

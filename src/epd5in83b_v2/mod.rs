@@ -70,7 +70,7 @@ where
         // Power on
         self.command(spi, Command::PowerOn)?;
         delay.delay_ms(5);
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         // Set the panel settings: BWROTP
         self.cmd_with_data(spi, Command::PanelSetting, &[0x0F])?;
@@ -87,7 +87,7 @@ where
         // Set S2G and G2S non-overlap periods to 12 (default)
         self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 }
@@ -105,16 +105,22 @@ where
     fn update_color_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         black: &[u8],
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.update_achromatic_frame(spi, black)?;
-        self.update_chromatic_frame(spi, chromatic)?;
+        self.update_achromatic_frame(spi, delay, black)?;
+        self.update_chromatic_frame(spi, delay, chromatic)?;
         Ok(())
     }
 
-    fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn update_achromatic_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        black: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::DataStartTransmission1, black)?;
         Ok(())
     }
@@ -122,9 +128,10 @@ where
     fn update_chromatic_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::DataStartTransmission2, chromatic)?;
         Ok(())
     }
@@ -148,8 +155,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: u8,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd5in83 { interface, color };
@@ -159,10 +167,10 @@ where
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.command(spi, Command::PowerOff)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
     }
@@ -191,10 +199,10 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.update_achromatic_frame(spi, buffer)?;
+        self.wait_until_idle(spi, delay)?;
+        self.update_achromatic_frame(spi, delay, buffer)?;
         let color = self.color.get_byte_value();
         self.command(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
@@ -204,13 +212,14 @@ where
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         if buffer.len() as u32 != width / 8 * height {
             //TODO panic or error
         }
@@ -243,15 +252,15 @@ where
             .data_x_times(spi, color, width * height / 8)?;
 
         self.command(spi, Command::DisplayRefresh)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         self.command(spi, Command::PartialOut)?;
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.command(spi, Command::DisplayRefresh)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 
@@ -266,8 +275,8 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
 
         // The Waveshare controllers all implement clear using 0x33
         self.command(spi, Command::DataStartTransmission1)?;
@@ -282,13 +291,15 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -316,10 +327,6 @@ where
         data: &[u8],
     ) -> Result<(), SPI::Error> {
         self.interface.cmd_with_data(spi, command, data)
-    }
-
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {

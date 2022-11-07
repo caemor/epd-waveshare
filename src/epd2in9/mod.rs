@@ -21,7 +21,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, 5)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display2in9::default();
@@ -93,7 +93,7 @@ where
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10, 10);
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         // 3 Databytes:
         // A[7:0]
@@ -128,7 +128,7 @@ where
         self.interface
             .cmd_with_data(spi, Command::DataEntryModeSetting, &[0x03])?;
 
-        self.set_lut(spi, None)
+        self.set_lut(spi, delay, None)
     }
 }
 
@@ -158,8 +158,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: u8,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
 
         let mut epd = Epd2in9 {
             interface,
@@ -172,8 +173,8 @@ where
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         //TODO: is 0x00 needed here? (see also epd1in54)
         self.interface
@@ -182,7 +183,7 @@ where
     }
 
     fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.init(spi, delay)?;
         Ok(())
     }
@@ -191,10 +192,10 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.use_full_frame(spi)?;
+        self.wait_until_idle(spi, delay)?;
+        self.use_full_frame(spi, delay)?;
 
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
@@ -205,23 +206,24 @@ where
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.set_ram_area(spi, x, y, x + width, y + height)?;
-        self.set_ram_counter(spi, x, y)?;
+        self.set_ram_counter(spi, delay, x, y)?;
 
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
         //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
         self.interface
@@ -245,9 +247,9 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.use_full_frame(spi)?;
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
+        self.use_full_frame(spi, delay)?;
 
         // clear the ram with the background color
         let color = self.background_color.get_byte_value();
@@ -269,19 +271,21 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
         match self.refresh {
-            RefreshLut::Full => self.set_lut_helper(spi, &LUT_FULL_UPDATE),
-            RefreshLut::Quick => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
+            RefreshLut::Full => self.set_lut_helper(spi, delay, &LUT_FULL_UPDATE),
+            RefreshLut::Quick => self.set_lut_helper(spi, delay, &LUT_PARTIAL_UPDATE),
         }
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -294,16 +298,12 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW);
-    }
-
-    fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn use_full_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // choose full frame/ram
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
         // start from the beginning
-        self.set_ram_counter(spi, 0, 0)
+        self.set_ram_counter(spi, delay, 0, 0)
     }
 
     fn set_ram_area(
@@ -338,8 +338,14 @@ where
         )
     }
 
-    fn set_ram_counter(&mut self, spi: &mut SPI, x: u32, y: u32) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn set_ram_counter(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        x: u32,
+        y: u32,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface
@@ -355,8 +361,13 @@ where
     }
 
     /// Set your own LUT, this function is also used internally for set_lut
-    fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn set_lut_helper(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        buffer: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         assert!(buffer.len() == 30);
         self.interface
             .cmd_with_data(spi, Command::WriteLutRegister, buffer)?;

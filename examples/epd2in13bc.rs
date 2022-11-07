@@ -72,7 +72,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd2in13 =
-        Epd2in13bc::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+        Epd2in13bc::new(&mut spi, cs, busy, dc, rst, &mut delay, 5).expect("eink initalize error");
 
     println!("Test all the rotations");
     let mut display = Display2in13bc::default();
@@ -137,7 +137,12 @@ fn main() -> Result<(), std::io::Error> {
 
     // we used three colors, so we need to update both bw-buffer and chromatic-buffer
 
-    epd2in13.update_color_frame(&mut spi, display.bw_buffer(), display.chromatic_buffer())?;
+    epd2in13.update_color_frame(
+        &mut spi,
+        &mut delay,
+        display.bw_buffer(),
+        display.chromatic_buffer(),
+    )?;
     epd2in13
         .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
@@ -147,7 +152,12 @@ fn main() -> Result<(), std::io::Error> {
 
     // clear both bw buffer and chromatic buffer
     display.clear(TriColor::White).ok();
-    epd2in13.update_color_frame(&mut spi, display.bw_buffer(), display.chromatic_buffer())?;
+    epd2in13.update_color_frame(
+        &mut spi,
+        &mut delay,
+        display.bw_buffer(),
+        display.chromatic_buffer(),
+    )?;
     epd2in13.display_frame(&mut spi, &mut delay)?;
 
     println!("Finished tests - going to sleep");

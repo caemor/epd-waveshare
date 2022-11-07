@@ -51,9 +51,9 @@ where
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10, 10);
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.interface.cmd(spi, Command::SwReset)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         // 3 Databytes:
         // A[7:0]
@@ -69,7 +69,7 @@ where
         self.interface
             .cmd_with_data(spi, Command::DataEntryModeSetting, &[0x3])?;
 
-        self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
+        self.set_ram_area(spi, delay, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
         self.interface
             .cmd_with_data(spi, Command::BorderWaveformControl, &[0x1])?;
@@ -83,9 +83,9 @@ where
         self.interface
             .cmd_with_data(spi, Command::TemperatureSensorControl, &[0xB1, 0x20])?;
 
-        self.set_ram_counter(spi, 0, 0)?;
+        self.set_ram_counter(spi, delay, 0, 0)?;
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 }
@@ -116,8 +116,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: u8,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
 
         let mut epd = Epd1in54 {
             interface,
@@ -134,8 +135,8 @@ where
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         //TODO: is 0x00 needed here or would 0x01 be even more efficient?
         self.interface
@@ -147,10 +148,10 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.use_full_frame(spi)?;
+        self.wait_until_idle(spi, delay)?;
+        self.use_full_frame(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
         Ok(())
@@ -160,23 +161,24 @@ where
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.set_ram_area(spi, x, y, x + width, y + height)?;
-        self.set_ram_counter(spi, x, y)?;
+        self.wait_until_idle(spi, delay)?;
+        self.set_ram_area(spi, delay, x, y, x + width, y + height)?;
+        self.set_ram_counter(spi, delay, x, y)?;
 
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         if self.refresh == RefreshLut::Full {
             self.interface
                 .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xC7])?;
@@ -203,9 +205,9 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.use_full_frame(spi)?;
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
+        self.use_full_frame(spi, delay)?;
 
         // clear the ram with the background color
         let color = self.background_color.get_byte_value();
@@ -230,14 +232,15 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
         match self.refresh {
-            RefreshLut::Full => self.set_lut_helper(spi, &LUT_FULL_UPDATE),
-            RefreshLut::Quick => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE),
+            RefreshLut::Full => self.set_lut_helper(spi, delay, &LUT_FULL_UPDATE),
+            RefreshLut::Quick => self.set_lut_helper(spi, delay, &LUT_PARTIAL_UPDATE),
         }?;
 
         // Additional configuration required only for partial updates
@@ -259,8 +262,9 @@ where
         Ok(())
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -273,27 +277,28 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW);
-    }
-
-    pub(crate) fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    pub(crate) fn use_full_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
         // choose full frame/ram
-        self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
+        self.set_ram_area(spi, delay, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
         // start from the beginning
-        self.set_ram_counter(spi, 0, 0)
+        self.set_ram_counter(spi, delay, 0, 0)
     }
 
     pub(crate) fn set_ram_area(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         start_x: u32,
         start_y: u32,
         end_x: u32,
         end_y: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         assert!(start_x < end_x);
         assert!(start_y < end_y);
 
@@ -322,10 +327,11 @@ where
     pub(crate) fn set_ram_counter(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         x: u32,
         y: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface
@@ -340,8 +346,13 @@ where
         Ok(())
     }
 
-    fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn set_lut_helper(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        buffer: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         assert!(buffer.len() == 159);
 
         self.interface
@@ -350,7 +361,7 @@ where
         self.interface
             .cmd_with_data(spi, Command::WriteLutRegisterEnd, &[buffer[153]])?;
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         self.interface
             .cmd_with_data(spi, Command::GateDrivingVoltage, &[buffer[154]])?;

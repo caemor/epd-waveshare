@@ -65,6 +65,7 @@ where
     fn update_color_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         black: &[u8],
         chromatic: &[u8],
     ) -> Result<(), SPI::Error>;
@@ -72,14 +73,23 @@ where
     /// Update only the black/white data of the display.
     ///
     /// This must be finished by calling `update_chromatic_frame`.
-    fn update_achromatic_frame(&mut self, spi: &mut SPI, black: &[u8]) -> Result<(), SPI::Error>;
+    fn update_achromatic_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        black: &[u8],
+    ) -> Result<(), SPI::Error>;
 
     /// Update only the chromatic data of the display.
     ///
     /// This should be preceded by a call to `update_achromatic_frame`.
     /// This data takes precedence over the black/white data.
-    fn update_chromatic_frame(&mut self, spi: &mut SPI, chromatic: &[u8])
-        -> Result<(), SPI::Error>;
+    fn update_chromatic_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        chromatic: &[u8],
+    ) -> Result<(), SPI::Error>;
 }
 
 /// All the functions to interact with the EPDs
@@ -106,7 +116,7 @@ where
 ///# let mut delay = delay::MockNoop::new();
 ///
 ///// Setup EPD
-///let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+///let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, 5)?;
 ///
 ///// Use display graphics from embedded-graphics
 ///let mut display = Display4in2::default();
@@ -139,6 +149,9 @@ where
     type DisplayColor;
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
+    /// delay_ms is the number of ms the idle loop should sleep on.
+    /// Setting this to 0 implies busy waiting.
+    ///
     /// This already initialises the device.
     fn new(
         spi: &mut SPI,
@@ -147,6 +160,7 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: u8,
     ) -> Result<Self, SPI::Error>
     where
         Self: Sized;
@@ -189,6 +203,7 @@ where
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -225,15 +240,14 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error>;
 
-    /// Checks if the display is busy transmitting data
+    /// Wait until the display has stopped processing data
     ///
-    /// This is normally handled by the more complicated commands themselves,
-    /// but in the case you send data and commands directly you might need to check
-    /// if the device is still busy
-    fn is_busy(&self) -> bool;
+    /// You can call this to make sure a frame is displayed before goin further
+    fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 }
 
 /// Allows quick refresh support for displays that support it; lets you send both
@@ -264,19 +278,19 @@ where
 ///# let mut delay = delay::MockNoop::new();
 ///#
 ///# // Setup EPD
-///# let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+///# let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, 5)?;
 ///let (x, y, frame_width, frame_height) = (20, 40, 80,80);
 ///
 ///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];
 ///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer,false).unwrap();
 ///
-///epd.update_partial_old_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
+///epd.update_partial_old_frame(&mut spi, &mut delay, display.buffer(), x, y, frame_width, frame_height)
 ///  .ok();
 ///
 ///display.clear(Color::White).ok();
 ///// Execute drawing commands here.
 ///
-///epd.update_partial_new_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
+///epd.update_partial_new_frame(&mut spi, &mut delay, display.buffer(), x, y, frame_width, frame_height)
 ///  .ok();
 ///# Ok(())
 ///# }
@@ -321,6 +335,7 @@ where
     fn update_partial_old_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -332,6 +347,7 @@ where
     fn update_partial_new_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -344,6 +360,7 @@ where
     fn clear_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         x: u32,
         y: u32,
         width: u32,
