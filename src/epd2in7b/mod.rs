@@ -388,6 +388,7 @@ where
     }
 
     /// Update black/achromatic frame
+    #[allow(clippy::too_many_arguments)]
     pub fn update_partial_achromatic_frame(
         &mut self,
         spi: &mut SPI,
@@ -419,6 +420,7 @@ where
     }
 
     /// Update partial chromatic/red frame
+    #[allow(clippy::too_many_arguments)]
     pub fn update_partial_chromatic_frame(
         &mut self,
         spi: &mut SPI,

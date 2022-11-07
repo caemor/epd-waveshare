@@ -200,6 +200,7 @@ where
     /// (x,y) is the top left corner
     ///
     /// BUFFER needs to be of size: width / 8 * height !
+    #[allow(clippy::too_many_arguments)]
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
@@ -332,6 +333,7 @@ where
     ) -> Result<(), SPI::Error>;
 
     /// Updates the old frame for a portion of the display.
+    #[allow(clippy::too_many_arguments)]
     fn update_partial_old_frame(
         &mut self,
         spi: &mut SPI,
@@ -344,6 +346,7 @@ where
     ) -> Result<(), SPI::Error>;
 
     /// Updates the new frame for a portion of the display.
+    #[allow(clippy::too_many_arguments)]
     fn update_partial_new_frame(
         &mut self,
         spi: &mut SPI,

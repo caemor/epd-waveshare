@@ -384,6 +384,7 @@ where
         self.send_data(spi, &[h as u8])
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn set_lut_helper(
         &mut self,
         spi: &mut SPI,
