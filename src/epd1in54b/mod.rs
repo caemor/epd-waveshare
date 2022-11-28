@@ -27,10 +27,11 @@ use crate::color::Color;
 pub(crate) mod command;
 use self::command::Command;
 
+/// Full size buffer for use with the 1in54b EPD
+/// TODO this should be a TriColor, but let's keep it as is at first
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use self::graphics::Display1in54b;
+pub type Display1in54b =
+    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
 
 /// Epd1in54b driver
 pub struct Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY> {

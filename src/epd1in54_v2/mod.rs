@@ -27,7 +27,7 @@ use crate::traits::{RefreshLut, WaveshareDisplay};
 use crate::interface::DisplayInterface;
 
 #[cfg(feature = "graphics")]
-pub use crate::epd1in54::graphics::Display1in54;
+pub use crate::epd1in54::Display1in54;
 
 /// Epd1in54 driver
 pub struct Epd1in54<SPI, CS, BUSY, DC, RST, DELAY> {

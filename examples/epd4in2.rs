@@ -86,11 +86,11 @@ fn main() -> Result<(), std::io::Error> {
     delay.delay_ms(5000u16);
 
     println!("Now test new graphics with default rotation and some special stuff");
-    display.clear_buffer(Color::White);
+    display.clear(Color::White).ok();
 
     // draw a analog clock
     let style = PrimitiveStyleBuilder::new()
-        .stroke_color(Black)
+        .stroke_color(Color::Black)
         .stroke_width(1)
         .build();
 
@@ -107,8 +107,8 @@ fn main() -> Result<(), std::io::Error> {
     // draw white on black background
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
     let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
 
@@ -118,8 +118,8 @@ fn main() -> Result<(), std::io::Error> {
     // use bigger/different font
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_10X20)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
 
     let _ = Text::with_text_style("It's working-WoB!", Point::new(50, 200), style, text_style)
@@ -151,8 +151,8 @@ fn main() -> Result<(), std::io::Error> {
 fn draw_text(display: &mut Display4in2, text: &str, x: i32, y: i32) {
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
 
     let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();

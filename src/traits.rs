@@ -114,7 +114,7 @@ where
 ///// Use embedded graphics for drawing a line
 ///
 ///let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-///    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+///    .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 ///    .draw(&mut display);
 ///
 ///    // Display updated frame
@@ -268,12 +268,12 @@ where
 ///let (x, y, frame_width, frame_height) = (20, 40, 80,80);
 ///
 ///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];
-///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer);
+///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer,false).unwrap();
 ///
 ///epd.update_partial_old_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
 ///  .ok();
 ///
-///display.clear_buffer(Color::White);
+///display.clear(Color::White).ok();
 ///// Execute drawing commands here.
 ///
 ///epd.update_partial_new_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)

@@ -36,7 +36,7 @@
 //!// Use embedded graphics for drawing a line
 //!
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 //!    .draw(&mut display);
 //!
 //!    // Display updated frame
@@ -104,7 +104,7 @@ pub mod prelude {
     pub use crate::SPI_MODE;
 
     #[cfg(feature = "graphics")]
-    pub use crate::graphics::{Display, DisplayRotation, OctDisplay, TriDisplay};
+    pub use crate::graphics::{Display, DisplayRotation};
 }
 
 /// Computes the needed buffer length. Takes care of rounding up in case width

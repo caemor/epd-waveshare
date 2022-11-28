@@ -18,10 +18,15 @@ use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 pub(crate) mod command;
 use self::command::Command;
 
+/// Full size buffer for use with the 5in65f EPD
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use self::graphics::Display5in65f;
+pub type Display5in65f = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    false,
+    { WIDTH as usize * HEIGHT as usize / 2 },
+    OctColor,
+>;
 
 /// Width of the display
 pub const WIDTH: u32 = 600;

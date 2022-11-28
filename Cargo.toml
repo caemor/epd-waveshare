@@ -1,4 +1,4 @@
- [package]
+[package]
 authors = ["Christoph Groß <caemor@mailbox.org>"]
 categories = ["embedded", "hardware-support", "no-std"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare formerly published as eink-waveshare-rs"
