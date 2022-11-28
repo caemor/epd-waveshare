@@ -4,7 +4,7 @@ use crate::color::{ColorType, TriColor};
 use core::marker::PhantomData;
 use embedded_graphics_core::prelude::*;
 
-/// Display rotation, only 90° increment supported
+/// Display rotation, only 90° increments supported
 #[derive(Clone, Copy)]
 pub enum DisplayRotation {
     /// No rotation
