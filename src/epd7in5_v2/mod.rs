@@ -96,7 +96,7 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-        delay_ms: u8,
+        delay_ms: Option<u8>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;
@@ -201,12 +201,8 @@ where
     }
 
     fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        while self.interface.is_busy(IS_BUSY_LOW) {
-            // ignore error because it doesn't change anything and we still check busy
-            self.interface.cmd(spi, Command::GetStatus)?;
-            delay.delay_ms(20);
-        }
-        Ok(())
+        self.interface
+            .wait_until_idle_with_cmd(spi, delay, IS_BUSY_LOW, Command::GetStatus)
     }
 }
 

@@ -58,7 +58,7 @@ fn main() -> Result<(), std::io::Error> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = Epd1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay, 5)?;
+    let mut epd = Epd1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay, Some(5))?;
 
     // Clear the full screen
     epd.clear_frame(&mut spi, &mut delay)?;

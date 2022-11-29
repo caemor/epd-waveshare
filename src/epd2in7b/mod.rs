@@ -127,7 +127,7 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-        delay_ms: u8,
+        delay_ms: Option<u8>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;

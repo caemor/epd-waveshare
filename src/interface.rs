@@ -33,7 +33,9 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
-    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST, delay_ms: u8) -> Self {
+    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST, delay_ms: Option<u8>) -> Self {
+        // default delay of 10ms
+        let delay_ms = delay_ms.unwrap_or(10);
         DisplayInterface {
             _spi: PhantomData::default(),
             _delay: PhantomData::default(),
@@ -136,7 +138,6 @@ where
     ///  - FALSE for epd2in9, epd1in54 (for all Display Type A ones?)
     ///
     /// Most likely there was a mistake with the 2in9 busy connection
-    /// //TODO: use the #cfg feature to make this compile the right way for the certain types
     pub(crate) fn wait_until_idle(&mut self, delay: &mut DELAY, is_busy_low: bool) {
         while self.is_busy(is_busy_low) {
             // This has been removed and added many time :
@@ -149,6 +150,27 @@ where
                 delay.delay_ms(self.delay_ms);
             }
         }
+    }
+
+    /// Same as `wait_until_idle` for device needing a command to probe Busy pin
+    pub(crate) fn wait_until_idle_with_cmd<T: Command>(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        is_busy_low: bool,
+        status_command: T,
+    ) -> Result<(), SPI::Error> {
+        self.cmd(spi, status_command)?;
+        if self.delay_ms > 0 {
+            delay.delay_ms(self.delay_ms);
+        }
+        while self.is_busy(is_busy_low) {
+            self.cmd(spi, status_command)?;
+            if self.delay_ms > 0 {
+                delay.delay_ms(self.delay_ms);
+            }
+        }
+        Ok(())
     }
 
     /// Checks if device is still busy

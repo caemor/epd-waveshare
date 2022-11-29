@@ -20,7 +20,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd2in13bc::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, 5)?;
+//!let mut epd = Epd2in13bc::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!// This display is for the black/white/chromatic pixels
@@ -212,7 +212,7 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-        delay_ms: u8,
+        delay_ms: Option<u8>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;
