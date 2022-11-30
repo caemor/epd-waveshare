@@ -6,7 +6,7 @@
 
 # EPD Driver
 
-This library contains a driver for E-Paper Modules from Waveshare (which are basically the same as the Dalian Good
+This library contains a driver for E-Paper Modules mostly from Waveshare (which are basically the same as the Dalian Good
 Display ones).
 
 It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) library for the optional graphics support.
