@@ -73,11 +73,17 @@ use crate::color::Color;
 
 pub(crate) mod command;
 use self::command::Command;
+use crate::buffer_len;
 
 /// Full size buffer for use with the 4in2 EPD
 #[cfg(feature = "graphics")]
-pub type Display4in2 =
-    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
+pub type Display4in2 = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    false,
+    { buffer_len(WIDTH as usize, HEIGHT as usize) },
+    Color,
+>;
 
 /// Epd4in2 driver
 ///

@@ -28,12 +28,18 @@ use crate::color::Color;
 
 pub(crate) mod command;
 use self::command::Command;
+use crate::buffer_len;
 
 /// Full size buffer for use with the 2in7B EPD
 /// TODO this should be a TriColor, but let's keep it as is at first
 #[cfg(feature = "graphics")]
-pub type Display2in7b =
-    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
+pub type Display2in7b = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    false,
+    { buffer_len(WIDTH as usize, HEIGHT as usize) },
+    Color,
+>;
 
 /// Epd2in7b driver
 pub struct Epd2in7b<SPI, CS, BUSY, DC, RST, DELAY> {

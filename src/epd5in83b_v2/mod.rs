@@ -18,6 +18,7 @@ use crate::traits::{InternalWiAdditions, RefreshLut};
 
 pub(crate) mod command;
 use self::command::Command;
+use crate::buffer_len;
 
 /// Full size buffer for use with the 5in83b v2 EPD
 #[cfg(feature = "graphics")]
@@ -25,7 +26,7 @@ pub type Display5in83 = crate::graphics::Display<
     WIDTH,
     HEIGHT,
     false,
-    { WIDTH as usize * HEIGHT as usize / 8 * 2 },
+    { buffer_len(WIDTH as usize, HEIGHT as usize * 2) },
     TriColor,
 >;
 

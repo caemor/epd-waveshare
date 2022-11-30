@@ -30,8 +30,13 @@ use self::constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
 /// Full size buffer for use with the 2in13 v2 EPD
 #[cfg(feature = "graphics")]
-pub type Display2in13 =
-    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
+pub type Display2in13 = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    false,
+    { buffer_len(WIDTH as usize, HEIGHT as usize) },
+    Color,
+>;
 
 /// Width of the display.
 pub const WIDTH: u32 = 122;
