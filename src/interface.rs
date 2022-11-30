@@ -33,6 +33,9 @@ where
     RST: OutputPin,
     DELAY: DelayMs<u8>,
 {
+    /// Creates a new `DisplayInterface` struct
+    ///
+    /// If no delay is given, a default delay of 10ms is used.
     pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST, delay_ms: Option<u8>) -> Self {
         // default delay of 10ms
         let delay_ms = delay_ms.unwrap_or(10);

@@ -234,9 +234,7 @@ where
     }
 
     fn wait_busy_low(&mut self, delay: &mut DELAY) {
-        while self.interface.is_busy(false) {
-            delay.delay_ms(5);
-        }
+        self.interface.wait_until_idle(delay, false);
     }
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();

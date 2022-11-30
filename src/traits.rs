@@ -149,9 +149,9 @@ where
     type DisplayColor;
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
-    /// delay_ms is the number of ms the idle loop should sleep on.
+    /// `delay_ms` is the number of ms the idle loop should sleep on.
     /// Setting it to 0 implies busy waiting.
-    /// Setting it to None means use a default value.
+    /// Setting it to None means a default value is used.
     ///
     /// This already initialises the device.
     fn new(
