@@ -20,6 +20,7 @@ use crate::traits::{
 
 pub(crate) mod command;
 use self::command::Command;
+use crate::buffer_len;
 
 /// Full size buffer for use with the 7in5 v3 EPD
 #[cfg(feature = "graphics")]
@@ -27,7 +28,7 @@ pub type Display7in5 = crate::graphics::Display<
     WIDTH,
     HEIGHT,
     false,
-    { WIDTH as usize * HEIGHT as usize / 8 },
+    { buffer_len(WIDTH as usize, HEIGHT as usize) },
     TriColor,
 >;
 

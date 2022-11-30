@@ -80,6 +80,7 @@ use crate::color::TriColor;
 
 pub(crate) mod command;
 use self::command::Command;
+use crate::buffer_len;
 
 /// Full size buffer for use with the 2.13" b/c EPD
 #[cfg(feature = "graphics")]
@@ -87,7 +88,7 @@ pub type Display2in13bc = crate::graphics::Display<
     WIDTH,
     HEIGHT,
     true,
-    { WIDTH as usize * HEIGHT as usize / 8 * 2 },
+    { buffer_len(WIDTH as usize, HEIGHT as usize * 2) },
     TriColor,
 >;
 
