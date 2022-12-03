@@ -68,14 +68,14 @@ where
         // and as per specs:
         // https://www.waveshare.com/w/upload/2/27/7inch_HD_e-Paper_Specification.pdf
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.command(spi, Command::SwReset)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         self.cmd_with_data(spi, Command::AutoWriteRed, &[0xF7])?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::AutoWriteBw, &[0xF7])?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         self.cmd_with_data(spi, Command::SoftStart, &[0xAE, 0xC7, 0xC3, 0xC0, 0x40])?;
 
@@ -93,7 +93,7 @@ where
         self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xB1])?;
 
         self.command(spi, Command::MasterActivation)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         self.cmd_with_data(spi, Command::SetRamXAc, &[0x00, 0x00])?;
         self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
@@ -120,8 +120,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: Option<u8>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd7in5 { interface, color };
@@ -135,8 +136,8 @@ where
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::DeepSleep, &[0x01])?;
         Ok(())
     }
@@ -145,9 +146,9 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
         self.cmd_with_data(spi, Command::WriteRamBw, buffer)?;
         self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
@@ -157,6 +158,7 @@ where
     fn update_partial_frame(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         _buffer: &[u8],
         _x: u32,
         _y: u32,
@@ -166,9 +168,9 @@ where
         unimplemented!();
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.command(spi, Command::MasterActivation)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 
@@ -183,11 +185,11 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         let pixel_count = WIDTH * HEIGHT / 8;
         let background_color_byte = self.color.get_byte_value();
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
 
         for cmd in &[Command::WriteRamBw, Command::WriteRamRed] {
@@ -198,7 +200,7 @@ where
 
         self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
         self.command(spi, Command::MasterActivation)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 
@@ -221,13 +223,15 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -251,10 +255,6 @@ where
         data: &[u8],
     ) -> Result<(), SPI::Error> {
         self.interface.cmd_with_data(spi, command, data)
-    }
-
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW)
     }
 }
 

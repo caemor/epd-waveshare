@@ -63,7 +63,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd2in13 =
-        Epd2in13::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+        Epd2in13::new(&mut spi, cs, busy, dc, rst, &mut delay, None).expect("eink initalize error");
 
     //println!("Test all the rotations");
     let mut display = Display2in13::default();

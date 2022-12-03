@@ -77,9 +77,9 @@ where
 
         if self.refresh == RefreshLut::Quick {
             self.set_vcom_register(spi, (-9).vcom())?;
-            self.wait_until_idle();
+            self.wait_until_idle(spi, delay)?;
 
-            self.set_lut(spi, Some(self.refresh))?;
+            self.set_lut(spi, delay, Some(self.refresh))?;
 
             // Python code does this, not sure why
             // self.cmd_with_data(spi, Command::WriteOtpSelection, &[0, 0, 0, 0, 0x40, 0, 0])?;
@@ -91,7 +91,7 @@ where
                 DisplayUpdateControl2::new().enable_analog().enable_clock(),
             )?;
             self.command(spi, Command::MasterActivation)?;
-            self.wait_until_idle();
+            self.wait_until_idle(spi, delay)?;
 
             self.set_border_waveform(
                 spi,
@@ -102,9 +102,9 @@ where
                 },
             )?;
         } else {
-            self.wait_until_idle();
+            self.wait_until_idle(spi, delay)?;
             self.command(spi, Command::SwReset)?;
-            self.wait_until_idle();
+            self.wait_until_idle(spi, delay)?;
 
             self.set_driver_output(
                 spi,
@@ -124,7 +124,7 @@ where
 
             // Use simple X/Y auto increase
             self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
-            self.set_ram_address_counters(spi, 0, 0)?;
+            self.set_ram_address_counters(spi, delay, 0, 0)?;
 
             self.set_border_waveform(
                 spi,
@@ -147,10 +147,10 @@ where
 
             self.set_gate_line_width(spi, 10)?;
 
-            self.set_lut(spi, Some(self.refresh))?;
+            self.set_lut(spi, delay, Some(self.refresh))?;
         }
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 }
@@ -173,9 +173,10 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: Option<u8>,
     ) -> Result<Self, SPI::Error> {
         let mut epd = Epd2in13 {
-            interface: DisplayInterface::new(cs, busy, dc, rst),
+            interface: DisplayInterface::new(cs, busy, dc, rst, delay_ms),
             sleep_mode: DeepSleepMode::Mode1,
             background_color: DEFAULT_BACKGROUND_COLOR,
             refresh: RefreshLut::Full,
@@ -189,8 +190,8 @@ where
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
 
         // All sample code enables and disables analog/clocks...
         self.set_display_update_control_2(
@@ -211,18 +212,18 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         assert!(buffer.len() == buffer_len(WIDTH as usize, HEIGHT as usize));
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
-        self.set_ram_address_counters(spi, 0, 0)?;
+        self.set_ram_address_counters(spi, delay, 0, 0)?;
 
         self.cmd_with_data(spi, Command::WriteRam, buffer)?;
 
         if self.refresh == RefreshLut::Full {
             // Always keep the base buffer equal to current if not doing partial refresh.
             self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
-            self.set_ram_address_counters(spi, 0, 0)?;
+            self.set_ram_address_counters(spi, delay, 0, 0)?;
 
             self.cmd_with_data(spi, Command::WriteRamRed, buffer)?;
         }
@@ -235,6 +236,7 @@ where
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -252,14 +254,14 @@ where
         assert!(self.refresh == RefreshLut::Full);
 
         self.set_ram_area(spi, x, y, x + width, y + height)?;
-        self.set_ram_address_counters(spi, x, y)?;
+        self.set_ram_address_counters(spi, delay, x, y)?;
 
         self.cmd_with_data(spi, Command::WriteRam, buffer)?;
 
         if self.refresh == RefreshLut::Full {
             // Always keep the base buffer equals to current if not doing partial refresh.
             self.set_ram_area(spi, x, y, x + width, y + height)?;
-            self.set_ram_address_counters(spi, x, y)?;
+            self.set_ram_address_counters(spi, delay, x, y)?;
 
             self.cmd_with_data(spi, Command::WriteRamRed, buffer)?;
         }
@@ -269,7 +271,7 @@ where
 
     /// Never use directly this function when using partial refresh, or also
     /// keep the base buffer in syncd using `set_partial_base_buffer` function.
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         if self.refresh == RefreshLut::Full {
             self.set_display_update_control_2(
                 spi,
@@ -284,7 +286,7 @@ where
             self.set_display_update_control_2(spi, DisplayUpdateControl2::new().display())?;
         }
         self.command(spi, Command::MasterActivation)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         Ok(())
     }
@@ -299,16 +301,16 @@ where
         self.display_frame(spi, delay)?;
 
         if self.refresh == RefreshLut::Quick {
-            self.set_partial_base_buffer(spi, buffer)?;
+            self.set_partial_base_buffer(spi, delay, buffer)?;
         }
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         let color = self.background_color.get_byte_value();
 
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
-        self.set_ram_address_counters(spi, 0, 0)?;
+        self.set_ram_address_counters(spi, delay, 0, 0)?;
 
         self.command(spi, Command::WriteRam)?;
         self.interface.data_x_times(
@@ -320,7 +322,7 @@ where
         // Always keep the base buffer equals to current if not doing partial refresh.
         if self.refresh == RefreshLut::Full {
             self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
-            self.set_ram_address_counters(spi, 0, 0)?;
+            self.set_ram_address_counters(spi, delay, 0, 0)?;
 
             self.command(spi, Command::WriteRamRed)?;
             self.interface.data_x_times(
@@ -351,6 +353,7 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
+        _delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         let buffer = match refresh_rate {
@@ -361,8 +364,9 @@ where
         self.cmd_with_data(spi, Command::WriteLutRegister, buffer)
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -380,11 +384,12 @@ where
     pub fn set_partial_base_buffer(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
     ) -> Result<(), SPI::Error> {
         assert!(buffer_len(WIDTH as usize, HEIGHT as usize) == buffer.len());
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
-        self.set_ram_address_counters(spi, 0, 0)?;
+        self.set_ram_address_counters(spi, delay, 0, 0)?;
 
         self.cmd_with_data(spi, Command::WriteRamRed, buffer)?;
         Ok(())
@@ -537,10 +542,11 @@ where
     fn set_ram_address_counters(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         x: u32,
         y: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::SetRamXAddressCounter, &[(x >> 3) as u8])?;
 
         self.cmd_with_data(
@@ -562,10 +568,6 @@ where
         data: &[u8],
     ) -> Result<(), SPI::Error> {
         self.interface.cmd_with_data(spi, command, data)
-    }
-
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW);
     }
 }
 

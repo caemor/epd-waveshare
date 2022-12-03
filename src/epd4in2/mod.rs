@@ -25,7 +25,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display4in2::default();
@@ -124,7 +124,7 @@ where
         // power on
         self.command(spi, Command::PowerOn)?;
         delay.delay_ms(5);
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         // set the panel settings
         self.cmd_with_data(spi, Command::PanelSetting, &[0x3F])?;
@@ -144,9 +144,9 @@ where
         self.interface
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])?;
 
-        self.set_lut(spi, None)?;
+        self.set_lut(spi, delay, None)?;
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 }
@@ -169,8 +169,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: Option<u8>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd4in2 {
@@ -184,12 +185,8 @@ where
         Ok(epd)
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.init(spi, delay)
-    }
-
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x17])?; //border floating
         self.command(spi, Command::VcmDcSetting)?; // VCOM to 0V
@@ -201,19 +198,39 @@ where
         }
 
         self.command(spi, Command::PowerOff)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
+    }
+
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.init(spi, delay)
+    }
+
+    fn set_background_color(&mut self, color: Color) {
+        self.color = color;
+    }
+
+    fn background_color(&self) -> &Color {
+        &self.color
+    }
+
+    fn width(&self) -> u32 {
+        WIDTH
+    }
+
+    fn height(&self) -> u32 {
+        HEIGHT
     }
 
     fn update_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         let color_value = self.color.get_byte_value();
 
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
@@ -228,13 +245,14 @@ where
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
@@ -271,8 +289,8 @@ where
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.command(spi, Command::DisplayRefresh)?;
         Ok(())
     }
@@ -288,8 +306,8 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.send_resolution(spi)?;
 
         let color_value = self.color.get_byte_value();
@@ -304,25 +322,10 @@ where
         Ok(())
     }
 
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
-    }
-
-    fn width(&self) -> u32 {
-        WIDTH
-    }
-
-    fn height(&self) -> u32 {
-        HEIGHT
-    }
-
     fn set_lut(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
@@ -330,10 +333,11 @@ where
         }
         match self.refresh {
             RefreshLut::Full => {
-                self.set_lut_helper(spi, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
+                self.set_lut_helper(spi, delay, &LUT_VCOM0, &LUT_WW, &LUT_BW, &LUT_WB, &LUT_BB)
             }
             RefreshLut::Quick => self.set_lut_helper(
                 spi,
+                delay,
                 &LUT_VCOM0_QUICK,
                 &LUT_WW_QUICK,
                 &LUT_BW_QUICK,
@@ -343,8 +347,9 @@ where
         }
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -374,10 +379,6 @@ where
         self.interface.cmd_with_data(spi, command, data)
     }
 
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW);
-    }
-
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
         let h = self.height();
@@ -389,16 +390,18 @@ where
         self.send_data(spi, &[h as u8])
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn set_lut_helper(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         lut_vcom: &[u8],
         lut_ww: &[u8],
         lut_bw: &[u8],
         lut_wb: &[u8],
         lut_bb: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         // LUT VCOM
         self.cmd_with_data(spi, Command::LutForVcom, lut_vcom)?;
 
@@ -460,9 +463,9 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
@@ -476,9 +479,9 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         // self.send_resolution(spi)?;
 
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
@@ -511,13 +514,14 @@ where
     fn update_partial_old_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
@@ -541,13 +545,14 @@ where
     fn update_partial_new_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         if buffer.len() as u32 != width / 8 * height {
             //TODO: panic!! or sth like that
             //return Err("Wrong buffersize");
@@ -566,12 +571,13 @@ where
     fn clear_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         x: u32,
         y: u32,
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.send_resolution(spi)?;
 
         let color_value = self.color.get_byte_value();

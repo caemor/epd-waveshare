@@ -97,8 +97,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_ms: Option<u8>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd5in65f { interface, color };
@@ -121,9 +122,9 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_busy_high();
+        self.wait_until_idle(spi, delay)?;
         self.update_vcom(spi)?;
         self.send_resolution(spi)?;
         self.cmd_with_data(spi, Command::DataStartTransmission1, buffer)?;
@@ -133,6 +134,7 @@ where
     fn update_partial_frame(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         _buffer: &[u8],
         _x: u32,
         _y: u32,
@@ -142,14 +144,14 @@ where
         unimplemented!();
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_busy_high();
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.command(spi, Command::PowerOn)?;
-        self.wait_busy_high();
+        self.wait_until_idle(spi, delay)?;
         self.command(spi, Command::DisplayRefresh)?;
-        self.wait_busy_high();
+        self.wait_until_idle(spi, delay)?;
         self.command(spi, Command::PowerOff)?;
-        self.wait_busy_low();
+        self.wait_busy_low(delay);
         Ok(())
     }
 
@@ -166,7 +168,7 @@ where
 
     fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         let bg = OctColor::colors_byte(self.color, self.color);
-        self.wait_busy_high();
+        self.wait_until_idle(spi, delay)?;
         self.update_vcom(spi)?;
         self.send_resolution(spi)?;
         self.command(spi, Command::DataStartTransmission1)?;
@@ -194,13 +196,15 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -230,11 +234,8 @@ where
         self.interface.cmd_with_data(spi, command, data)
     }
 
-    fn wait_busy_high(&mut self) {
-        self.interface.wait_until_idle(true);
-    }
-    fn wait_busy_low(&mut self) {
-        self.interface.wait_until_idle(false);
+    fn wait_busy_low(&mut self, delay: &mut DELAY) {
+        self.interface.wait_until_idle(delay, false);
     }
     fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();

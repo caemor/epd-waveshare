@@ -63,7 +63,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd4in2 =
-        Epd4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+        Epd4in2::new(&mut spi, cs, busy, dc, rst, &mut delay, None).expect("eink initalize error");
 
     println!("Test all the rotations");
 
@@ -84,7 +84,7 @@ fn main() -> Result<(), std::io::Error> {
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
     epd4in2
-        .update_partial_frame(&mut spi, display.buffer(), x, y, width, height)
+        .update_partial_frame(&mut spi, &mut delay, display.buffer(), x, y, width, height)
         .unwrap();
     epd4in2
         .display_frame(&mut spi, &mut delay)
@@ -140,7 +140,7 @@ fn main() -> Result<(), std::io::Error> {
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd4in2
-            .update_partial_frame(&mut spi, display.buffer(), x, y, width, height)
+            .update_partial_frame(&mut spi, &mut delay, display.buffer(), x, y, width, height)
             .unwrap();
         epd4in2
             .display_frame(&mut spi, &mut delay)
