@@ -32,7 +32,7 @@ const IS_BUSY_LOW: bool = false;
 /// Display with Fullsize buffer for use with the 2in9 EPD
 #[cfg(feature = "graphics")]
 pub type Display3in7 =
-    crate::graphics::Display<WIDTH, HEIGHT, false, { WIDTH as usize * HEIGHT as usize / 8 }, Color>;
+    crate::graphics::Display<WIDTH, HEIGHT, false, buffer_len(WIDTH as usize, HEIGHT as usize), Color>;
 
 /// EPD3in7 driver
 pub struct EPD3in7<SPI, CS, BUSY, DC, RST, DELAY> {
