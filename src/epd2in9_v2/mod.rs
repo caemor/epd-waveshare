@@ -104,8 +104,6 @@ pub type Display2in9 = crate::graphics::Display<
 pub struct Epd2in9<SPI, CS, BUSY, DC, RST, DELAY> {
     /// SPI
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Color
-    background_color: Color,
     /// Refresh LUT
     refresh: RefreshLut,
 }
@@ -182,7 +180,6 @@ where
 
         let mut epd = Epd2in9 {
             interface,
-            background_color: DEFAULT_BACKGROUND_COLOR,
             refresh: RefreshLut::Full,
         };
 
@@ -253,27 +250,6 @@ where
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
-    }
-
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-
-        // clear the ram with the background color
-        let color = self.background_color.get_byte_value();
-
-        self.interface.cmd(spi, Command::WriteRam)?;
-        self.interface
-            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
-        self.interface.cmd(spi, Command::WriteRam2)?;
-        self.interface.data_x_times(spi, color, WIDTH / 8 * HEIGHT)
-    }
-
-    fn set_background_color(&mut self, background_color: Color) {
-        self.background_color = background_color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.background_color
     }
 
     fn set_lut(
@@ -467,20 +443,6 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        x: u32,
-        y: u32,
-        width: u32,
-        height: u32,
-    ) -> Result<(), SPI::Error> {
-        //TODO supported by display?
-        unimplemented!()
-    }
-
-    /// Partial quick refresh not supported yet
-    #[allow(unused)]
-    fn clear_partial_frame(
-        &mut self,
-        spi: &mut SPI,
         x: u32,
         y: u32,
         width: u32,

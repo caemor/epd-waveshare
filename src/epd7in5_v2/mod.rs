@@ -46,8 +46,6 @@ const IS_BUSY_LOW: bool = true;
 pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -104,9 +102,8 @@ where
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd7in5 { interface, color };
+        let mut epd = Epd7in5 { interface };
 
         epd.init(spi, delay)?;
 
@@ -165,28 +162,6 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay)?;
-        self.send_resolution(spi)?;
-
-        self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
-
-        self.command(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
-
-        self.command(spi, Command::DisplayRefresh)?;
-        Ok(())
-    }
-
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
-    }
-
     fn width(&self) -> u32 {
         WIDTH
     }
@@ -221,10 +196,6 @@ where
         self.interface.cmd(spi, command)
     }
 
-    fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
-        self.interface.data(spi, data)
-    }
-
     fn cmd_with_data(
         &mut self,
         spi: &mut SPI,
@@ -240,17 +211,6 @@ where
             delay.delay_ms(20);
         }
         Ok(())
-    }
-
-    fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        let w = self.width();
-        let h = self.height();
-
-        self.command(spi, Command::TconResolution)?;
-        self.send_data(spi, &[(w >> 8) as u8])?;
-        self.send_data(spi, &[w as u8])?;
-        self.send_data(spi, &[(h >> 8) as u8])?;
-        self.send_data(spi, &[h as u8])
     }
 }
 

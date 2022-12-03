@@ -99,7 +99,6 @@ pub type Display2in9bc = crate::graphics::Display<
 /// Epd2in9bc driver
 pub struct Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -211,9 +210,8 @@ where
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd2in9bc { interface, color };
+        let mut epd = Epd2in9bc { interface };
 
         epd.init(spi, delay)?;
 
@@ -241,14 +239,6 @@ where
         self.init(spi, delay)
     }
 
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
-    }
-
     fn width(&self) -> u32 {
         WIDTH
     }
@@ -268,7 +258,7 @@ where
         self.interface.data(spi, buffer)?;
 
         // Clear the chromatic layer
-        let color = self.color.get_byte_value();
+        let color = 0xff;
 
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
@@ -305,24 +295,6 @@ where
     ) -> Result<(), SPI::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
-        Ok(())
-    }
-
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.send_resolution(spi)?;
-
-        let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
-
-        // Clear the black
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
-
-        self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
-
-        // Clear the chromatic
-        self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
-
-        self.wait_until_idle();
         Ok(())
     }
 

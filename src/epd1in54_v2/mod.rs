@@ -33,8 +33,6 @@ pub use crate::epd1in54::Display1in54;
 pub struct Epd1in54<SPI, CS, BUSY, DC, RST, DELAY> {
     /// SPI
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Color
-    background_color: Color,
 
     /// Refresh LUT
     refresh: RefreshLut,
@@ -121,7 +119,6 @@ where
 
         let mut epd = Epd1in54 {
             interface,
-            background_color: DEFAULT_BACKGROUND_COLOR,
             refresh: RefreshLut::Full,
         };
 
@@ -201,30 +198,6 @@ where
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
-    }
-
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.use_full_frame(spi)?;
-
-        // clear the ram with the background color
-        let color = self.background_color.get_byte_value();
-
-        self.interface.cmd(spi, Command::WriteRam)?;
-        self.interface
-            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
-        self.interface.cmd(spi, Command::WriteRam2)?;
-        self.interface
-            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
-        Ok(())
-    }
-
-    fn set_background_color(&mut self, background_color: Color) {
-        self.background_color = background_color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.background_color
     }
 
     fn set_lut(

@@ -161,12 +161,6 @@ where
     /// Also reintialises the device if necessary.
     fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 
-    /// Sets the backgroundcolor for various commands like [clear_frame](WaveshareDisplay::clear_frame)
-    fn set_background_color(&mut self, color: Self::DisplayColor);
-
-    /// Get current background color
-    fn background_color(&self) -> &Self::DisplayColor;
-
     /// Get the width of the display
     fn width(&self) -> u32;
 
@@ -208,11 +202,6 @@ where
         buffer: &[u8],
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
-
-    /// Clears the frame buffer on the EPD with the declared background color
-    ///
-    /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 
     /// Trait for using various Waveforms from different LUTs
     /// E.g. for partial refreshes
@@ -333,17 +322,6 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        x: u32,
-        y: u32,
-        width: u32,
-        height: u32,
-    ) -> Result<(), SPI::Error>;
-
-    /// Clears the partial frame buffer on the EPD with the declared background color
-    /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
-    fn clear_partial_frame(
-        &mut self,
-        spi: &mut SPI,
         x: u32,
         y: u32,
         width: u32,

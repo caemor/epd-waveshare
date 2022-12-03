@@ -42,7 +42,6 @@ pub type Display1in54b = crate::graphics::Display<
 /// Epd1in54b driver
 pub struct Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -156,9 +155,8 @@ where
         delay: &mut DELAY,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd1in54b { interface, color };
+        let mut epd = Epd1in54b { interface };
 
         epd.init(spi, delay)?;
 
@@ -189,14 +187,6 @@ where
         self.init(spi, delay)
     }
 
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
-    }
-
     fn width(&self) -> u32 {
         WIDTH
     }
@@ -224,12 +214,12 @@ where
 
         //NOTE: Example code has a delay here
 
-        // Clear the read layer
-        let color = self.color.get_byte_value();
-        let nbits = WIDTH * (HEIGHT / 8);
+        // Clear the red layer
+        let color = 0xff;
+        let nbytes = WIDTH * (HEIGHT / 8);
 
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, color, nbits)?;
+        self.interface.data_x_times(spi, color, nbytes)?;
 
         //NOTE: Example code has a delay here
         Ok(())
@@ -262,26 +252,6 @@ where
     ) -> Result<(), SPI::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
-        Ok(())
-    }
-
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.send_resolution(spi)?;
-
-        let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
-
-        // Clear the black
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
-
-        // Uses 2 bits per pixel
-        self.interface
-            .data_x_times(spi, color, 2 * (WIDTH * HEIGHT / 8))?;
-
-        // Clear the red
-        self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface
-            .data_x_times(spi, color, WIDTH * HEIGHT / 8)?;
         Ok(())
     }
 
