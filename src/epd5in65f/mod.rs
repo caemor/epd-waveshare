@@ -35,7 +35,6 @@ pub const WIDTH: u32 = 600;
 pub const HEIGHT: u32 = 448;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: OctColor = OctColor::White;
-const IS_BUSY_LOW: bool = true;
 
 /// Epd5in65f driver
 ///
@@ -54,11 +53,11 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
-        self.interface.reset(delay, 10, 2);
+        self.interface.reset(delay, 10_000, 2_000);
 
         self.cmd_with_data(spi, Command::PanelSetting, &[0xEF, 0x08])?;
         self.cmd_with_data(spi, Command::PowerSetting, &[0x37, 0x00, 0x23, 0x23])?;
@@ -72,7 +71,7 @@ where
 
         self.cmd_with_data(spi, Command::FlashMode, &[0xAA])?;
 
-        delay.delay_ms(100);
+        delay.delay_us(100_000);
 
         self.update_vcom(spi)?;
         Ok(())
@@ -87,7 +86,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     type DisplayColor = OctColor;
     fn new(
@@ -97,9 +96,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-        delay_ms: Option<u8>,
+        delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd5in65f { interface, color };
@@ -203,7 +202,7 @@ where
     }
 
     fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        self.interface.wait_until_idle(delay, true);
         Ok(())
     }
 }
@@ -215,7 +214,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)

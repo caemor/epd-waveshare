@@ -60,12 +60,12 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
         // C driver does 200/2 original rust driver does 10/2
-        self.interface.reset(delay, 200, 2);
+        self.interface.reset(delay, 200_000, 2_000);
 
         // V2 procedure as described here:
         // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5bc_V2.py
@@ -110,7 +110,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     type DisplayColor = TriColor;
     fn new(
@@ -120,9 +120,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-        delay_ms: Option<u8>,
+        delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd7in5 { interface, color };
@@ -249,7 +249,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     /// temporary replacement for missing delay in the trait to call wait_until_idle
     #[allow(clippy::too_many_arguments)]

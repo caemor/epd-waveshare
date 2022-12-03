@@ -21,7 +21,7 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Pin for Resetting
     rst: RST,
     /// number of ms the idle loop should sleep on
-    delay_ms: u8,
+    delay_us: u32,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>
@@ -31,14 +31,14 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     /// Creates a new `DisplayInterface` struct
     ///
     /// If no delay is given, a default delay of 10ms is used.
-    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST, delay_ms: Option<u8>) -> Self {
+    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST, delay_us: Option<u32>) -> Self {
         // default delay of 10ms
-        let delay_ms = delay_ms.unwrap_or(10);
+        let delay_us = delay_us.unwrap_or(10_000);
         DisplayInterface {
             _spi: PhantomData::default(),
             _delay: PhantomData::default(),
@@ -46,7 +46,7 @@ where
             busy,
             dc,
             rst,
-            delay_ms,
+            delay_us,
         }
     }
 
@@ -149,8 +149,8 @@ where
             // - busy waiting can consume more power that delaying
             // - delay waiting enables task switching on realtime OS
             // -> keep it and leave the decision to the user
-            if self.delay_ms > 0 {
-                delay.delay_ms(self.delay_ms);
+            if self.delay_us > 0 {
+                delay.delay_us(self.delay_us);
             }
         }
     }
@@ -164,13 +164,13 @@ where
         status_command: T,
     ) -> Result<(), SPI::Error> {
         self.cmd(spi, status_command)?;
-        if self.delay_ms > 0 {
-            delay.delay_ms(self.delay_ms);
+        if self.delay_us > 0 {
+            delay.delay_us(self.delay_us);
         }
         while self.is_busy(is_busy_low) {
             self.cmd(spi, status_command)?;
-            if self.delay_ms > 0 {
-                delay.delay_ms(self.delay_ms);
+            if self.delay_us > 0 {
+                delay.delay_us(self.delay_us);
             }
         }
         Ok(())
@@ -201,15 +201,15 @@ where
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset(&mut self, delay: &mut DELAY, initial_delay: u8, duration: u8) {
+    pub(crate) fn reset(&mut self, delay: &mut DELAY, initial_delay: u32, duration: u32) {
         let _ = self.rst.set_high();
-        delay.delay_ms(initial_delay);
+        delay.delay_us(initial_delay);
 
         let _ = self.rst.set_low();
-        delay.delay_ms(duration);
+        delay.delay_us(duration);
         let _ = self.rst.set_high();
         //TODO: the upstream libraries always sleep for 200ms here
         // 10ms works fine with just for the 7in5_v2 but this needs to be validated for other devices
-        delay.delay_ms(200);
+        delay.delay_us(200_000);
     }
 }

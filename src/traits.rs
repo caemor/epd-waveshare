@@ -33,7 +33,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -57,7 +57,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -143,13 +143,13 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     /// The Color Type used by the Display
     type DisplayColor;
     /// Creates a new driver from a SPI peripheral, CS Pin, Busy InputPin, DC
     ///
-    /// `delay_ms` is the number of ms the idle loop should sleep on.
+    /// `delay_us` is the number of us the idle loop should sleep on.
     /// Setting it to 0 implies busy waiting.
     /// Setting it to None means a default value is used.
     ///
@@ -161,7 +161,7 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-        delay_ms: Option<u8>,
+        delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error>
     where
         Self: Sized;
@@ -304,7 +304,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     /// Updates the old frame.
     fn update_old_frame(
