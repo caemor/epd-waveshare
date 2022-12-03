@@ -94,10 +94,10 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.reset(delay, 10, 10);
+        self.interface.reset(delay, 10_000, 10_000);
 
         self.wait_until_idle(spi, delay)?;
 
@@ -146,7 +146,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -164,9 +164,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-        delay_ms: Option<u8>,
+        delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_ms);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
 
         let mut epd = Epd2in9 {
             interface,
@@ -302,7 +302,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn use_full_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // choose full frame/ram

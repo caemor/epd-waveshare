@@ -69,11 +69,11 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // HW reset
-        self.interface.reset(delay, 10, 10);
+        self.interface.reset(delay, 10_000, 10_000);
 
         if self.refresh == RefreshLut::Quick {
             self.set_vcom_register(spi, (-9).vcom())?;
@@ -163,7 +163,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     type DisplayColor = Color;
     fn new(
@@ -173,10 +173,10 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
-        delay_ms: Option<u8>,
+        delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let mut epd = Epd2in13 {
-            interface: DisplayInterface::new(cs, busy, dc, rst, delay_ms),
+            interface: DisplayInterface::new(cs, busy, dc, rst, delay_us),
             sleep_mode: DeepSleepMode::Mode1,
             background_color: DEFAULT_BACKGROUND_COLOR,
             refresh: RefreshLut::Full,
@@ -377,7 +377,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     /// When using partial refresh, the controller uses the provided buffer for
     /// comparison with new buffer.
