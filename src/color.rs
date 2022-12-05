@@ -24,6 +24,7 @@ impl OutOfColorRangeParseError {
 }
 
 /// Only for the Black/White-Displays
+// TODO : 'color' is not a good name for black and white, rename it to BiColor/BWColor ?
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Color {
     /// Black color
@@ -292,6 +293,46 @@ impl PixelColor for Color {
     type Raw = ();
 }
 
+#[cfg(feature = "graphics")]
+impl From<BinaryColor> for Color {
+    fn from(b: BinaryColor) -> Color {
+        match b {
+            BinaryColor::On => Color::Black,
+            BinaryColor::Off => Color::White,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb888> for Color {
+    fn from(rgb: embedded_graphics_core::pixelcolor::Rgb888) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        if rgb == RgbColor::BLACK {
+            Color::Black
+        } else if rgb == RgbColor::WHITE {
+            Color::White
+        } else {
+            // choose closest color
+            if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
+                Color::White
+            } else {
+                Color::Black
+            }
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::Rgb888 {
+    fn from(color: Color) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        match color {
+            Color::Black => embedded_graphics_core::pixelcolor::Rgb888::BLACK,
+            Color::White => embedded_graphics_core::pixelcolor::Rgb888::WHITE,
+        }
+    }
+}
+
 impl TriColor {
     /// Get the color encoding of the color for one bit
     pub fn get_bit_value(self) -> u8 {
@@ -333,6 +374,7 @@ impl From<embedded_graphics_core::pixelcolor::Rgb888> for TriColor {
         } else if rgb == RgbColor::WHITE {
             TriColor::White
         } else {
+            // there is no good approximation here since we don't know which color is 'chromatic'
             TriColor::Chromatic
         }
     }
@@ -344,6 +386,7 @@ impl From<TriColor> for embedded_graphics_core::pixelcolor::Rgb888 {
         match tri_color {
             TriColor::Black => embedded_graphics_core::pixelcolor::Rgb888::BLACK,
             TriColor::White => embedded_graphics_core::pixelcolor::Rgb888::WHITE,
+            // assume chromatic is red
             TriColor::Chromatic => embedded_graphics_core::pixelcolor::Rgb888::new(255, 0, 0),
         }
     }
