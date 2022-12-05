@@ -44,8 +44,6 @@ pub const WIDTH: u32 = 122;
 /// Height of the display
 pub const HEIGHT: u32 = 250;
 
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 
 /// Epd2in13 (V2) driver
@@ -56,8 +54,6 @@ pub struct Epd2in13<SPI, CS, BUSY, DC, RST, DELAY> {
 
     sleep_mode: DeepSleepMode,
 
-    /// Background Color
-    background_color: Color,
     refresh: RefreshLut,
 }
 
@@ -178,7 +174,6 @@ where
         let mut epd = Epd2in13 {
             interface: DisplayInterface::new(cs, busy, dc, rst, delay_us),
             sleep_mode: DeepSleepMode::Mode1,
-            background_color: DEFAULT_BACKGROUND_COLOR,
             refresh: RefreshLut::Full,
         };
 
@@ -306,8 +301,13 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        let color = self.background_color.get_byte_value();
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
+        let color = color.get_byte_value();
 
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
         self.set_ram_address_counters(spi, delay, 0, 0)?;
@@ -332,14 +332,6 @@ where
             )?;
         }
         Ok(())
-    }
-
-    fn set_background_color(&mut self, background_color: Color) {
-        self.background_color = background_color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.background_color
     }
 
     fn width(&self) -> u32 {
@@ -579,6 +571,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 122);
         assert_eq!(HEIGHT, 250);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

@@ -6,8 +6,6 @@
 pub const WIDTH: u32 = 200;
 /// Height of the display
 pub const HEIGHT: u32 = 200;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 
 use embedded_hal::{
@@ -33,8 +31,6 @@ pub use crate::epd1in54::Display1in54;
 pub struct Epd1in54<SPI, CS, BUSY, DC, RST, DELAY> {
     /// SPI
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Color
-    background_color: Color,
 
     /// Refresh LUT
     refresh: RefreshLut,
@@ -122,7 +118,6 @@ where
 
         let mut epd = Epd1in54 {
             interface,
-            background_color: DEFAULT_BACKGROUND_COLOR,
             refresh: RefreshLut::Full,
         };
 
@@ -205,12 +200,17 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.use_full_frame(spi, delay)?;
 
         // clear the ram with the background color
-        let color = self.background_color.get_byte_value();
+        let color = color.get_byte_value();
 
         self.interface.cmd(spi, Command::WriteRam)?;
         self.interface
@@ -219,14 +219,6 @@ where
         self.interface
             .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
         Ok(())
-    }
-
-    fn set_background_color(&mut self, background_color: Color) {
-        self.background_color = background_color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.background_color
     }
 
     fn set_lut(
@@ -386,6 +378,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 200);
         assert_eq!(HEIGHT, 200);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

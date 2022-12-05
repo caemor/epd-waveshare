@@ -18,8 +18,6 @@ use crate::epd1in54b::constants::*;
 pub const WIDTH: u32 = 200;
 /// Height of epd1in54 in pixels
 pub const HEIGHT: u32 = 200;
-/// Default Background Color (white)
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
 use crate::color::Color;
@@ -42,7 +40,6 @@ pub type Display1in54b = crate::graphics::Display<
 /// Epd1in54b driver
 pub struct Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY> {
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -164,9 +161,8 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd1in54b { interface, color };
+        let mut epd = Epd1in54b { interface };
 
         epd.init(spi, delay)?;
 
@@ -197,14 +193,6 @@ where
         self.init(spi, delay)
     }
 
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
-    }
-
     fn width(&self) -> u32 {
         WIDTH
     }
@@ -233,7 +221,7 @@ where
         //NOTE: Example code has a delay here
 
         // Clear the read layer
-        let color = self.color.get_byte_value();
+        let color = Color::White.get_byte_value();
         let nbits = WIDTH * (HEIGHT / 8);
 
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
@@ -274,11 +262,16 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.send_resolution(spi)?;
 
-        let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
+        let color = color.get_byte_value();
 
         // Clear the black
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
@@ -381,6 +374,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 200);
         assert_eq!(HEIGHT, 200);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

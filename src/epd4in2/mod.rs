@@ -65,8 +65,6 @@ use crate::epd4in2::constants::*;
 pub const WIDTH: u32 = 400;
 /// Height of the display
 pub const HEIGHT: u32 = 300;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
 use crate::color::Color;
@@ -90,8 +88,6 @@ pub type Display4in2 = crate::graphics::Display<
 pub struct Epd4in2<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
     /// Refresh LUT
     refresh: RefreshLut,
 }
@@ -172,11 +168,9 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd4in2 {
             interface,
-            color,
             refresh: RefreshLut::Full,
         };
 
@@ -208,14 +202,6 @@ where
         self.init(spi, delay)
     }
 
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
-    }
-
     fn width(&self) -> u32 {
         WIDTH
     }
@@ -231,7 +217,7 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
-        let color_value = self.color.get_byte_value();
+        let color_value = Color::White.get_byte_value();
 
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
@@ -306,11 +292,16 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.send_resolution(spi)?;
 
-        let color_value = self.color.get_byte_value();
+        let color_value = color.get_byte_value();
 
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
@@ -580,7 +571,8 @@ where
         self.wait_until_idle(spi, delay)?;
         self.send_resolution(spi)?;
 
-        let color_value = self.color.get_byte_value();
+        // TODO should the color be a parameter here ?
+        let color_value = Color::White.get_byte_value();
 
         self.interface.cmd(spi, Command::PartialIn)?;
         self.interface.cmd(spi, Command::PartialWindow)?;
@@ -608,6 +600,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 400);
         assert_eq!(HEIGHT, 300);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

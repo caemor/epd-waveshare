@@ -61,7 +61,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut epd = Epd1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay, Some(5))?;
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)?;
+    epd.clear_frame(&mut spi, &mut delay, Color::White)?;
     epd.display_frame(&mut spi, &mut delay)?;
 
     // Speeddemo
@@ -83,7 +83,7 @@ fn main() -> Result<(), std::io::Error> {
     }
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)?;
+    epd.clear_frame(&mut spi, &mut delay, Color::White)?;
     epd.display_frame(&mut spi, &mut delay)?;
 
     // Draw some squares

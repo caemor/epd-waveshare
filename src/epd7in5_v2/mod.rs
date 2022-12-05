@@ -37,8 +37,6 @@ pub type Display7in5 = crate::graphics::Display<
 pub const WIDTH: u32 = 800;
 /// Height of the display
 pub const HEIGHT: u32 = 480;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
 /// Epd7in5 (V2) driver
@@ -46,8 +44,6 @@ const IS_BUSY_LOW: bool = true;
 pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -105,9 +101,8 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd7in5 { interface, color };
+        let mut epd = Epd7in5 { interface };
 
         epd.init(spi, delay)?;
 
@@ -167,26 +162,29 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.send_resolution(spi)?;
 
+        let byte_color = match color {
+            Color::White => 0x00,
+            Color::Black => 0xFF,
+        };
         self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+        self.interface
+            .data_x_times(spi, byte_color, WIDTH * HEIGHT / 8)?;
 
         self.command(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+        self.interface
+            .data_x_times(spi, byte_color, WIDTH * HEIGHT / 8)?;
 
         self.command(spi, Command::DisplayRefresh)?;
         Ok(())
-    }
-
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
     }
 
     fn width(&self) -> u32 {
@@ -258,6 +256,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 800);
         assert_eq!(HEIGHT, 480);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

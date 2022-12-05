@@ -33,16 +33,12 @@ pub type Display5in65f = crate::graphics::Display<
 pub const WIDTH: u32 = 600;
 /// Height of the display
 pub const HEIGHT: u32 = 448;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: OctColor = OctColor::White;
 
 /// Epd5in65f driver
 ///
 pub struct Epd5in65f<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: OctColor,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -99,9 +95,8 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd5in65f { interface, color };
+        let mut epd = Epd5in65f { interface };
 
         epd.init(spi, delay)?;
 
@@ -165,8 +160,13 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        let bg = OctColor::colors_byte(self.color, self.color);
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
+        let bg = OctColor::colors_byte(color, color);
         self.wait_until_idle(spi, delay)?;
         self.update_vcom(spi)?;
         self.send_resolution(spi)?;
@@ -174,14 +174,6 @@ where
         self.interface.data_x_times(spi, bg, WIDTH * HEIGHT / 2)?;
         self.display_frame(spi, delay)?;
         Ok(())
-    }
-
-    fn set_background_color(&mut self, color: OctColor) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &OctColor {
-        &self.color
     }
 
     fn width(&self) -> u32 {
@@ -248,7 +240,7 @@ where
     }
 
     fn update_vcom(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
-        let bg_color = (self.color.get_nibble() & 0b111) << 5;
+        let bg_color = (OctColor::White.get_nibble() & 0b111) << 5;
         self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x17 | bg_color])?;
         Ok(())
     }
@@ -262,6 +254,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 600);
         assert_eq!(HEIGHT, 448);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, OctColor::White);
     }
 }

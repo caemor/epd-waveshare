@@ -2,9 +2,9 @@
 //!
 //! # References
 //!
-//! - [Datasheet](https://www.waveshare.com/wiki/7.5inch_e-Paper_HAT)
-//! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/702def0/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_7in5_V2.c)
-//! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/702def0/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5_V2.py)
+//! - [Datasheet](https://www.waveshare.com/product/7.5inch-e-paper-b.htm)
+//! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/702def06bc/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_7in5b_V2.c)
+//! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/702def06bc/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5bc_V2.py)
 //!
 //! Important note for V2:
 //! Revision V2 has been released on 2019.11, the resolution is upgraded to 800×480, from 640×384 of V1.
@@ -37,8 +37,6 @@ pub type Display7in5 = crate::graphics::Display<
 pub const WIDTH: u32 = 800;
 /// Height of the display
 pub const HEIGHT: u32 = 480;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
 const NUM_DISPLAY_BYTES: usize = WIDTH as usize * HEIGHT as usize / 8;
 const IS_BUSY_LOW: bool = true;
@@ -48,8 +46,6 @@ const IS_BUSY_LOW: bool = true;
 pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: TriColor,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -123,9 +119,8 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd7in5 { interface, color };
+        let mut epd = Epd7in5 { interface };
 
         epd.init(spi, delay)?;
 
@@ -195,27 +190,29 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.send_resolution(spi)?;
 
+        let (bw, chr) = match color {
+            TriColor::White => (0xFF, 0x00),
+            TriColor::Black => (0x00, 00),
+            TriColor::Chromatic => (0xFF, 00),
+        };
         self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0xFF, WIDTH * HEIGHT / 8)?;
+        self.interface.data_x_times(spi, bw, WIDTH * HEIGHT / 8)?;
 
         self.command(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+        self.interface.data_x_times(spi, chr, WIDTH * HEIGHT / 8)?;
 
         self.command(spi, Command::DisplayRefresh)?;
 
         Ok(())
-    }
-
-    fn set_background_color(&mut self, color: Self::DisplayColor) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Self::DisplayColor {
-        &self.color
     }
 
     fn width(&self) -> u32 {
@@ -335,6 +332,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 800);
         assert_eq!(HEIGHT, 480);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, TriColor::White);
     }
 }
