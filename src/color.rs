@@ -140,6 +140,16 @@ impl From<BinaryColor> for OctColor {
 }
 
 #[cfg(feature = "graphics")]
+impl From<BinaryColor> for Color {
+    fn from(b: BinaryColor) -> Color {
+        match b {
+            BinaryColor::On => Color::Black,
+            BinaryColor::Off => Color::White,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
 impl From<OctColor> for embedded_graphics_core::pixelcolor::Rgb888 {
     fn from(b: OctColor) -> Self {
         let (r, g, b) = b.rgb();
