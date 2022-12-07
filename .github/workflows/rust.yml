@@ -21,7 +21,7 @@ jobs:
     - name: Build lib
       run: cargo check --all-targets --verbose
     - name: Clippy
-      run: cargo clippy --all-targets --all-features -- -D warnings -A clippy::new_ret_no_self
+      run: cargo clippy --all-targets -- -D warnings -A clippy::new_ret_no_self
     - name: Build examples
       run: cargo build --examples --all-targets --verbose
     - name: Run tests
