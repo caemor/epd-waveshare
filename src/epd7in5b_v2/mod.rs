@@ -1,4 +1,4 @@
-//! A simple Driver for the Waveshare 7.5" (B) E-Ink Display (V2) via SPI
+//! A simple Driver for the Waveshare 7.5" (B) E-Ink Display (V2 and V3) via SPI
 //!
 //! # References
 //!
@@ -23,7 +23,7 @@ pub(crate) mod command;
 use self::command::Command;
 use crate::buffer_len;
 
-/// Full size buffer for use with the 1in54 EPD
+/// Full size buffer for use with the 7in5 EPD
 #[cfg(feature = "graphics")]
 pub type Display7in5 = crate::graphics::Display<
     WIDTH,
