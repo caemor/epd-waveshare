@@ -146,9 +146,6 @@ where
 ///let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
 ///     .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 ///     .draw(&mut *display);
-///
-///epd.update_frame(&mut spi, display.buffer(), &mut delay)?;
-///epd.display_frame(&mut spi, &mut delay)?;
 ///```
 pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
 where
