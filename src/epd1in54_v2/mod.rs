@@ -137,10 +137,8 @@ where
 
     fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
-        // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
-        //TODO: is 0x00 needed here or would 0x01 be even more efficient?
         self.interface
-            .cmd_with_data(spi, Command::DeepSleepMode, &[0x00])?;
+            .cmd_with_data(spi, Command::DeepSleepMode, &[0x01])?;
         Ok(())
     }
 
