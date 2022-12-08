@@ -140,6 +140,8 @@ where
 /// use Box::new to request heap space for the display buffer.
 ///
 ///```rust, no_run
+///# use epd_waveshare::epd4in2::Display4in2;
+///# use embedded_graphics_core::prelude::*;
 ///let mut display = Box::new(Display4in2::default());
 ///let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
 ///     .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
