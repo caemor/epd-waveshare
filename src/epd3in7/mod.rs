@@ -29,6 +29,8 @@ pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 const IS_BUSY_LOW: bool = false;
 
+const SINGLE_BYTE_WRITE: bool = true;
+
 /// Display with Fullsize buffer for use with the 3in7 EPD
 #[cfg(feature = "graphics")]
 pub type Display3in7 = crate::graphics::Display<
@@ -42,7 +44,7 @@ pub type Display3in7 = crate::graphics::Display<
 /// EPD3in7 driver
 pub struct EPD3in7<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     background_color: Color,
 }

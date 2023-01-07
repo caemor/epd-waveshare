@@ -79,6 +79,7 @@ const WHITE_BORDER: u8 = 0x70;
 const BLACK_BORDER: u8 = 0x30;
 const CHROMATIC_BORDER: u8 = 0xb0;
 const FLOATING_BORDER: u8 = 0xF0;
+const SINGLE_BYTE_WRITE: bool = true;
 
 use crate::color::{Color, TriColor};
 
@@ -99,7 +100,7 @@ pub type Display2in9bc = crate::graphics::Display<
 
 /// Epd2in9bc driver
 pub struct Epd2in9bc<SPI, CS, BUSY, DC, RST, DELAY> {
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     color: Color,
 }
 

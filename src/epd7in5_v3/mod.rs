@@ -44,12 +44,13 @@ pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 /// Number of bits for b/w buffer and same for chromatic buffer
 const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 const IS_BUSY_LOW: bool = true;
+const SINGLE_BYTE_WRITE: bool = false;
 
 /// Epd7in5 (V3) driver
 ///
 pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: TriColor,
 }

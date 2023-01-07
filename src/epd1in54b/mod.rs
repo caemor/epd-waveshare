@@ -21,6 +21,7 @@ pub const HEIGHT: u32 = 200;
 /// Default Background Color (white)
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
+const SINGLE_BYTE_WRITE: bool = true;
 
 use crate::color::Color;
 
@@ -41,7 +42,7 @@ pub type Display1in54b = crate::graphics::Display<
 
 /// Epd1in54b driver
 pub struct Epd1in54b<SPI, CS, BUSY, DC, RST, DELAY> {
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     color: Color,
 }
 

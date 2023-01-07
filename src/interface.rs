@@ -7,7 +7,7 @@ use embedded_hal::{
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
-pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
+pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, const SINGLE_BYTE_WRITE: bool> {
     /// SPI
     _spi: PhantomData<SPI>,
     /// DELAY
@@ -24,7 +24,8 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
     delay_us: u32,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, CS, BUSY, DC, RST, DELAY, const SINGLE_BYTE_WRITE: bool>
+    DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>
 where
     SPI: Write<u8>,
     CS: OutputPin,
@@ -68,9 +69,13 @@ where
         // high for data
         let _ = self.dc.set_high();
 
-        for val in data.iter().copied() {
-            // Transfer data one u8 at a time over spi
-            self.write(spi, &[val])?;
+        if SINGLE_BYTE_WRITE {
+            for val in data.iter().copied() {
+                // Transfer data one u8 at a time over spi
+                self.write(spi, &[val])?;
+            }
+        } else {
+            self.write(spi, data)?;
         }
 
         Ok(())

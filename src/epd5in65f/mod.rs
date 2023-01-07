@@ -35,12 +35,14 @@ pub const WIDTH: u32 = 600;
 pub const HEIGHT: u32 = 448;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: OctColor = OctColor::White;
+/// Default mode of writing data (single byte vs blockwise)
+const SINGLE_BYTE_WRITE: bool = true;
 
 /// Epd5in65f driver
 ///
 pub struct Epd5in65f<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: OctColor,
 }

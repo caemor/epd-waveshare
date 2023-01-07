@@ -47,12 +47,13 @@ pub const HEIGHT: u32 = 250;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
+const SINGLE_BYTE_WRITE: bool = true;
 
 /// Epd2in13 (V2) driver
 ///
 pub struct Epd2in13<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
 
     sleep_mode: DeepSleepMode,
 
