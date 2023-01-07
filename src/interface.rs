@@ -7,6 +7,8 @@ use embedded_hal::{
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
+/// SINGLE_BYTE_WRITE defines if a data block is written bytewise
+/// or blockwise to the spi device
 pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, const SINGLE_BYTE_WRITE: bool> {
     /// SPI
     _spi: PhantomData<SPI>,
