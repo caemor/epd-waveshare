@@ -11,19 +11,14 @@ pub(crate) trait Command: Copy {
 }
 
 /// Seperates the different LUT for the Display Refresh process
-#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Copy)]
 pub enum RefreshLut {
     /// The "normal" full Lookuptable for the Refresh-Sequence
+    #[default]
     Full,
     /// The quick LUT where not the full refresh sequence is followed.
     /// This might lead to some
     Quick,
-}
-
-impl Default for RefreshLut {
-    fn default() -> Self {
-        RefreshLut::Full
-    }
 }
 
 pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -284,7 +279,7 @@ where
 ///let (x, y, frame_width, frame_height) = (20, 40, 80,80);
 ///
 ///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];
-///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer,false).unwrap();
+///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer, DisplayMode::BwrBitOff as u8).unwrap();
 ///
 ///epd.update_partial_old_frame(&mut spi, &mut delay, display.buffer(), x, y, frame_width, frame_height)
 ///  .ok();
