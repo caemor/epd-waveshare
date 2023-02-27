@@ -2,7 +2,6 @@
 ///! SPI Commands for the SSD1675B driver chip
 use crate::traits;
 
-#[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
     DriverOutputControl = 0x01,
