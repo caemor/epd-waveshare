@@ -14,7 +14,7 @@
 //! # Example for the 'Pico-ePaper-2.66-B' B/W/R Pi Pico Hat E-Ink Display
 //! This example was created in an environment using the [Knurling](https://github.com/knurling-rs) ```flip-link```, ```defmt``` and ```probe-run``` tools - you will
 //! need to adjust for your preferred setup.
-//!```no_run
+//!```ignore
 //!#![no_std]
 //!#![no_main]
 //!use epd_waveshare::{epd2in66b::*, prelude::*};
