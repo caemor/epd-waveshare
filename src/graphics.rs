@@ -337,7 +337,7 @@ fn set_pixel<COLOR: ColorType>(
     };
 
     // Out of range check
-    if (x < 0) || (x >= width as i32) || (y < 0) || (y > height as i32) {
+    if (x < 0) || (x >= width as i32) || (y < 0) || (y >= height as i32) {
         // don't do anything in case of out of range
         return;
     }
