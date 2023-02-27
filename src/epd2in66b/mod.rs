@@ -1,7 +1,7 @@
-//! A driver for the Waveshare three-color E-ink Pi Pico hat 'Pico-ePaper-2.66-B'.
+//! A driver for the Waveshare three-color E-ink Pi Pico hat 'Pico-ePaper-2.66-B' B/W/R.
 //!
 //!
-//! This driver was built and tested for this 296x152, 2.66inch E-Ink display hat for the Pi Pico, it is expected to work for
+//! This driver was built and tested for this 296x152, 2.66inch three-color E-Ink display hat for the Pi Pico, it is expected to work for
 //! other boards too, but that might depend on how the OTP memory in the display is programmed by the factory.
 //!
 //! The driver embedded in the display of this board is the SSD1675B, [documented by cursedhardware](https://cursedhardware.github.io/epd-driver-ic/SSD1675B.pdf).
@@ -9,9 +9,9 @@
 //! The pin assigments are shown on the Waveshare wiki [schematic](https://www.waveshare.com/w/upload/8/8d/Pico-ePaper-2.66.pdf).
 //!
 //! Information on this display/hat can be found at the [Waveshare Wiki](https://www.waveshare.com/wiki/Pico-ePaper-2.66-B).
-//! Do read this documentation, in particular to understand how often this display both must and cannot be updated.
+//! Do read this documentation, in particular to understand how often this display both should and should not be updated.
 //!
-//! # Example for the 'Pico-ePaper-2.66-B' Pi Pico Hat E-Ink Display
+//! # Example for the 'Pico-ePaper-2.66-B' B/W/R Pi Pico Hat E-Ink Display
 //! This example was created in an environment using the [Knurling](https://github.com/knurling-rs) ```flip-link```, ```defmt``` and ```probe-run``` tools - you will
 //! need to adjust for your preferred setup.
 //!```rust, no_run
