@@ -1,41 +1,38 @@
-//! A simple Driver for the Waveshare 2.66"-B E-Ink Display via SPI
+//! A driver for the Waveshare three-color E-ink Pi Pico hat 'Pico-ePaper-2.66-B'.
 //!
-//! More information on this display can be found at the [Waveshare Wiki](https://www.waveshare.com/wiki/Pico-ePaper-2.66-B)
-//! This driver was built and tested for 296x152, 2.66inch E-Ink display HAT for Raspberry Pi Pico, three-color, SPI interface.
 //!
-//! # Example for the 2.66"B Pi Pico Hat E-Ink Display
+//! This driver was built and tested for this 296x152, 2.66inch E-Ink display hat for the Pi Pico, it is expected to work for
+//! other boards too, but that might depend on how the OTP memory in the display is programmed by the factory.
 //!
+//! The driver embedded in the display of this board is the SSD1675B, [documented by cursedhardware](https://cursedhardware.github.io/epd-driver-ic/SSD1675B.pdf).
+//!
+//! The pin assigments are shown on the Waveshare wiki [schematic](https://www.waveshare.com/w/upload/8/8d/Pico-ePaper-2.66.pdf).
+//!
+//! Information on this display/hat can be found at the [Waveshare Wiki](https://www.waveshare.com/wiki/Pico-ePaper-2.66-B).
+//! Do read this documentation, in particular to understand how often this display both must and cannot be updated.
+//!
+//! # Example for the 'Pico-ePaper-2.66-B' Pi Pico Hat E-Ink Display
+//! This example was created in an environment using the [Knurling](https://github.com/knurling-rs) ```flip-link```, ```defmt``` and ```probe-run``` tools - you will
+//! need to adjust for your preferred setup.
 //!```rust, no_run
 //!#![no_std]
 //!#![no_main]
-//!
-//!use embedded_graphics::{
-//!    mono_font::{ascii::FONT_10X20, MonoTextStyle},
-//!    prelude::*,
-//!    primitives::PrimitiveStyle,
-//!    text::{Alignment, Text},
-//!};
+//!use epd_waveshare::{epd2in66b::*, prelude::*};
 //!
 //!use cortex_m_rt::entry;
 //!//use defmt::*;
 //!use defmt_rtt as _;
-//!
 //!use panic_probe as _;
-//!use rp_pico::hal::{
-//!    self,
-//!    clocks::{init_clocks_and_plls, Clock},
-//!    gpio::{FunctionSpi, PinState, Pins},
-//!    pac,
-//!    sio::Sio,
-//!    watchdog::Watchdog,
-//!};
-//!
-//!use fugit::RateExtU32;
-//!
-//!use epd_waveshare::{epd2in66b::*, prelude::*};
 //!
 //!// Use embedded-graphics to create a bitmap to show
 //!fn drawing() -> Display2in66b {
+//!    use embedded_graphics::{
+//!        mono_font::{ascii::FONT_10X20, MonoTextStyle},
+//!        prelude::*,
+//!        primitives::PrimitiveStyle,
+//!        text::{Alignment, Text},
+//!    };
+//!
 //!    // Create a Display buffer to draw on, specific for this ePaper
 //!    let mut display = Display2in66b::default();
 //!
@@ -72,6 +69,17 @@
 //!
 //!#[entry]
 //!fn main() -> ! {
+//!    use fugit::RateExtU32;
+//!    use rp_pico::hal::{
+//!        self,
+//!        clocks::{init_clocks_and_plls, Clock},
+//!        gpio::{FunctionSpi, PinState, Pins},
+//!        pac,
+//!        sio::Sio,
+//!        watchdog::Watchdog,
+//!    };
+//!
+//!    // Boilerplate to access the peripherals
 //!    let mut pac = pac::Peripherals::take().unwrap();
 //!    let core = pac::CorePeripherals::take().unwrap();
 //!    let mut watchdog = Watchdog::new(pac.WATCHDOG);
@@ -87,7 +95,6 @@
 //!    )
 //!    .ok()
 //!    .unwrap();
-//!
 //!    let sio = Sio::new(pac.SIO);
 //!    let pins = Pins::new(
 //!        pac.IO_BANK0,
@@ -95,7 +102,8 @@
 //!        sio.gpio_bank0,
 //!        &mut pac.RESETS,
 //!    );
-//!    // pin assignemnts
+//!
+//!    // Pin assignments of the Pi Pico-ePaper-2.66 Hat
 //!    let _ = pins.gpio10.into_mode::<FunctionSpi>();
 //!    let _ = pins.gpio11.into_mode::<FunctionSpi>();
 //!    let chip_select_pin = pins.gpio9.into_push_pull_output_in_state(PinState::High);
@@ -103,19 +111,19 @@
 //!    let data_or_command_pin = pins.gpio8.into_push_pull_output_in_state(PinState::High);
 //!    let reset_pin = pins.gpio12.into_push_pull_output_in_state(PinState::High);
 //!
-//!    // spi
+//!    // SPI
 //!    let spi = hal::Spi::<_, _, 8>::new(pac.SPI1);
 //!    let mut spi = spi.init(
 //!        &mut pac.RESETS,
 //!        clocks.peripheral_clock.freq(),
-//!        20_000_000u32.Hz(),
+//!        20_000_000u32.Hz(), // The SSD1675B docs say 20MHz max
 //!        &SPI_MODE,
 //!    );
 //!
-//!    //delay
+//!    // Delay
 //!    let mut delay = cortex_m::delay::Delay::new(core.SYST, clocks.system_clock.freq().to_Hz());
 //!
-//!    // Setup EPD
+//!    // Setup the EPD driver
 //!    let mut e_paper = Epd2in66b::new(
 //!        &mut spi,
 //!        chip_select_pin,
@@ -143,7 +151,7 @@
 //!    // Render the ePaper RAM - takes time.
 //!    e_paper.display_frame(&mut spi, &mut delay).unwrap();
 //!
-//!    // Always sleep your EPD as much as possible - ePaper wears out while powered on.
+//!    // Always turn off your EPD as much as possible - ePaper wears out while powered on.
 //!    e_paper.sleep(&mut spi, &mut delay).unwrap();
 //!
 //!    delay.delay_ms(60 * 1000);
