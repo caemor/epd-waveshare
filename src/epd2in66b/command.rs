@@ -57,7 +57,7 @@ pub(crate) enum Command {
     SetYAddressCounter = 0x4f,
     SetAnalogBlockControl = 0x74,
     SetDigitalBlockControl = 0x7e,
-    NOP = 0x7f,
+    Nop = 0x7f,
 }
 
 impl traits::Command for Command {
@@ -81,7 +81,7 @@ pub(crate) enum DataEntryRow {
 pub(crate) enum WriteMode {
     Normal = 0b0000,
     ForceZero = 0b0100,
-    Invert = 01000,
+    Invert = 0b1000,
 }
 pub(crate) enum OutputSource {
     S0ToS175 = 0x00,
