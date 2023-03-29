@@ -17,6 +17,8 @@ pub(crate) enum Command {
     ///     0.. B[2:0]
     ///     Default: Set A[8:0] = 0x127 and B[2:0] = 0x0
     DriverOutputControl = 0x01,
+    GateVoltage = 0x03,
+    SourceVoltage = 0x04,
     /// Booster Soft start control
     ///     3 Databytes:
     ///     1.. A[6:0]
@@ -62,6 +64,8 @@ pub(crate) enum Command {
     SetGateLineWidth = 0x3B,
 
     BorderWaveformControl = 0x3C,
+
+    Eopq = 0x3F,
 
     SetRamXAddressStartEndPosition = 0x44,
 
