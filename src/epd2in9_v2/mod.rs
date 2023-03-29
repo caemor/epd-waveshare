@@ -161,7 +161,7 @@ where
         self.wait_until_idle(spi, delay)?;
 
         // set LUT by host
-        self.set_lut_helper(spi, &WS_20_30[0..153])?;
+        self.set_lut_helper(spi, delay, &WS_20_30[0..153])?;
         self.interface
             .cmd_with_data(spi, Command::WriteLutRegisterEnd, &WS_20_30[153..154])?;
         self.interface
