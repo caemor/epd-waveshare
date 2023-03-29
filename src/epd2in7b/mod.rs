@@ -28,11 +28,18 @@ use crate::color::Color;
 
 pub(crate) mod command;
 use self::command::Command;
+use crate::buffer_len;
 
+/// Full size buffer for use with the 2in7B EPD
+/// TODO this should be a TriColor, but let's keep it as is at first
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use self::graphics::Display2in7b;
+pub type Display2in7b = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    false,
+    { buffer_len(WIDTH as usize, HEIGHT as usize) },
+    Color,
+>;
 
 /// Epd2in7b driver
 pub struct Epd2in7b<SPI, CS, BUSY, DC, RST, DELAY> {
@@ -50,16 +57,16 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
-        self.interface.reset(delay, 2);
+        self.interface.reset(delay, 10_000, 2_000);
 
         // power on
         self.command(spi, Command::PowerOn)?;
-        delay.delay_ms(5);
-        self.wait_until_idle();
+        delay.delay_us(5000);
+        self.wait_until_idle(spi, delay)?;
 
         // set panel settings, 0xbf is bw, 0xaf is multi-color
         self.interface
@@ -98,12 +105,12 @@ where
         self.interface
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x87])?;
 
-        self.set_lut(spi, None)?;
+        self.set_lut(spi, delay, None)?;
 
         self.interface
             .cmd_with_data(spi, Command::PartialDisplayRefresh, &[0x00])?;
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 }
@@ -116,7 +123,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     type DisplayColor = Color;
     fn new(
@@ -126,8 +133,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd2in7b { interface, color };
@@ -141,13 +149,13 @@ where
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0xf7])?;
 
         self.command(spi, Command::PowerOff)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
         Ok(())
@@ -174,6 +182,7 @@ where
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -191,16 +200,16 @@ where
         self.send_data(spi, &[(width & 0xf8) as u8])?;
         self.send_data(spi, &[(height >> 8) as u8])?;
         self.send_data(spi, &[(height & 0xff) as u8])?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         self.send_buffer_helper(spi, buffer)?;
 
         self.interface.cmd(spi, Command::DataStop)
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.command(spi, Command::DisplayRefresh)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 
@@ -215,8 +224,8 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
 
         let color_value = self.color.get_byte_value();
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
@@ -251,9 +260,10 @@ where
     fn set_lut(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::LutForVcom, &LUT_VCOM_DC)?;
         self.cmd_with_data(spi, Command::LutWhiteToWhite, &LUT_WW)?;
         self.cmd_with_data(spi, Command::LutBlackToWhite, &LUT_BW)?;
@@ -262,8 +272,9 @@ where
         Ok(())
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -275,16 +286,17 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn update_color_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         black: &[u8],
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.update_achromatic_frame(spi, black)?;
-        self.update_chromatic_frame(spi, chromatic)
+        self.update_achromatic_frame(spi, delay, black)?;
+        self.update_chromatic_frame(spi, delay, chromatic)
     }
 
     /// Update only the black/white data of the display.
@@ -293,6 +305,7 @@ where
     fn update_achromatic_frame(
         &mut self,
         spi: &mut SPI,
+        _delay: &mut DELAY,
         achromatic: &[u8],
     ) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
@@ -308,6 +321,7 @@ where
     fn update_chromatic_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         chromatic: &[u8],
     ) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
@@ -315,7 +329,7 @@ where
         self.send_buffer_helper(spi, chromatic)?;
 
         self.interface.cmd(spi, Command::DataStop)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         Ok(())
     }
@@ -328,7 +342,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
@@ -356,14 +370,11 @@ where
         self.interface.cmd_with_data(spi, command, data)
     }
 
-    fn wait_until_idle(&mut self) {
-        let _ = self.interface.wait_until_idle(IS_BUSY_LOW);
-    }
-
     /// Refresh display for partial frame
     pub fn display_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         x: u32,
         y: u32,
         width: u32,
@@ -378,14 +389,16 @@ where
         self.send_data(spi, &[(width & 0xf8) as u8])?;
         self.send_data(spi, &[(height >> 8) as u8])?;
         self.send_data(spi, &[(height & 0xff) as u8])?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 
     /// Update black/achromatic frame
+    #[allow(clippy::too_many_arguments)]
     pub fn update_partial_achromatic_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         achromatic: &[u8],
         x: u32,
         y: u32,
@@ -402,7 +415,7 @@ where
         self.send_data(spi, &[(width & 0xf8) as u8])?;
         self.send_data(spi, &[(height >> 8) as u8])?;
         self.send_data(spi, &[(height & 0xff) as u8])?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         for b in achromatic.iter() {
             // Flipping based on waveshare implementation
@@ -413,9 +426,11 @@ where
     }
 
     /// Update partial chromatic/red frame
+    #[allow(clippy::too_many_arguments)]
     pub fn update_partial_chromatic_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         chromatic: &[u8],
         x: u32,
         y: u32,
@@ -432,7 +447,7 @@ where
         self.send_data(spi, &[(width & 0xf8) as u8])?;
         self.send_data(spi, &[(height >> 8) as u8])?;
         self.send_data(spi, &[(height & 0xff) as u8])?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         for b in chromatic.iter() {
             // Flipping based on waveshare implementation

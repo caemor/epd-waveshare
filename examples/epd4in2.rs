@@ -62,7 +62,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd4in2 =
-        Epd4in2::new(&mut spi, cs, busy, dc, rst, &mut delay).expect("eink initalize error");
+        Epd4in2::new(&mut spi, cs, busy, dc, rst, &mut delay, None).expect("eink initalize error");
 
     println!("Test all the rotations");
     let mut display = Display4in2::default();
@@ -86,11 +86,11 @@ fn main() -> Result<(), std::io::Error> {
     delay.delay_ms(5000u16);
 
     println!("Now test new graphics with default rotation and some special stuff");
-    display.clear_buffer(Color::White);
+    display.clear(Color::White).ok();
 
     // draw a analog clock
     let style = PrimitiveStyleBuilder::new()
-        .stroke_color(Black)
+        .stroke_color(Color::Black)
         .stroke_width(1)
         .build();
 
@@ -107,8 +107,8 @@ fn main() -> Result<(), std::io::Error> {
     // draw white on black background
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
     let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
 
@@ -118,8 +118,8 @@ fn main() -> Result<(), std::io::Error> {
     // use bigger/different font
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_10X20)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
 
     let _ = Text::with_text_style("It's working-WoB!", Point::new(50, 200), style, text_style)
@@ -127,7 +127,9 @@ fn main() -> Result<(), std::io::Error> {
 
     // a moving `Hello World!`
     let limit = 10;
-    epd4in2.set_lut(&mut spi, Some(RefreshLut::Quick)).unwrap();
+    epd4in2
+        .set_lut(&mut spi, &mut delay, Some(RefreshLut::Quick))
+        .unwrap();
     epd4in2.clear_frame(&mut spi, &mut delay).unwrap();
     for i in 0..limit {
         //println!("Moving Hello World. Loop {} from {}", (i + 1), limit);
@@ -151,8 +153,8 @@ fn main() -> Result<(), std::io::Error> {
 fn draw_text(display: &mut Display4in2, text: &str, x: i32, y: i32) {
     let style = MonoTextStyleBuilder::new()
         .font(&embedded_graphics::mono_font::ascii::FONT_6X10)
-        .text_color(White)
-        .background_color(Black)
+        .text_color(Color::White)
+        .background_color(Color::Black)
         .build();
 
     let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();

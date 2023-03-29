@@ -22,14 +22,14 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd2in9::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display2in9::default();
 //!
 //!// Use embedded graphics for drawing a line
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 //!    .draw(&mut display);
 //!
 //!// Display updated frame
@@ -62,16 +62,16 @@ pub const HEIGHT: u32 = 296;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 
-const LUT_PARTIAL_2IN9: [u8; 153] = [
+const LUT_PARTIAL_2IN9: [u8; 159] = [
     0x0, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x80, 0x80, 0x0, 0x0, 0x0, 0x0,
     0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x40, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
     0x0, 0x80, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
-    0x0, 0x0, 0x0, 0x0, 0x0, 0x0A, 0x0, 0x0, 0x0, 0x0, 0x0, 0x2, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0A, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
     0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
     0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
     0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
     0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x22, 0x22, 0x22, 0x22, 0x22,
-    0x22, 0x0, 0x0, 0x0,
+    0x22, 0x0, 0x0, 0x0, 0x22, 0x17, 0x41, 0xB0, 0x32, 0x36,
 ];
 
 const WS_20_30: [u8; 159] = [
@@ -97,13 +97,19 @@ use crate::color::Color;
 
 use crate::traits::*;
 
+use crate::buffer_len;
 use crate::interface::DisplayInterface;
 use crate::traits::QuickRefresh;
 
+/// Display with Fullsize buffer for use with the 2in9 EPD V2
 #[cfg(feature = "graphics")]
-mod graphics;
-#[cfg(feature = "graphics")]
-pub use crate::epd2in9_v2::graphics::Display2in9;
+pub type Display2in9 = crate::graphics::Display<
+    WIDTH,
+    HEIGHT,
+    false,
+    { buffer_len(WIDTH as usize, HEIGHT as usize) },
+    Color,
+>;
 
 /// Epd2in9 driver
 ///
@@ -123,14 +129,14 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.reset(delay, 2);
+        self.interface.reset(delay, 10_000, 2_000);
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.interface.cmd(spi, Command::SwReset)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         // 3 Databytes:
         // A[7:0]
@@ -150,18 +156,18 @@ where
         self.interface
             .cmd_with_data(spi, Command::DisplayUpdateControl1, &[0x00, 0x80])?;
 
-        self.set_ram_counter(spi, 0, 0)?;
+        self.set_ram_counter(spi, delay, 0, 0)?;
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
         // set LUT by host
         self.set_lut_helper(spi, &WS_20_30[0..153])?;
         self.interface
-            .cmd_with_data(spi, Command::Eopq, &WS_20_30[153..154])?;
+            .cmd_with_data(spi, Command::WriteLutRegisterEnd, &WS_20_30[153..154])?;
         self.interface
-            .cmd_with_data(spi, Command::GateVoltage, &WS_20_30[154..155])?;
+            .cmd_with_data(spi, Command::GateDrivingVoltage, &WS_20_30[154..155])?;
         self.interface
-            .cmd_with_data(spi, Command::SourceVoltage, &WS_20_30[155..158])?;
+            .cmd_with_data(spi, Command::SourceDrivingVoltage, &WS_20_30[155..158])?;
         self.interface
             .cmd_with_data(spi, Command::WriteVcomRegister, &WS_20_30[158..159])?;
 
@@ -177,7 +183,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -195,8 +201,9 @@ where
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
+        delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst);
+        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
 
         let mut epd = Epd2in9 {
             interface,
@@ -209,8 +216,8 @@ where
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         self.interface
             .cmd_with_data(spi, Command::DeepSleepMode, &[0x01])?;
@@ -226,15 +233,16 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.interface.cmd_with_data(spi, Command::WriteRam, buffer)
     }
 
     fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -242,22 +250,23 @@ where
         height: u32,
     ) -> Result<(), SPI::Error> {
         //TODO This is copied from epd2in9 but it seems not working. Partial refresh supported by version 2?
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         self.set_ram_area(spi, x, y, x + width, y + height)?;
-        self.set_ram_counter(spi, x, y)?;
+        self.set_ram_counter(spi, delay, x, y)?;
 
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    /// actually is the "Turn on Display" sequence
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         // Enable clock signal, Enable Analog, Load temperature value, DISPLAY with DISPLAY Mode 1, Disable Analog, Disable OSC
         self.interface
             .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xC7])?;
         self.interface.cmd(spi, Command::MasterActivation)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 
@@ -272,13 +281,16 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
 
         // clear the ram with the background color
         let color = self.background_color.get_byte_value();
 
         self.interface.cmd(spi, Command::WriteRam)?;
+        self.interface
+            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
+        self.interface.cmd(spi, Command::WriteRam2)?;
         self.interface.data_x_times(spi, color, WIDTH / 8 * HEIGHT)
     }
 
@@ -293,6 +305,7 @@ where
     fn set_lut(
         &mut self,
         _spi: &mut SPI,
+        _delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
@@ -301,8 +314,9 @@ where
         Ok(())
     }
 
-    fn is_busy(&self) -> bool {
-        self.interface.is_busy(IS_BUSY_LOW)
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+        Ok(())
     }
 }
 
@@ -313,18 +327,14 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
-    fn wait_until_idle(&mut self) {
-        self.interface.wait_until_idle(IS_BUSY_LOW);
-    }
-
-    fn use_full_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn use_full_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // choose full frame/ram
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
         // start from the beginning
-        self.set_ram_counter(spi, 0, 0)
+        self.set_ram_counter(spi, delay, 0, 0)
     }
 
     fn set_ram_area(
@@ -359,8 +369,14 @@ where
         )
     }
 
-    fn set_ram_counter(&mut self, spi: &mut SPI, x: u32, y: u32) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn set_ram_counter(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        x: u32,
+        y: u32,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface
@@ -376,11 +392,16 @@ where
     }
 
     /// Set your own LUT, this function is also used internally for set_lut
-    fn set_lut_helper(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn set_lut_helper(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        buffer: &[u8],
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::WriteLutRegister, buffer)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 }
@@ -393,18 +414,16 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayMs<u8>,
+    DELAY: DelayUs<u32>,
 {
     /// To be followed immediately by `update_new_frame`.
     fn update_old_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        _delay: &mut DELAY,
+        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.interface
-            .cmd_with_data(spi, Command::WriteRam, buffer)?;
+        self.wait_until_idle(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::WriteRam2, buffer)
     }
@@ -416,10 +435,10 @@ where
         buffer: &[u8],
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
-        self.interface.reset(delay, 2);
+        self.wait_until_idle(spi, delay)?;
+        self.interface.reset(delay, 10_000, 2_000);
 
-        self.set_lut_helper(spi, &LUT_PARTIAL_2IN9)?;
+        self.set_lut_helper(spi, delay, &LUT_PARTIAL_2IN9)?;
         self.interface.cmd_with_data(
             spi,
             Command::WriteOtpSelection,
@@ -431,9 +450,9 @@ where
             .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xC0])?;
         self.interface.cmd(spi, Command::MasterActivation)?;
 
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
 
-        self.use_full_frame(spi)?;
+        self.use_full_frame(spi, delay)?;
 
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)?;
@@ -441,12 +460,12 @@ where
     }
 
     /// For a quick refresh of the new updated frame. To be used immediately after `update_new_frame`
-    fn display_new_frame(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle();
+    fn display_new_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0x0F])?;
         self.interface.cmd(spi, Command::MasterActivation)?;
-        self.wait_until_idle();
+        self.wait_until_idle(spi, delay)?;
         Ok(())
     }
 
@@ -467,6 +486,7 @@ where
     fn update_partial_old_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -482,6 +502,7 @@ where
     fn update_partial_new_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -497,6 +518,7 @@ where
     fn clear_partial_frame(
         &mut self,
         spi: &mut SPI,
+        delay: &mut DELAY,
         x: u32,
         y: u32,
         width: u32,

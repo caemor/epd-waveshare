@@ -1,14 +1,12 @@
 //! B/W Color for EPDs
+//!
+//! EPD representation of multicolor with separate buffers
+//! for each bit makes it hard to properly represent colors here
 
 #[cfg(feature = "graphics")]
 use embedded_graphics_core::pixelcolor::BinaryColor;
 #[cfg(feature = "graphics")]
 use embedded_graphics_core::pixelcolor::PixelColor;
-
-#[cfg(feature = "graphics")]
-pub use BinaryColor::Off as White;
-#[cfg(feature = "graphics")]
-pub use BinaryColor::On as Black;
 
 /// When trying to parse u8 to one of the color types
 #[derive(Debug, PartialEq, Eq)]
@@ -26,7 +24,8 @@ impl OutOfColorRangeParseError {
 }
 
 /// Only for the Black/White-Displays
-#[derive(Clone, Copy, PartialEq, Debug)]
+// TODO : 'color' is not a good name for black and white, rename it to BiColor/BWColor ?
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Color {
     /// Black color
     Black,
@@ -35,7 +34,7 @@ pub enum Color {
 }
 
 /// Only for the Black/White/Color-Displays
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum TriColor {
     /// Black color
     Black,
@@ -46,7 +45,7 @@ pub enum TriColor {
 }
 
 /// For the 5in65 7 Color Display
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum OctColor {
     /// Black Color
     Black = 0x00,
@@ -66,9 +65,68 @@ pub enum OctColor {
     HiZ = 0x07,
 }
 
-impl From<()> for OctColor {
-    fn from(_: ()) -> OctColor {
-        OctColor::White
+/// Color trait for use in `Display`s
+pub trait ColorType: PixelColor {
+    /// Number of bit used to represent this color type in a single buffer.
+    /// To get the real number of bits per pixel you should multiply this by `BUFFER_COUNT`
+    const BITS_PER_PIXEL_PER_BUFFER: usize;
+
+    /// Number of buffer used to represent this color type
+    /// splitted buffer like tricolo is 2, otherwise this should be 1.
+    const BUFFER_COUNT: usize;
+
+    /// Return the data used to set a pixel color
+    ///
+    /// * bwrbit is used to tell the value of the unused bit when a chromatic
+    /// color is set (TriColor only as for now)
+    /// * pos is the pixel position in the line, used to know which pixels must be set
+    ///
+    /// Return values are :
+    /// * .0 is the mask used to exclude this pixel from the byte (eg: 0x7F in BiColor)
+    /// * .1 are the bits used to set the color in the byte (eg: 0x80 in BiColor)
+    ///      this is u16 because we set 2 bytes in case of split buffer
+    fn bitmask(&self, bwrbit: bool, pos: u32) -> (u8, u16);
+}
+
+impl ColorType for Color {
+    const BITS_PER_PIXEL_PER_BUFFER: usize = 1;
+    const BUFFER_COUNT: usize = 1;
+    fn bitmask(&self, _bwrbit: bool, pos: u32) -> (u8, u16) {
+        let bit = 0x80 >> (pos % 8);
+        match self {
+            Color::Black => (!bit, 0u16),
+            Color::White => (!bit, bit as u16),
+        }
+    }
+}
+
+impl ColorType for TriColor {
+    const BITS_PER_PIXEL_PER_BUFFER: usize = 1;
+    const BUFFER_COUNT: usize = 2;
+    fn bitmask(&self, bwrbit: bool, pos: u32) -> (u8, u16) {
+        let bit = 0x80 >> (pos % 8);
+        match self {
+            TriColor::Black => (!bit, 0u16),
+            TriColor::White => (!bit, bit as u16),
+            TriColor::Chromatic => (
+                !bit,
+                if bwrbit {
+                    (bit as u16) << 8
+                } else {
+                    (bit as u16) << 8 | bit as u16
+                },
+            ),
+        }
+    }
+}
+
+impl ColorType for OctColor {
+    const BITS_PER_PIXEL_PER_BUFFER: usize = 4;
+    const BUFFER_COUNT: usize = 1;
+    fn bitmask(&self, _bwrbit: bool, pos: u32) -> (u8, u16) {
+        let mask = !(0xF0 >> (pos % 2));
+        let bits = self.get_nibble() as u16;
+        (mask, if pos % 2 == 1 { bits } else { bits << 4 })
     }
 }
 
@@ -230,6 +288,51 @@ impl From<u8> for Color {
     }
 }
 
+#[cfg(feature = "graphics")]
+impl PixelColor for Color {
+    type Raw = ();
+}
+
+#[cfg(feature = "graphics")]
+impl From<BinaryColor> for Color {
+    fn from(b: BinaryColor) -> Color {
+        match b {
+            BinaryColor::On => Color::Black,
+            BinaryColor::Off => Color::White,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb888> for Color {
+    fn from(rgb: embedded_graphics_core::pixelcolor::Rgb888) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        if rgb == RgbColor::BLACK {
+            Color::Black
+        } else if rgb == RgbColor::WHITE {
+            Color::White
+        } else {
+            // choose closest color
+            if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
+                Color::White
+            } else {
+                Color::Black
+            }
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::Rgb888 {
+    fn from(color: Color) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        match color {
+            Color::Black => embedded_graphics_core::pixelcolor::Rgb888::BLACK,
+            Color::White => embedded_graphics_core::pixelcolor::Rgb888::WHITE,
+        }
+    }
+}
+
 impl TriColor {
     /// Get the color encoding of the color for one bit
     pub fn get_bit_value(self) -> u8 {
@@ -251,6 +354,42 @@ impl TriColor {
 #[cfg(feature = "graphics")]
 impl PixelColor for TriColor {
     type Raw = ();
+}
+
+#[cfg(feature = "graphics")]
+impl From<BinaryColor> for TriColor {
+    fn from(b: BinaryColor) -> TriColor {
+        match b {
+            BinaryColor::On => TriColor::Black,
+            BinaryColor::Off => TriColor::White,
+        }
+    }
+}
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb888> for TriColor {
+    fn from(rgb: embedded_graphics_core::pixelcolor::Rgb888) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        if rgb == RgbColor::BLACK {
+            TriColor::Black
+        } else if rgb == RgbColor::WHITE {
+            TriColor::White
+        } else {
+            // there is no good approximation here since we don't know which color is 'chromatic'
+            TriColor::Chromatic
+        }
+    }
+}
+#[cfg(feature = "graphics")]
+impl From<TriColor> for embedded_graphics_core::pixelcolor::Rgb888 {
+    fn from(tri_color: TriColor) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        match tri_color {
+            TriColor::Black => embedded_graphics_core::pixelcolor::Rgb888::BLACK,
+            TriColor::White => embedded_graphics_core::pixelcolor::Rgb888::WHITE,
+            // assume chromatic is red
+            TriColor::Chromatic => embedded_graphics_core::pixelcolor::Rgb888::new(255, 0, 0),
+        }
+    }
 }
 
 #[cfg(test)]

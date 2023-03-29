@@ -1,4 +1,4 @@
-//! A simple Driver for the Waveshare 7.5" E-Ink Display (V2) via SPI
+//! A simple Driver for the Waveshare 7.5" (B) E-Ink Display (V2) via SPI
 //!
 //! # References
 //!
@@ -15,7 +15,7 @@ use embedded_hal::{
     digital::v2::{InputPin, OutputPin},
 };
 
-use crate::color::Color;
+use crate::color::TriColor;
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 
@@ -23,14 +23,14 @@ pub(crate) mod command;
 use self::command::Command;
 use crate::buffer_len;
 
-/// Full size buffer for use with the 7in5 v2 EPD
+/// Full size buffer for use with the 1in54 EPD
 #[cfg(feature = "graphics")]
 pub type Display7in5 = crate::graphics::Display<
     WIDTH,
     HEIGHT,
     false,
-    { buffer_len(WIDTH as usize, HEIGHT as usize) },
-    Color,
+    { buffer_len(WIDTH as usize, HEIGHT as usize * 2) },
+    TriColor,
 >;
 
 /// Width of the display
@@ -38,7 +38,9 @@ pub const WIDTH: u32 = 800;
 /// Height of the display
 pub const HEIGHT: u32 = 480;
 /// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
+pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
+
+const NUM_DISPLAY_BYTES: usize = WIDTH as usize * HEIGHT as usize / 8;
 const IS_BUSY_LOW: bool = true;
 
 /// Epd7in5 (V2) driver
@@ -47,7 +49,7 @@ pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
     /// Background Color
-    color: Color,
+    color: TriColor,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -62,23 +64,39 @@ where
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
-        self.interface.reset(delay, 10_000, 2_000);
+        // C driver does 200/2 original rust driver does 10/2
+        self.interface.reset(delay, 200_000, 2_000);
 
         // V2 procedure as described here:
         // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5bc_V2.py
         // and as per specs:
         // https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
 
-        self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x27, 0x17])?;
-        self.cmd_with_data(spi, Command::PowerSetting, &[0x07, 0x17, 0x3F, 0x3F])?;
+        self.cmd_with_data(spi, Command::PowerSetting, &[0x07, 0x07, 0x3F, 0x3F])?;
         self.command(spi, Command::PowerOn)?;
+        // C driver adds a static 100ms delay here
         self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::PanelSetting, &[0x1F])?;
-        self.cmd_with_data(spi, Command::PllControl, &[0x06])?;
+        // Done, but this is also the default
+        // 0x1F = B/W mode ? doesnt seem to work
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x0F])?;
+        // Not done in C driver, this is the default
+        //self.cmd_with_data(spi, Command::PllControl, &[0x06])?;
         self.cmd_with_data(spi, Command::TconResolution, &[0x03, 0x20, 0x01, 0xE0])?;
+        // Documentation removed in v3 but done in v2 and works in v3
         self.cmd_with_data(spi, Command::DualSpi, &[0x00])?;
+        //                    0x10 in BW mode  (Work ?) V
+        //                    0x12 in BW mode to disable new/old thing
+        //                    0x01 -> Black border
+        //                    0x11 -> White norder
+        //                    0x21 -> Red border
+        //                    0x31 -> don't touch border
+        //                    the second nibble can change polarity (may be easier for default
+        //                    display initialization)                   V
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x11, 0x07])?;
+        // This is the default
         self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
-        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x10, 0x07])?;
+        self.cmd_with_data(spi, Command::SpiFlashControl, &[0x00, 0x00, 0x00, 0x00])?;
+        // Not in C driver
         self.wait_until_idle(spi, delay)?;
         Ok(())
     }
@@ -94,7 +112,7 @@ where
     RST: OutputPin,
     DELAY: DelayUs<u32>,
 {
-    type DisplayColor = Color;
+    type DisplayColor = TriColor;
     fn new(
         spi: &mut SPI,
         cs: CS,
@@ -133,7 +151,17 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
+        // (B) version sends one buffer for black and one for red
+        self.cmd_with_data(
+            spi,
+            Command::DataStartTransmission1,
+            &buffer[..NUM_DISPLAY_BYTES],
+        )?;
+        self.cmd_with_data(
+            spi,
+            Command::DataStartTransmission2,
+            &buffer[NUM_DISPLAY_BYTES..],
+        )?;
         Ok(())
     }
 
@@ -147,7 +175,7 @@ where
         _width: u32,
         _height: u32,
     ) -> Result<(), SPI::Error> {
-        unimplemented!();
+        unimplemented!()
     }
 
     fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
@@ -172,20 +200,21 @@ where
         self.send_resolution(spi)?;
 
         self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+        self.interface.data_x_times(spi, 0xFF, WIDTH * HEIGHT / 8)?;
 
         self.command(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
 
         self.command(spi, Command::DisplayRefresh)?;
+
         Ok(())
     }
 
-    fn set_background_color(&mut self, color: Color) {
+    fn set_background_color(&mut self, color: Self::DisplayColor) {
         self.color = color;
     }
 
-    fn background_color(&self) -> &Color {
+    fn background_color(&self) -> &Self::DisplayColor {
         &self.color
     }
 
@@ -206,6 +235,7 @@ where
         unimplemented!();
     }
 
+    /// wait
     fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface
             .wait_until_idle_with_cmd(spi, delay, IS_BUSY_LOW, Command::GetStatus)
@@ -221,6 +251,53 @@ where
     RST: OutputPin,
     DELAY: DelayUs<u32>,
 {
+    /// temporary replacement for missing delay in the trait to call wait_until_idle
+    #[allow(clippy::too_many_arguments)]
+    pub fn update_partial_frame2(
+        &mut self,
+        spi: &mut SPI,
+        buffer: &[u8],
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi, delay)?;
+        if buffer.len() as u32 != width / 8 * height {
+            //TODO panic or error
+        }
+
+        let hrst_upper = (x / 8) as u8 >> 5;
+        let hrst_lower = ((x / 8) << 3) as u8;
+        let hred_upper = ((x + width) / 8 - 1) as u8 >> 5;
+        let hred_lower = (((x + width) / 8 - 1) << 3) as u8 | 0b111;
+        let vrst_upper = (y >> 8) as u8;
+        let vrst_lower = y as u8;
+        let vred_upper = ((y + height - 1) >> 8) as u8;
+        let vred_lower = (y + height - 1) as u8;
+        let pt_scan = 0x01; // Gates scan both inside and outside of the partial window. (default)
+
+        self.command(spi, Command::PartialIn)?;
+        self.cmd_with_data(
+            spi,
+            Command::PartialWindow,
+            &[
+                hrst_upper, hrst_lower, hred_upper, hred_lower, vrst_upper, vrst_lower, vred_upper,
+                vred_lower, pt_scan,
+            ],
+        )?;
+        let half = buffer.len() / 2;
+        self.cmd_with_data(spi, Command::DataStartTransmission1, &buffer[..half])?;
+        self.cmd_with_data(spi, Command::DataStartTransmission2, &buffer[half..])?;
+
+        self.command(spi, Command::DisplayRefresh)?;
+        self.wait_until_idle(spi, delay)?;
+
+        self.command(spi, Command::PartialOut)?;
+        Ok(())
+    }
+
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
     }
@@ -258,6 +335,6 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 800);
         assert_eq!(HEIGHT, 480);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
+        assert_eq!(DEFAULT_BACKGROUND_COLOR, TriColor::White);
     }
 }

@@ -28,7 +28,7 @@
 //!# let mut delay = delay::MockNoop::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay)?;
+//!let mut epd = Epd1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display1in54::default();
@@ -36,7 +36,7 @@
 //!// Use embedded graphics for drawing a line
 //!
 //!let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
-//!    .into_styled(PrimitiveStyle::with_stroke(Black, 1))
+//!    .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
 //!    .draw(&mut display);
 //!
 //!    // Display updated frame
@@ -74,6 +74,7 @@ pub mod color;
 mod interface;
 
 pub mod epd1in54;
+pub mod epd1in54_v2;
 pub mod epd1in54b;
 pub mod epd1in54c;
 pub mod epd2in13_v2;
@@ -82,11 +83,15 @@ pub mod epd2in7b;
 pub mod epd2in9;
 pub mod epd2in9_v2;
 pub mod epd2in9bc;
+pub mod epd3in7;
 pub mod epd4in2;
 pub mod epd5in65f;
+pub mod epd5in83b_v2;
 pub mod epd7in5;
 pub mod epd7in5_hd;
 pub mod epd7in5_v2;
+pub mod epd7in5_v3;
+pub mod epd7in5b_v2;
 
 pub(crate) mod type_a;
 
@@ -100,7 +105,7 @@ pub mod prelude {
     pub use crate::SPI_MODE;
 
     #[cfg(feature = "graphics")]
-    pub use crate::graphics::{Display, DisplayRotation, OctDisplay, TriDisplay};
+    pub use crate::graphics::{Display, DisplayRotation};
 }
 
 /// Computes the needed buffer length. Takes care of rounding up in case width

@@ -133,8 +133,7 @@ impl DisplayUpdateControl2 {
     }
 }
 
-#[allow(dead_code)]
-
+#[allow(dead_code, clippy::enum_variant_names)]
 pub(crate) enum DataEntryModeIncr {
     XDecrYDecr = 0x0,
     XIncrYDecr = 0x1,
@@ -143,7 +142,6 @@ pub(crate) enum DataEntryModeIncr {
 }
 
 #[allow(dead_code)]
-
 pub(crate) enum DataEntryModeDir {
     XDir = 0x0,
     YDir = 0x4,
