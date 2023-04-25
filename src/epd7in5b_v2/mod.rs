@@ -29,7 +29,7 @@ pub type Display7in5 = crate::graphics::Display<
     WIDTH,
     HEIGHT,
     false,
-    { buffer_len(WIDTH as usize, HEIGHT as usize * 2) },
+    { buffer_len(WIDTH as usize, HEIGHT as usize) },
     TriColor,
 >;
 
