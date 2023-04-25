@@ -37,8 +37,6 @@ pub const WIDTH: u32 = 800;
 /// Height of the display
 pub const HEIGHT: u32 = 480;
 /// Default Background Color
-//pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
-
 pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
 /// Number of bits for b/w buffer and same for chromatic buffer
