@@ -3,6 +3,7 @@
 //! EPD representation of multicolor with separate buffers
 //! for each bit makes it hard to properly represent colors here
 
+use crate::prelude::DisplayMode;
 #[cfg(feature = "graphics")]
 use embedded_graphics_core::pixelcolor::BinaryColor;
 #[cfg(feature = "graphics")]
@@ -77,7 +78,7 @@ pub trait ColorType: PixelColor {
 
     /// Return the data used to set a pixel color
     ///
-    /// * bwrbit is used to tell the value of the unused bit when a chromatic
+    /// * MODE is used to tell the value of the unused bit when a chromatic
     /// color is set (TriColor only as for now)
     /// * pos is the pixel position in the line, used to know which pixels must be set
     ///
@@ -85,13 +86,13 @@ pub trait ColorType: PixelColor {
     /// * .0 is the mask used to exclude this pixel from the byte (eg: 0x7F in BiColor)
     /// * .1 are the bits used to set the color in the byte (eg: 0x80 in BiColor)
     ///      this is u16 because we set 2 bytes in case of split buffer
-    fn bitmask(&self, bwrbit: bool, pos: u32) -> (u8, u16);
+    fn bitmask(&self, mode: DisplayMode, pos: u32) -> (u8, u16);
 }
 
 impl ColorType for Color {
     const BITS_PER_PIXEL_PER_BUFFER: usize = 1;
     const BUFFER_COUNT: usize = 1;
-    fn bitmask(&self, _bwrbit: bool, pos: u32) -> (u8, u16) {
+    fn bitmask(&self, _mode: DisplayMode, pos: u32) -> (u8, u16) {
         let bit = 0x80 >> (pos % 8);
         match self {
             Color::Black => (!bit, 0u16),
@@ -103,27 +104,34 @@ impl ColorType for Color {
 impl ColorType for TriColor {
     const BITS_PER_PIXEL_PER_BUFFER: usize = 1;
     const BUFFER_COUNT: usize = 2;
-    fn bitmask(&self, bwrbit: bool, pos: u32) -> (u8, u16) {
+
+    fn bitmask(&self, mode: DisplayMode, pos: u32) -> (u8, u16) {
         let bit = 0x80 >> (pos % 8);
-        match self {
-            TriColor::Black => (!bit, 0u16),
-            TriColor::White => (!bit, bit as u16),
-            TriColor::Chromatic => (
-                !bit,
-                if bwrbit {
-                    (bit as u16) << 8
-                } else {
-                    (bit as u16) << 8 | bit as u16
-                },
-            ),
-        }
+        let mask = match mode {
+            DisplayMode::BwrBitOnColorInverted => match self {
+                TriColor::Black => (bit as u16) << 8,
+                TriColor::White => (bit as u16) << 8 | bit as u16,
+                TriColor::Chromatic => 0u16,
+            },
+            DisplayMode::BwrBitOn => match self {
+                TriColor::Black => 0u16,
+                TriColor::White => bit as u16,
+                TriColor::Chromatic => (bit as u16) << 8,
+            },
+            DisplayMode::BwrBitOff => match self {
+                TriColor::Black => 0u16,
+                TriColor::White => bit as u16,
+                TriColor::Chromatic => (bit as u16) << 8 | bit as u16,
+            },
+        };
+        (!bit, mask)
     }
 }
 
 impl ColorType for OctColor {
     const BITS_PER_PIXEL_PER_BUFFER: usize = 4;
     const BUFFER_COUNT: usize = 1;
-    fn bitmask(&self, _bwrbit: bool, pos: u32) -> (u8, u16) {
+    fn bitmask(&self, _mode: DisplayMode, pos: u32) -> (u8, u16) {
         let mask = !(0xF0 >> (pos % 2));
         let bits = self.get_nibble() as u16;
         (mask, if pos % 2 == 1 { bits } else { bits << 4 })
@@ -307,16 +315,16 @@ impl From<BinaryColor> for Color {
 impl From<embedded_graphics_core::pixelcolor::Rgb888> for Color {
     fn from(rgb: embedded_graphics_core::pixelcolor::Rgb888) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
-        if rgb == RgbColor::BLACK {
-            Color::Black
-        } else if rgb == RgbColor::WHITE {
-            Color::White
-        } else {
-            // choose closest color
-            if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
-                Color::White
-            } else {
-                Color::Black
+        match rgb {
+            RgbColor::BLACK => Color::Black,
+            RgbColor::WHITE => Color::White,
+            _ => {
+                // choose closest color
+                if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
+                    Color::White
+                } else {
+                    Color::Black
+                }
             }
         }
     }
@@ -369,13 +377,11 @@ impl From<BinaryColor> for TriColor {
 impl From<embedded_graphics_core::pixelcolor::Rgb888> for TriColor {
     fn from(rgb: embedded_graphics_core::pixelcolor::Rgb888) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
-        if rgb == RgbColor::BLACK {
-            TriColor::Black
-        } else if rgb == RgbColor::WHITE {
-            TriColor::White
-        } else {
+        match rgb {
+            RgbColor::BLACK => TriColor::Black,
+            RgbColor::WHITE => TriColor::White,
             // there is no good approximation here since we don't know which color is 'chromatic'
-            TriColor::Chromatic
+            _ => TriColor::Chromatic,
         }
     }
 }
