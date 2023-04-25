@@ -23,7 +23,7 @@ pub(crate) mod command;
 use self::command::Command;
 use crate::buffer_len;
 
-/// Full size buffer for use with the 1in54 EPD
+/// Full size buffer for use with the 7in5 V2 B EPD
 #[cfg(feature = "graphics")]
 pub type Display7in5 = crate::graphics::Display<
     WIDTH,
