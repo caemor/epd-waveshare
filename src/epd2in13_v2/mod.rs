@@ -66,7 +66,7 @@ const IS_BUSY_LOW: bool = false;
 
 /// Epd2in13 (V2 & V3) driver
 ///
-/// To use this driver for V3 of the display, feature \"epd2in13_v2\" needs to be disabled and feature \"epd2in13_v3\" enabled.
+/// To use this driver for V2 of the display, feature \"epd2in13_v3\" needs to be disabled and feature \"epd2in13_v2\" enabled.
 pub struct Epd2in13<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
