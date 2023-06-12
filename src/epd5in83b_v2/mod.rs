@@ -34,8 +34,6 @@ pub type Display5in83 = crate::graphics::Display<
 pub const WIDTH: u32 = 648;
 /// Height of the display
 pub const HEIGHT: u32 = 480;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 
@@ -44,8 +42,6 @@ const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
 pub struct Epd5in83<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -159,9 +155,8 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd5in83 { interface, color };
+        let mut epd = Epd5in83 { interface };
 
         epd.init(spi, delay)?;
 
@@ -180,14 +175,6 @@ where
         self.init(spi, delay)
     }
 
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
-    }
-
     fn width(&self) -> u32 {
         WIDTH
     }
@@ -204,7 +191,7 @@ where
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.update_achromatic_frame(spi, delay, buffer)?;
-        let color = self.color.get_byte_value();
+        let color = Color::White.get_byte_value();
         self.command(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
         Ok(())
@@ -276,12 +263,22 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
 
+        let color_byte = match color {
+            Color::White => 0xFF,
+            Color::Black => 0x00,
+        };
         // The Waveshare controllers all implement clear using 0x33
         self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0xFF, NUM_DISPLAY_BITS)?;
+        self.interface
+            .data_x_times(spi, color_byte, NUM_DISPLAY_BITS)?;
 
         self.command(spi, Command::DataStartTransmission2)?;
         self.interface.data_x_times(spi, 0x00, NUM_DISPLAY_BITS)?;
@@ -350,6 +347,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 648);
         assert_eq!(HEIGHT, 480);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

@@ -130,7 +130,7 @@ fn main() -> Result<(), std::io::Error> {
     epd4in2
         .set_lut(&mut spi, &mut delay, Some(RefreshLut::Quick))
         .unwrap();
-    epd4in2.clear_frame(&mut spi, &mut delay).unwrap();
+    epd4in2.clear_frame(&mut spi, &mut delay, Color::White).unwrap();
     for i in 0..limit {
         //println!("Moving Hello World. Loop {} from {}", (i + 1), limit);
 

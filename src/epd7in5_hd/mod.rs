@@ -36,8 +36,6 @@ pub type Display7in5 = crate::graphics::Display<
 pub const WIDTH: u32 = 880;
 /// Height of the display
 pub const HEIGHT: u32 = 528;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White; // Inverted for HD as compared to 7in5 v2 (HD: 0xFF = White)
 const IS_BUSY_LOW: bool = false;
 
 /// EPD7in5 (HD) driver
@@ -45,8 +43,6 @@ const IS_BUSY_LOW: bool = false;
 pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -123,9 +119,8 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd7in5 { interface, color };
+        let mut epd = Epd7in5 { interface };
 
         epd.init(spi, delay)?;
 
@@ -185,9 +180,14 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         let pixel_count = WIDTH * HEIGHT / 8;
-        let background_color_byte = self.color.get_byte_value();
+        let background_color_byte = color.get_byte_value();
 
         self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
@@ -202,14 +202,6 @@ where
         self.command(spi, Command::MasterActivation)?;
         self.wait_until_idle(spi, delay)?;
         Ok(())
-    }
-
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
     }
 
     fn width(&self) -> u32 {
@@ -266,6 +258,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 880);
         assert_eq!(HEIGHT, 528);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

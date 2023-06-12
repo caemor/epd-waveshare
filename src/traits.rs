@@ -171,12 +171,6 @@ where
     /// Also reintialises the device if necessary.
     fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
 
-    /// Sets the backgroundcolor for various commands like [clear_frame](WaveshareDisplay::clear_frame)
-    fn set_background_color(&mut self, color: Self::DisplayColor);
-
-    /// Get current background color
-    fn background_color(&self) -> &Self::DisplayColor;
-
     /// Get the width of the display
     fn width(&self) -> u32;
 
@@ -221,10 +215,13 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
-    /// Clears the frame buffer on the EPD with the declared background color
-    ///
-    /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
+    /// Clears the frame buffer on the EPD with the given background color
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error>;
 
     /// Trait for using various Waveforms from different LUTs
     /// E.g. for partial refreshes
@@ -278,7 +275,7 @@ where
 ///# let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
 ///let (x, y, frame_width, frame_height) = (20, 40, 80,80);
 ///
-///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];
+///let mut buffer = [Color::White.get_byte_value(); 80 / 8 * 80];
 ///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer,false).unwrap();
 ///
 ///epd.update_partial_old_frame(&mut spi, &mut delay, display.buffer(), x, y, frame_width, frame_height)
@@ -354,8 +351,7 @@ where
         height: u32,
     ) -> Result<(), SPI::Error>;
 
-    /// Clears the partial frame buffer on the EPD with the declared background color
-    /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
+    /// Clears the partial frame buffer on the EPD with the given background color
     fn clear_partial_frame(
         &mut self,
         spi: &mut SPI,

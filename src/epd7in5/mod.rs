@@ -33,8 +33,6 @@ pub type Display7in5 = crate::graphics::Display<
 pub const WIDTH: u32 = 640;
 /// Height of the display
 pub const HEIGHT: u32 = 384;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
 /// Epd7in5 driver
@@ -42,8 +40,6 @@ const IS_BUSY_LOW: bool = true;
 pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -123,9 +119,8 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd7in5 { interface, color };
+        let mut epd = Epd7in5 { interface };
 
         epd.init(spi, delay)?;
 
@@ -142,14 +137,6 @@ where
 
     fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.init(spi, delay)
-    }
-
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
     }
 
     fn width(&self) -> u32 {
@@ -212,14 +199,23 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.send_resolution(spi)?;
 
-        // The Waveshare controllers all implement clear using 0x33
+        // The Waveshare driver implement clear using 0x33
+        let color_byte = match color {
+            Color::White => 0x33,
+            Color::Black => 0x00,
+        };
         self.command(spi, Command::DataStartTransmission1)?;
         self.interface
-            .data_x_times(spi, 0x33, WIDTH / 8 * HEIGHT * 4)?;
+            .data_x_times(spi, color_byte, WIDTH / 8 * HEIGHT * 4)?;
         Ok(())
     }
 
@@ -284,6 +280,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 640);
         assert_eq!(HEIGHT, 384);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

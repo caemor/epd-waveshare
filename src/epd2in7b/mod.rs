@@ -20,8 +20,6 @@ use crate::epd2in7b::constants::*;
 pub const WIDTH: u32 = 176;
 /// Height of the display
 pub const HEIGHT: u32 = 264;
-/// Default Background Color
-pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 
 use crate::color::Color;
@@ -45,8 +43,6 @@ pub type Display2in7b = crate::graphics::Display<
 pub struct Epd2in7b<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
     interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
-    /// Background Color
-    color: Color,
 }
 
 impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
@@ -136,9 +132,8 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
-        let color = DEFAULT_BACKGROUND_COLOR;
 
-        let mut epd = Epd2in7b { interface, color };
+        let mut epd = Epd2in7b { interface };
 
         epd.init(spi, delay)?;
 
@@ -173,7 +168,7 @@ where
         // Clear chromatic layer since we won't be using it here
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface
-            .data_x_times(spi, !self.color.get_byte_value(), WIDTH * HEIGHT / 8)?;
+            .data_x_times(spi, !Color::White.get_byte_value(), WIDTH * HEIGHT / 8)?;
 
         self.interface.cmd(spi, Command::DataStop)?;
         Ok(())
@@ -224,10 +219,15 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+        color: Self::DisplayColor,
+    ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
 
-        let color_value = self.color.get_byte_value();
+        let color_value = color.get_byte_value();
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
             .data_x_times(spi, color_value, WIDTH * HEIGHT / 8)?;
@@ -239,14 +239,6 @@ where
             .data_x_times(spi, color_value, WIDTH * HEIGHT / 8)?;
         self.interface.cmd(spi, Command::DataStop)?;
         Ok(())
-    }
-
-    fn set_background_color(&mut self, color: Color) {
-        self.color = color;
-    }
-
-    fn background_color(&self) -> &Color {
-        &self.color
     }
 
     fn width(&self) -> u32 {
@@ -466,6 +458,5 @@ mod tests {
     fn epd_size() {
         assert_eq!(WIDTH, 176);
         assert_eq!(HEIGHT, 264);
-        assert_eq!(DEFAULT_BACKGROUND_COLOR, Color::White);
     }
 }

@@ -126,7 +126,7 @@ fn main() -> Result<(), std::io::Error> {
     epd2in13
         .set_refresh(&mut spi, &mut delay, RefreshLut::Quick)
         .unwrap();
-    epd2in13.clear_frame(&mut spi, &mut delay).unwrap();
+    epd2in13.clear_frame(&mut spi, &mut delay, Color::White).unwrap();
 
     // a moving `Hello World!`
     let limit = 10;

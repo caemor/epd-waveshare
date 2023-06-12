@@ -10,7 +10,7 @@ use embedded_graphics::{
 use embedded_hal::prelude::*;
 use epd_waveshare::{
     color::*,
-    epd4in2::{self, Epd4in2},
+    epd4in2::Epd4in2,
     graphics::{DisplayRotation, VarDisplay},
     prelude::*,
 };
@@ -69,7 +69,7 @@ fn main() -> Result<(), std::io::Error> {
 
     let (x, y, width, height) = (50, 50, 250, 250);
 
-    let mut buffer = [epd4in2::DEFAULT_BACKGROUND_COLOR.get_byte_value(); 62500]; //250*250
+    let mut buffer = [Color::White.get_byte_value(); 62500]; //250*250
     let mut display = VarDisplay::new(width, height, &mut buffer, false).unwrap();
     display.set_rotation(DisplayRotation::Rotate0);
     draw_text(&mut display, "Rotate 0!", 5, 50);
