@@ -11,19 +11,14 @@ pub(crate) trait Command: Copy {
 }
 
 /// Seperates the different LUT for the Display Refresh process
-#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy, Default)]
 pub enum RefreshLut {
     /// The "normal" full Lookuptable for the Refresh-Sequence
+    #[default]
     Full,
     /// The quick LUT where not the full refresh sequence is followed.
     /// This might lead to some
     Quick,
-}
-
-impl Default for RefreshLut {
-    fn default() -> Self {
-        RefreshLut::Full
-    }
 }
 
 pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
