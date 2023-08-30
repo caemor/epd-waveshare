@@ -42,12 +42,13 @@ pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
 const NUM_DISPLAY_BYTES: usize = WIDTH as usize * HEIGHT as usize / 8;
 const IS_BUSY_LOW: bool = true;
+const SINGLE_BYTE_WRITE: bool = false;
 
 /// Epd7in5 (V2) driver
 ///
 pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: TriColor,
 }

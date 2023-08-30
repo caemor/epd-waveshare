@@ -52,6 +52,7 @@ pub const HEIGHT: u32 = 200;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 //const DPI: u16 = 184;
 const IS_BUSY_LOW: bool = false;
+const SINGLE_BYTE_WRITE: bool = true;
 
 use embedded_hal::{
     blocking::{delay::*, spi::Write},
@@ -83,7 +84,7 @@ pub type Display1in54 = crate::graphics::Display<
 /// Epd1in54 driver
 pub struct Epd1in54<SPI, CS, BUSY, DC, RST, DELAY> {
     /// SPI
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Color
     background_color: Color,
     /// Refresh LUT

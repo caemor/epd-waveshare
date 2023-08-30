@@ -39,12 +39,13 @@ pub const HEIGHT: u32 = 528;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White; // Inverted for HD as compared to 7in5 v2 (HD: 0xFF = White)
 const IS_BUSY_LOW: bool = false;
+const SINGLE_BYTE_WRITE: bool = false;
 
 /// EPD7in5 (HD) driver
 ///
 pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: Color,
 }

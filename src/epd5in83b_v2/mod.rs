@@ -38,12 +38,13 @@ pub const HEIGHT: u32 = 480;
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
 const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
+const SINGLE_BYTE_WRITE: bool = true;
 
 /// Epd7in5 driver
 ///
 pub struct Epd5in83<SPI, CS, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: Color,
 }
