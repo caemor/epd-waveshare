@@ -1,8 +1,5 @@
 use core::marker::Sized;
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
-};
+use embedded_hal::{delay::*, digital::*, spi::SpiDevice};
 
 /// All commands need to have this trait which gives the address of the command
 /// which needs to be send via SPI with activated CommandsPin (Data/Command Pin in CommandMode)
@@ -21,14 +18,13 @@ pub enum RefreshLut {
     Quick,
 }
 
-pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
+pub(crate) trait InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -44,15 +40,14 @@ where
 }
 
 /// Functions to interact with three color panels
-pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>:
-    WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>:
+    WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -131,14 +126,13 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     /// The Color Type used by the Display
     type DisplayColor;
@@ -151,7 +145,6 @@ where
     /// This already initialises the device.
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
@@ -292,14 +285,13 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait QuickRefresh<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     /// Updates the old frame.
     fn update_old_frame(
