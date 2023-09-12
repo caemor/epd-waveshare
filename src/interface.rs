@@ -37,8 +37,8 @@ where
         // default delay of 10ms
         let delay_us = delay_us.unwrap_or(10_000);
         DisplayInterface {
-            _spi: PhantomData::default(),
-            _delay: PhantomData::default(),
+            _spi: PhantomData,
+            _delay: PhantomData,
             busy,
             dc,
             rst,
