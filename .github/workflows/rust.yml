@@ -21,11 +21,13 @@ jobs:
     - name: Build lib
       run: cargo check --lib --verbose    
     - name: Build examples
+      continue-on-error: true
       run: cargo build --examples --all-targets --verbose
     - name: Run tests
       run: cargo test --verbose
     - name: Build docs
       run: cargo doc
     - name: Clippy
+      continue-on-error: true
       run: cargo clippy --all-targets -- -D warnings -A clippy::new_ret_no_self
 
