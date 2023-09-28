@@ -3,8 +3,8 @@
 //! # Example for the 1.54 in E-Ink Display
 //!
 //!```rust, no_run
-//!# use embedded_hal_mock::*;
-//!# fn main() -> Result<(), MockError> {
+//!# use embedded_hal_mock::eh1::*;
+//!# fn main() -> Result<(), embedded_hal::spi::ErrorKind> {
 //!use embedded_graphics::{
 //!    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyleBuilder},
 //!};
@@ -17,10 +17,10 @@
 //!# let busy_in = pin::Mock::new(&expectations);
 //!# let dc = pin::Mock::new(&expectations);
 //!# let rst = pin::Mock::new(&expectations);
-//!# let mut delay = delay::MockNoop::new();
+//!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd1in54::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
+//!let mut epd = Epd1in54::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display1in54::default();
