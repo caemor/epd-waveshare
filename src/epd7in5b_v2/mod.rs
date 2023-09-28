@@ -11,8 +11,9 @@
 //! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    delay::DelayUs,
+    digital::{InputPin, OutputPin},
+    spi::SpiDevice,
 };
 
 use crate::color::TriColor;
@@ -42,25 +43,25 @@ pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
 const NUM_DISPLAY_BYTES: usize = WIDTH as usize * HEIGHT as usize / 8;
 const IS_BUSY_LOW: bool = true;
+const SINGLE_BYTE_WRITE: bool = false;
 
 /// Epd7in5 (V2) driver
 ///
-pub struct Epd7in5<SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct Epd7in5<SPI, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: TriColor,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
@@ -102,27 +103,25 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     type DisplayColor = TriColor;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
+        let interface = DisplayInterface::new(busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd7in5 { interface, color };
@@ -242,14 +241,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd7in5<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     /// temporary replacement for missing delay in the trait to call wait_until_idle
     #[allow(clippy::too_many_arguments)]

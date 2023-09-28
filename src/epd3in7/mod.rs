@@ -3,8 +3,9 @@
 //!
 //! Build with the help of documentation/code from [Waveshare](https://www.waveshare.com/wiki/3.7inch_e-Paper_HAT),
 use embedded_hal::{
-    blocking::{delay::DelayUs, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    delay::DelayUs,
+    digital::{InputPin, OutputPin},
+    spi::SpiDevice,
 };
 
 pub(crate) mod command;
@@ -29,6 +30,8 @@ pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 
 const IS_BUSY_LOW: bool = false;
 
+const SINGLE_BYTE_WRITE: bool = true;
+
 /// Display with Fullsize buffer for use with the 3in7 EPD
 #[cfg(feature = "graphics")]
 pub type Display3in7 = crate::graphics::Display<
@@ -40,22 +43,21 @@ pub type Display3in7 = crate::graphics::Display<
 >;
 
 /// EPD3in7 driver
-pub struct EPD3in7<SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct EPD3in7<SPI, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     background_color: Color,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for EPD3in7<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for EPD3in7<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
@@ -121,21 +123,19 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for EPD3in7<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for EPD3in7<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     type DisplayColor = Color;
 
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
@@ -143,7 +143,7 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let mut epd = EPD3in7 {
-            interface: DisplayInterface::new(cs, busy, dc, rst, delay_us),
+            interface: DisplayInterface::new(busy, dc, rst, delay_us),
             background_color: DEFAULT_BACKGROUND_COLOR,
         };
 

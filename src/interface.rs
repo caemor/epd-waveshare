@@ -1,19 +1,16 @@
 use crate::traits::Command;
 use core::marker::PhantomData;
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
-};
+use embedded_hal::{delay::*, digital::*, spi::SpiDevice};
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
-pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
+/// SINGLE_BYTE_WRITE defines if a data block is written bytewise
+/// or blockwise to the spi device
+pub(crate) struct DisplayInterface<SPI, BUSY, DC, RST, DELAY, const SINGLE_BYTE_WRITE: bool> {
     /// SPI
     _spi: PhantomData<SPI>,
     /// DELAY
     _delay: PhantomData<DELAY>,
-    /// CS for SPI
-    cs: CS,
     /// Low for busy, Wait until display is ready!
     busy: BUSY,
     /// Data/Command Control Pin (High for data, Low for command)
@@ -24,25 +21,24 @@ pub(crate) struct DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY> {
     delay_us: u32,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY, const SINGLE_BYTE_WRITE: bool>
+    DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     /// Creates a new `DisplayInterface` struct
     ///
     /// If no delay is given, a default delay of 10ms is used.
-    pub fn new(cs: CS, busy: BUSY, dc: DC, rst: RST, delay_us: Option<u32>) -> Self {
+    pub fn new(busy: BUSY, dc: DC, rst: RST, delay_us: Option<u32>) -> Self {
         // default delay of 10ms
         let delay_us = delay_us.unwrap_or(10_000);
         DisplayInterface {
-            _spi: PhantomData::default(),
-            _delay: PhantomData::default(),
-            cs,
+            _spi: PhantomData,
+            _delay: PhantomData,
             busy,
             dc,
             rst,
@@ -68,9 +64,13 @@ where
         // high for data
         let _ = self.dc.set_high();
 
-        for val in data.iter().copied() {
-            // Transfer data one u8 at a time over spi
-            self.write(spi, &[val])?;
+        if SINGLE_BYTE_WRITE {
+            for val in data.iter().copied() {
+                // Transfer data one u8 at a time over spi
+                self.write(spi, &[val])?;
+            }
+        } else {
+            self.write(spi, data)?;
         }
 
         Ok(())
@@ -109,9 +109,6 @@ where
 
     // spi write helper/abstraction function
     fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
-        // activate spi with cs low
-        let _ = self.cs.set_low();
-
         // transfer spi data
         // Be careful!! Linux has a default limit of 4096 bytes per spi transfer
         // see https://raspberrypi.stackexchange.com/questions/65595/spi-transfer-fails-with-buffer-size-greater-than-4096
@@ -119,14 +116,10 @@ where
             for data_chunk in data.chunks(4096) {
                 spi.write(data_chunk)?;
             }
+            Ok(())
         } else {
-            spi.write(data)?;
+            spi.write(data)
         }
-
-        // deactivate spi with cs high
-        let _ = self.cs.set_high();
-
-        Ok(())
     }
 
     /// Waits until device isn't busy anymore (busy == HIGH)

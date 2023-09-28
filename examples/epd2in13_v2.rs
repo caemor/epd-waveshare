@@ -6,7 +6,7 @@ use embedded_graphics::{
     primitives::{Circle, Line, PrimitiveStyle},
     text::{Baseline, Text, TextStyleBuilder},
 };
-use embedded_hal::prelude::*;
+use embedded_hal::delay::DelayUs;
 use epd_waveshare::{
     color::*,
     epd2in13_v2::{Display2in13, Epd2in13},
@@ -16,7 +16,7 @@ use epd_waveshare::{
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, Pin, Spidev,
+    Delay, SPIError, Spidev, SysfsPin,
 };
 
 // The pins in this example are for the Universal e-Paper Raw Panel Driver HAT
@@ -24,7 +24,7 @@ use linux_embedded_hal::{
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<(), SPIError> {
     // Configure SPI
     // Settings are taken from
     let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
@@ -36,25 +36,25 @@ fn main() -> Result<(), std::io::Error> {
     spi.configure(&options).expect("spi configuration");
 
     // Configure Digital I/O Pin to be used as Chip Select for SPI
-    let cs = Pin::new(26); //BCM7 CE0
+    let cs = SysfsPin::new(26); //BCM7 CE0
     cs.export().expect("cs export");
     while !cs.is_exported() {}
     cs.set_direction(Direction::Out).expect("CS Direction");
     cs.set_value(1).expect("CS Value set to 1");
 
-    let busy = Pin::new(24); // GPIO 24, board J-18
+    let busy = SysfsPin::new(24); // GPIO 24, board J-18
     busy.export().expect("busy export");
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
     //busy.set_value(1).expect("busy Value set to 1");
 
-    let dc = Pin::new(25); // GPIO 25, board J-22
+    let dc = SysfsPin::new(25); // GPIO 25, board J-22
     dc.export().expect("dc export");
     while !dc.is_exported() {}
     dc.set_direction(Direction::Out).expect("dc Direction");
     dc.set_value(1).expect("dc Value set to 1");
 
-    let rst = Pin::new(17); // GPIO 17, board J-11
+    let rst = SysfsPin::new(17); // GPIO 17, board J-11
     rst.export().expect("rst export");
     while !rst.is_exported() {}
     rst.set_direction(Direction::Out).expect("rst Direction");
@@ -63,7 +63,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut delay = Delay {};
 
     let mut epd2in13 =
-        Epd2in13::new(&mut spi, cs, busy, dc, rst, &mut delay, None).expect("eink initalize error");
+        Epd2in13::new(&mut spi, busy, dc, rst, &mut delay, None).expect("eink initalize error");
 
     //println!("Test all the rotations");
     let mut display = Display2in13::default();
@@ -84,7 +84,7 @@ fn main() -> Result<(), std::io::Error> {
     epd2in13
         .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
-    delay.delay_ms(5000u16);
+    delay.delay_ms(5000);
 
     //println!("Now test new graphics with default rotation and some special stuff:");
     display.clear(Color::White).ok();
@@ -136,7 +136,7 @@ fn main() -> Result<(), std::io::Error> {
         epd2in13
             .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
             .expect("display frame new graphics");
-        delay.delay_ms(1_000u16);
+        delay.delay_ms(1_000);
     }
 
     // Show a spinning bar without any delay between frames. Shows how «fast»

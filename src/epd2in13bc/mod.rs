@@ -5,8 +5,8 @@
 //! # Example for the 2.13" E-Ink Display
 //!
 //!```rust, no_run
-//!# use embedded_hal_mock::*;
-//!# fn main() -> Result<(), MockError> {
+//!# use embedded_hal_mock::eh1::*;
+//!# fn main() -> Result<(), embedded_hal::spi::ErrorKind> {
 //!use embedded_graphics::{prelude::*, primitives::{Line, PrimitiveStyle, PrimitiveStyleBuilder}};
 //!use epd_waveshare::{epd2in13bc::*, prelude::*};
 //!#
@@ -17,10 +17,10 @@
 //!# let busy_in = pin::Mock::new(&expectations);
 //!# let dc = pin::Mock::new(&expectations);
 //!# let rst = pin::Mock::new(&expectations);
-//!# let mut delay = delay::MockNoop::new();
+//!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd2in13bc::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
+//!let mut epd = Epd2in13bc::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!// This display is for the black/white/chromatic pixels
@@ -50,10 +50,7 @@
 //!# Ok(())
 //!# }
 //!```
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
-};
+use embedded_hal::{delay::*, digital::*, spi::SpiDevice};
 
 use crate::interface::DisplayInterface;
 use crate::traits::{
@@ -76,6 +73,7 @@ const WHITE_BORDER: u8 = 0x70;
 const BLACK_BORDER: u8 = 0x30;
 const CHROMATIC_BORDER: u8 = 0xb0;
 const FLOATING_BORDER: u8 = 0xF0;
+const SINGLE_BYTE_WRITE: bool = true;
 
 use crate::color::TriColor;
 
@@ -94,20 +92,19 @@ pub type Display2in13bc = crate::graphics::Display<
 >;
 
 /// Epd2in13bc driver
-pub struct Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY> {
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+pub struct Epd2in13bc<SPI, BUSY, DC, RST, DELAY> {
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     color: TriColor,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Values taken from datasheet and sample code
@@ -143,15 +140,14 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     fn update_color_frame(
         &mut self,
@@ -195,27 +191,25 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     type DisplayColor = TriColor;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
+        let interface = DisplayInterface::new(busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd2in13bc { interface, color };
@@ -347,14 +341,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in13bc<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)

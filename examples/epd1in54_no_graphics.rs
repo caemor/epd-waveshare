@@ -1,18 +1,18 @@
 #![deny(warnings)]
 
-use embedded_hal::prelude::*;
+use embedded_hal::delay::DelayUs;
 use epd_waveshare::{epd1in54::Epd1in54, prelude::*};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, Pin, Spidev,
+    Delay, SPIError, Spidev, SysfsPin,
 };
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<(), SPIError> {
     // Configure SPI
     // SPI settings are from eink-waveshare-rs documenation
     let mut spi = Spidev::open("/dev/spidev0.0")?;
@@ -24,7 +24,7 @@ fn main() -> Result<(), std::io::Error> {
     spi.configure(&options).expect("spi configuration");
 
     // Configure Digital I/O Pin to be used as Chip Select for SPI
-    let cs_pin = Pin::new(26); //BCM7 CE0
+    let cs_pin = SysfsPin::new(26); //BCM7 CE0
     cs_pin.export().expect("cs_pin export");
     while !cs_pin.is_exported() {}
     cs_pin
@@ -33,21 +33,21 @@ fn main() -> Result<(), std::io::Error> {
     cs_pin.set_value(1).expect("cs_pin Value set to 1");
 
     // Configure Busy Input Pin
-    let busy = Pin::new(5); //pin 29
+    let busy = SysfsPin::new(5); //pin 29
     busy.export().expect("busy export");
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
     //busy.set_value(1).expect("busy Value set to 1");
 
     // Configure Data/Command OutputPin
-    let dc = Pin::new(6); //pin 31 //bcm6
+    let dc = SysfsPin::new(6); //pin 31 //bcm6
     dc.export().expect("dc export");
     while !dc.is_exported() {}
     dc.set_direction(Direction::Out).expect("dc Direction");
     dc.set_value(1).expect("dc Value set to 1");
 
     // Configure Reset OutputPin
-    let rst = Pin::new(16); //pin 36 //bcm16
+    let rst = SysfsPin::new(16); //pin 36 //bcm16
     rst.export().expect("rst export");
     while !rst.is_exported() {}
     rst.set_direction(Direction::Out).expect("rst Direction");
@@ -58,7 +58,7 @@ fn main() -> Result<(), std::io::Error> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = Epd1in54::new(&mut spi, cs_pin, busy, dc, rst, &mut delay, Some(5))?;
+    let mut epd = Epd1in54::new(&mut spi, busy, dc, rst, &mut delay, Some(5))?;
 
     // Clear the full screen
     epd.clear_frame(&mut spi, &mut delay)?;
@@ -98,7 +98,7 @@ fn main() -> Result<(), std::io::Error> {
 
     // Display updated frame
     epd.display_frame(&mut spi, &mut delay)?;
-    delay.delay_ms(5000u16);
+    delay.delay_ms(5000);
 
     // Set the EPD to sleep
     epd.sleep(&mut spi, &mut delay)?;

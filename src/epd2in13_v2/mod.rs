@@ -16,8 +16,9 @@
 //!
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    delay::DelayUs,
+    digital::{InputPin, OutputPin},
+    spi::SpiDevice,
 };
 
 use crate::buffer_len;
@@ -63,13 +64,14 @@ pub const HEIGHT: u32 = 250;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
+const SINGLE_BYTE_WRITE: bool = true;
 
 /// Epd2in13 (V2 & V3) driver
 ///
 /// To use this driver for V2 of the display, feature \"epd2in13_v3\" needs to be disabled and feature \"epd2in13_v2\" enabled.
-pub struct Epd2in13<SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct Epd2in13<SPI, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
 
     sleep_mode: DeepSleepMode,
 
@@ -78,15 +80,14 @@ pub struct Epd2in13<SPI, CS, BUSY, DC, RST, DELAY> {
     refresh: RefreshLut,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // HW reset
@@ -172,20 +173,18 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     type DisplayColor = Color;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
@@ -193,7 +192,7 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let mut epd = Epd2in13 {
-            interface: DisplayInterface::new(cs, busy, dc, rst, delay_us),
+            interface: DisplayInterface::new(busy, dc, rst, delay_us),
             sleep_mode: DeepSleepMode::Mode1,
             background_color: DEFAULT_BACKGROUND_COLOR,
             refresh: RefreshLut::Full,
@@ -387,14 +386,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     /// When using partial refresh, the controller uses the provided buffer for
     /// comparison with new buffer.
