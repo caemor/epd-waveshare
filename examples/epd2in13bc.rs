@@ -6,7 +6,7 @@ use embedded_graphics::{
     primitives::{Circle, Line, PrimitiveStyle},
     text::{Baseline, Text, TextStyleBuilder},
 };
-use embedded_hal::prelude::*;
+use embedded_hal::delay::DelayUs;
 use epd_waveshare::{
     color::*,
     epd2in13bc::{Display2in13bc, Epd2in13bc},
@@ -16,7 +16,7 @@ use epd_waveshare::{
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, Pin, Spidev,
+    Delay, SPIError, Spidev, SysfsPin,
 };
 
 // activate spi, gpio in raspi-config
@@ -34,26 +34,26 @@ use linux_embedded_hal::{
 //
 // after finishing, put the display to sleep
 
-fn main() -> Result<(), std::io::Error> {
-    let busy = Pin::new(24); // GPIO 24, board J-18
+fn main() -> Result<(), SPIError> {
+    let busy = SysfsPin::new(24); // GPIO 24, board J-18
     busy.export().expect("busy export");
     while !busy.is_exported() {}
     busy.set_direction(Direction::In).expect("busy Direction");
 
-    let dc = Pin::new(25); // GPIO 25, board J-22
+    let dc = SysfsPin::new(25); // GPIO 25, board J-22
     dc.export().expect("dc export");
     while !dc.is_exported() {}
     dc.set_direction(Direction::Out).expect("dc Direction");
     // dc.set_value(1).expect("dc Value set to 1");
 
-    let rst = Pin::new(17); // GPIO 17, board J-11
+    let rst = SysfsPin::new(17); // GPIO 17, board J-11
     rst.export().expect("rst export");
     while !rst.is_exported() {}
     rst.set_direction(Direction::Out).expect("rst Direction");
     // rst.set_value(1).expect("rst Value set to 1");
 
     // Configure Digital I/O Pin to be used as Chip Select for SPI
-    let cs = Pin::new(26); // CE0, board J-24, GPIO 8 -> doesn work. use this from 2in19 example which works
+    let cs = SysfsPin::new(26); // CE0, board J-24, GPIO 8 -> doesn work. use this from 2in19 example which works
     cs.export().expect("cs export");
     while !cs.is_exported() {}
     cs.set_direction(Direction::Out).expect("CS Direction");
@@ -71,8 +71,8 @@ fn main() -> Result<(), std::io::Error> {
 
     let mut delay = Delay {};
 
-    let mut epd2in13 = Epd2in13bc::new(&mut spi, cs, busy, dc, rst, &mut delay, None)
-        .expect("eink initalize error");
+    let mut epd2in13 =
+        Epd2in13bc::new(&mut spi, busy, dc, rst, &mut delay, None).expect("eink initalize error");
 
     println!("Test all the rotations");
     let mut display = Display2in13bc::default();
@@ -98,7 +98,7 @@ fn main() -> Result<(), std::io::Error> {
         .expect("display frame new graphics");
 
     println!("First frame done. Waiting 5s");
-    delay.delay_ms(5000u16);
+    delay.delay_ms(5000);
 
     println!("Now test new graphics with default rotation and three colors:");
     display.clear(TriColor::White).ok();
@@ -148,7 +148,7 @@ fn main() -> Result<(), std::io::Error> {
         .expect("display frame new graphics");
 
     println!("Second frame done. Waiting 5s");
-    delay.delay_ms(5000u16);
+    delay.delay_ms(5000);
 
     // clear both bw buffer and chromatic buffer
     display.clear(TriColor::White).ok();
