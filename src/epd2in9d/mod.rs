@@ -87,7 +87,7 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay <SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
     for Epd2in9d<SPI, CS, BUSY, DC, RST, DELAY>
 where
     SPI: Write<u8>,
@@ -139,7 +139,7 @@ where
 
         //TODO: 这还有一个命令没实现，先放着等下回头写
         // DigitalWrite(reset_pin, LOW);
-        
+
         Ok(())
     }
 
