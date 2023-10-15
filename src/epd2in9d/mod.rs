@@ -8,12 +8,13 @@
 use core::slice::from_raw_parts;
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    delay::DelayUs,
+    digital::{InputPin, OutputPin},
+    spi::SpiDevice,
 };
 
 use crate::interface::DisplayInterface;
-use crate::traits::{RefreshLut, WaveshareDisplay};
+use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
 
 //The Lookup Tables for the Display
 mod constants;
@@ -49,9 +50,9 @@ pub type Display2in9d = crate::graphics::Display<
 
 /// Epd2in9d driver
 ///
-pub struct Epd2in9d<'a, SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct Epd2in9d<'a, SPI, BUSY, DC, RST, DELAY> {
     /// SPI
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Color
     // background_color: Color,
     color: Color,
@@ -63,14 +64,14 @@ pub struct Epd2in9d<'a, SPI, CS, BUSY, DC, RST, DELAY> {
     is_partial_refresh: bool,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in9d<'_, SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10_000, 2_000);
@@ -95,27 +96,25 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in9d<'_, SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     type DisplayColor = Color;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
+        let interface = DisplayInterface::new(busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
         let old_data: &[u8] = &[];
         let is_partial_refresh = false;
@@ -284,14 +283,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in9d<'_, SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayUs,
 {
     /// 唤醒屏幕
     ///
