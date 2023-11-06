@@ -58,7 +58,7 @@ required-features = ["linux-dev"]
 
 [features]
 # Remove the linux-dev feature to build the tests on non  unix systems
-default = ["async", "epd2in13_v3", "graphics"] #["dep:embedded-hal", "graphics", "linux-dev", "epd2in13_v3"]
+default = ["async", "epd2in13_v3"] #["dep:embedded-hal", "graphics", "linux-dev", "epd2in13_v3"]
 
 graphics = ["embedded-graphics-core"]
 epd2in13_v2 = []
