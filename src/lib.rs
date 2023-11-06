@@ -62,6 +62,9 @@
 //!
 #![no_std]
 #![deny(missing_docs)]
+#![allow(stable_features)]
+#![cfg_attr(feature = "async", feature(async_fn_in_trait, impl_trait_projections))]
+#![cfg_attr(feature = "async", allow(incomplete_features, async_fn_in_trait))]
 
 #[cfg(feature = "graphics")]
 pub mod graphics;
