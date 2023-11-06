@@ -16,7 +16,7 @@
 //!
 
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, digital::Wait, spi::SpiDevice};
+use embedded_hal_async::{digital::Wait, spi::SpiDevice};
 
 use crate::buffer_len;
 use crate::color::Color;
@@ -66,9 +66,9 @@ const SINGLE_BYTE_WRITE: bool = true;
 /// Epd2in13 (V2 & V3) driver
 ///
 /// To use this driver for V2 of the display, feature \"epd2in13_v3\" needs to be disabled and feature \"epd2in13_v2\" enabled.
-pub struct Epd2in13<SPI, BUSY, DC, RST, DELAY> {
+pub struct Epd2in13<SPI, BUSY, DC, RST> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, SINGLE_BYTE_WRITE>,
 
     sleep_mode: DeepSleepMode,
 
@@ -77,24 +77,23 @@ pub struct Epd2in13<SPI, BUSY, DC, RST, DELAY> {
     refresh: RefreshLut,
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
-    for Epd2in13<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> InternalWiAdditions<SPI, BUSY, DC, RST>
+    for Epd2in13<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
-    async fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    async fn init(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         // HW reset
-        self.interface.reset(delay, 10_000, 10_000).await;
+        self.interface.reset(spi, 10_000, 10_000).await;
 
         if self.refresh == RefreshLut::Quick {
             self.set_vcom_register(spi, (-9).vcom()).await?;
-            self.wait_until_idle(spi, delay).await?;
+            self.wait_until_idle(spi).await?;
 
-            self.set_lut(spi, delay, Some(self.refresh)).await?;
+            self.set_lut(spi, Some(self.refresh)).await?;
 
             // Python code does this, not sure why
             // self.cmd_with_data(spi, Command::WriteOtpSelection, &[0, 0, 0, 0, 0x40, 0, 0])?;
@@ -107,7 +106,7 @@ where
             )
             .await?;
             self.command(spi, Command::MasterActivation).await?;
-            self.wait_until_idle(spi, delay).await?;
+            self.wait_until_idle(spi).await?;
 
             self.set_border_waveform(
                 spi,
@@ -119,9 +118,9 @@ where
             )
             .await?;
         } else {
-            self.wait_until_idle(spi, delay).await?;
+            self.wait_until_idle(spi).await?;
             self.command(spi, Command::SwReset).await?;
-            self.wait_until_idle(spi, delay).await?;
+            self.wait_until_idle(spi).await?;
 
             self.set_driver_output(
                 spi,
@@ -143,7 +142,7 @@ where
 
             // Use simple X/Y auto increase
             self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1).await?;
-            self.set_ram_address_counters(spi, delay, 0, 0).await?;
+            self.set_ram_address_counters(spi, 0, 0).await?;
 
             self.set_border_waveform(
                 spi,
@@ -169,22 +168,21 @@ where
 
             self.set_gate_line_width(spi, 10).await?;
 
-            self.set_lut(spi, delay, Some(self.refresh)).await?;
+            self.set_lut(spi, Some(self.refresh)).await?;
         }
 
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         Ok(())
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
-    for Epd2in13<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> WaveshareDisplay<SPI, BUSY, DC, RST>
+    for Epd2in13<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     type DisplayColor = Color;
     async fn new(
@@ -192,7 +190,6 @@ where
         busy: BUSY,
         dc: DC,
         rst: RST,
-        delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let mut epd = Epd2in13 {
@@ -202,16 +199,16 @@ where
             refresh: RefreshLut::Full,
         };
 
-        epd.init(spi, delay).await?;
+        epd.init(spi).await?;
         Ok(epd)
     }
 
-    async fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.init(spi, delay).await
+    async fn wake_up(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.init(spi).await
     }
 
-    async fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+    async fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
 
         // All sample code enables and disables analog/clocks...
         self.set_display_update_control_2(
@@ -233,18 +230,17 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         assert!(buffer.len() == buffer_len(WIDTH as usize, HEIGHT as usize));
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1).await?;
-        self.set_ram_address_counters(spi, delay, 0, 0).await?;
+        self.set_ram_address_counters(spi, 0, 0).await?;
 
         self.cmd_with_data(spi, Command::WriteRam, buffer).await?;
 
         if self.refresh == RefreshLut::Full {
             // Always keep the base buffer equal to current if not doing partial refresh.
             self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1).await?;
-            self.set_ram_address_counters(spi, delay, 0, 0).await?;
+            self.set_ram_address_counters(spi, 0, 0).await?;
 
             self.cmd_with_data(spi, Command::WriteRamRed, buffer)
                 .await?;
@@ -258,7 +254,6 @@ where
     async fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -276,14 +271,14 @@ where
         assert!(self.refresh == RefreshLut::Full);
 
         self.set_ram_area(spi, x, y, x + width, y + height).await?;
-        self.set_ram_address_counters(spi, delay, x, y).await?;
+        self.set_ram_address_counters(spi, x, y).await?;
 
         self.cmd_with_data(spi, Command::WriteRam, buffer).await?;
 
         if self.refresh == RefreshLut::Full {
             // Always keep the base buffer equals to current if not doing partial refresh.
             self.set_ram_area(spi, x, y, x + width, y + height).await?;
-            self.set_ram_address_counters(spi, delay, x, y).await?;
+            self.set_ram_address_counters(spi, x, y).await?;
 
             self.cmd_with_data(spi, Command::WriteRamRed, buffer)
                 .await?;
@@ -294,7 +289,7 @@ where
 
     /// Never use directly this function when using partial refresh, or also
     /// keep the base buffer in syncd using `set_partial_base_buffer` function.
-    async fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    async fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         if self.refresh == RefreshLut::Full {
             self.set_display_update_control_2(
                 spi,
@@ -311,7 +306,7 @@ where
                 .await?;
         }
         self.command(spi, Command::MasterActivation).await?;
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
 
         Ok(())
     }
@@ -320,22 +315,21 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer, delay).await?;
-        self.display_frame(spi, delay).await?;
+        self.update_frame(spi, buffer).await?;
+        self.display_frame(spi).await?;
 
         if self.refresh == RefreshLut::Quick {
-            self.set_partial_base_buffer(spi, delay, buffer).await?;
+            self.set_partial_base_buffer(spi, buffer).await?;
         }
         Ok(())
     }
 
-    async fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    async fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let color = self.background_color.get_byte_value();
 
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1).await?;
-        self.set_ram_address_counters(spi, delay, 0, 0).await?;
+        self.set_ram_address_counters(spi, 0, 0).await?;
 
         self.command(spi, Command::WriteRam).await?;
         self.interface
@@ -349,7 +343,7 @@ where
         // Always keep the base buffer equals to current if not doing partial refresh.
         if self.refresh == RefreshLut::Full {
             self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1).await?;
-            self.set_ram_address_counters(spi, delay, 0, 0).await?;
+            self.set_ram_address_counters(spi, 0, 0).await?;
 
             self.command(spi, Command::WriteRamRed).await?;
             self.interface
@@ -382,7 +376,6 @@ where
     async fn set_lut(
         &mut self,
         spi: &mut SPI,
-        _delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         let buffer = match refresh_rate {
@@ -396,33 +389,30 @@ where
 
     async fn wait_until_idle(
         &mut self,
-        _spi: &mut SPI,
-        delay: &mut DELAY,
+        spi: &mut SPI,
     ) -> Result<(), SPI::Error> {
-        self.interface.wait_until_idle(delay, IS_BUSY_LOW).await;
+        self.interface.wait_until_idle(spi, IS_BUSY_LOW).await;
         Ok(())
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> Epd2in13<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> Epd2in13<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     /// When using partial refresh, the controller uses the provided buffer for
     /// comparison with new buffer.
     pub async fn set_partial_base_buffer(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         buffer: &[u8],
     ) -> Result<(), SPI::Error> {
         assert!(buffer_len(WIDTH as usize, HEIGHT as usize) == buffer.len());
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1).await?;
-        self.set_ram_address_counters(spi, delay, 0, 0).await?;
+        self.set_ram_address_counters(spi, 0, 0).await?;
 
         self.cmd_with_data(spi, Command::WriteRamRed, buffer)
             .await?;
@@ -439,12 +429,11 @@ where
     pub async fn set_refresh(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         refresh: RefreshLut,
     ) -> Result<(), SPI::Error> {
         if self.refresh != refresh {
             self.refresh = refresh;
-            self.init(spi, delay).await?;
+            self.init(spi).await?;
         }
         Ok(())
     }
@@ -597,11 +586,10 @@ where
     async fn set_ram_address_counters(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         x: u32,
         y: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         self.cmd_with_data(spi, Command::SetRamXAddressCounter, &[(x >> 3) as u8])
             .await?;
 

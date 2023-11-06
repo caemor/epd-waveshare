@@ -11,7 +11,7 @@
 //! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, digital::Wait, spi::SpiDevice};
+use embedded_hal_async::{digital::Wait, spi::SpiDevice};
 
 use crate::color::TriColor;
 use crate::interface::DisplayInterface;
@@ -44,26 +44,25 @@ const SINGLE_BYTE_WRITE: bool = false;
 
 /// Epd7in5 (V2) driver
 ///
-pub struct Epd7in5<SPI, BUSY, DC, RST, DELAY> {
+pub struct Epd7in5<SPI, BUSY, DC, RST> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: TriColor,
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> InternalWiAdditions<SPI, BUSY, DC, RST>
+    for Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
-    async fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    async fn init(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         // Reset the device
         // C driver does 200/2 original rust driver does 10/2
-        self.interface.reset(delay, 200_000, 2_000).await;
+        self.interface.reset(spi, 200_000, 2_000).await;
 
         // V2 procedure as described here:
         // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5bc_V2.py
@@ -74,7 +73,7 @@ where
             .await?;
         self.command(spi, Command::PowerOn).await?;
         // C driver adds a static 100ms delay here
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         // Done, but this is also the default
         // 0x1F = B/W mode ? doesnt seem to work
         self.cmd_with_data(spi, Command::PanelSetting, &[0x0F])
@@ -101,19 +100,18 @@ where
         self.cmd_with_data(spi, Command::SpiFlashControl, &[0x00, 0x00, 0x00, 0x00])
             .await?;
         // Not in C driver
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         Ok(())
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> WaveshareDisplay<SPI, BUSY, DC, RST>
+    for Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     type DisplayColor = TriColor;
     async fn new(
@@ -121,7 +119,6 @@ where
         busy: BUSY,
         dc: DC,
         rst: RST,
-        delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(busy, dc, rst, delay_us);
@@ -129,19 +126,19 @@ where
 
         let mut epd = Epd7in5 { interface, color };
 
-        epd.init(spi, delay).await?;
+        epd.init(spi).await?;
 
         Ok(epd)
     }
 
-    async fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.init(spi, delay).await
+    async fn wake_up(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.init(spi).await
     }
 
-    async fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+    async fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
         self.command(spi, Command::PowerOff).await?;
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         self.cmd_with_data(spi, Command::DeepSleep, &[0xA5]).await?;
         Ok(())
     }
@@ -150,9 +147,8 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         // (B) version sends one buffer for black and one for red
         self.cmd_with_data(
             spi,
@@ -171,8 +167,7 @@ where
 
     async fn update_partial_frame(
         &mut self,
-        _spi: &mut SPI,
-        _delay: &mut DELAY,
+        spi: &mut SPI,
         _buffer: &[u8],
         _x: u32,
         _y: u32,
@@ -182,8 +177,8 @@ where
         unimplemented!()
     }
 
-    async fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+    async fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
         self.command(spi, Command::DisplayRefresh).await?;
         Ok(())
     }
@@ -192,15 +187,14 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer, delay).await?;
+        self.update_frame(spi, buffer).await?;
         self.command(spi, Command::DisplayRefresh).await?;
         Ok(())
     }
 
-    async fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+    async fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
         self.send_resolution(spi).await?;
 
         self.command(spi, Command::DataStartTransmission1).await?;
@@ -236,8 +230,7 @@ where
 
     async fn set_lut(
         &mut self,
-        _spi: &mut SPI,
-        _delay: &mut DELAY,
+        spi: &mut SPI,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
@@ -247,21 +240,19 @@ where
     async fn wait_until_idle(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.interface
-            .wait_until_idle_with_cmd(spi, delay, IS_BUSY_LOW, Command::GetStatus)
+            .wait_until_idle_with_cmd(spi, IS_BUSY_LOW, Command::GetStatus)
             .await
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     /// temporary replacement for missing delay in the trait to call wait_until_idle
     #[allow(clippy::too_many_arguments)]
@@ -273,9 +264,8 @@ where
         y: u32,
         width: u32,
         height: u32,
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         if buffer.len() as u32 != width / 8 * height {
             //TODO panic or error
         }
@@ -307,7 +297,7 @@ where
             .await?;
 
         self.command(spi, Command::DisplayRefresh).await?;
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
 
         self.command(spi, Command::PartialOut).await?;
         Ok(())

@@ -1,6 +1,6 @@
 use core::marker::Sized;
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, spi::SpiDevice, digital::Wait};
+use embedded_hal_async::{digital::Wait, spi::SpiDevice};
 
 /// All commands need to have this trait which gives the address of the command
 /// which needs to be send via SPI with activated CommandsPin (Data/Command Pin in CommandMode)
@@ -19,13 +19,12 @@ pub enum RefreshLut {
     Quick,
 }
 
-pub(crate) trait InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+pub(crate) trait InternalWiAdditions<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -37,18 +36,17 @@ where
     /// This function calls [reset](WaveshareDisplay::reset),
     /// so you don't need to call reset your self when trying to wake your device up
     /// after setting it to sleep.
-    async fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
+    async fn init(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 }
 
 /// Functions to interact with three color panels
-pub trait WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>:
-    WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+pub trait WaveshareThreeColorDisplay<SPI, BUSY, DC, RST>:
+    WaveshareDisplay<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -56,7 +54,6 @@ where
     async fn update_color_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         black: &[u8],
         chromatic: &[u8],
     ) -> Result<(), SPI::Error>;
@@ -67,7 +64,6 @@ where
     async fn update_achromatic_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         black: &[u8],
     ) -> Result<(), SPI::Error>;
 
@@ -78,7 +74,6 @@ where
     async fn update_chromatic_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         chromatic: &[u8],
     ) -> Result<(), SPI::Error>;
 }
@@ -104,10 +99,9 @@ where
 ///# let busy_in = pin::Mock::new(&expectations);
 ///# let dc = pin::Mock::new(&expectations);
 ///# let rst = pin::Mock::new(&expectations);
-///# let mut delay = delay::NoopDelay::new();
 ///
 ///// Setup EPD
-///let mut epd = Epd4in2::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
+///let mut epd = Epd4in2::new(&mut spi, busy_in, dc, rst, None)?;
 ///
 ///// Use display graphics from embedded-graphics
 ///let mut display = Display4in2::default();
@@ -119,21 +113,20 @@ where
 ///    .draw(&mut display);
 ///
 ///    // Display updated frame
-///epd.update_frame(&mut spi, &display.buffer(), &mut delay)?;
-///epd.display_frame(&mut spi, &mut delay)?;
+///epd.update_frame(&mut spi, &display.buffer())?;
+///epd.display_frame(&mut spi)?;
 ///
 ///// Set the EPD to sleep
-///epd.sleep(&mut spi, &mut delay)?;
+///epd.sleep(&mut spi)?;
 ///# Ok(())
 ///# }
 ///```
-pub trait WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+pub trait WaveshareDisplay<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     /// The Color Type used by the Display
     type DisplayColor;
@@ -149,7 +142,6 @@ where
         busy: BUSY,
         dc: DC,
         rst: RST,
-        delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error>
     where
@@ -158,12 +150,12 @@ where
     /// Let the device enter deep-sleep mode to save power.
     ///
     /// The deep sleep mode returns to standby with a hardware reset.
-    async fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
+    async fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Wakes the device up from sleep
     ///
     /// Also reintialises the device if necessary.
-    async fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
+    async fn wake_up(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Sets the backgroundcolor for various commands like [clear_frame](WaveshareDisplay::clear_frame)
     fn set_background_color(&mut self, color: Self::DisplayColor);
@@ -182,7 +174,6 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Transmits partial data to the SRAM of the EPD
@@ -194,7 +185,6 @@ where
     async fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -205,20 +195,19 @@ where
     /// Displays the frame data from SRAM
     ///
     /// This function waits until the device isn`t busy anymore
-    async fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
+    async fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Provide a combined update&display and save some time (skipping a busy check in between)
     async fn update_and_display_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Clears the frame buffer on the EPD with the declared background color
     ///
     /// The background color can be changed with [`WaveshareDisplay::set_background_color`]
-    async fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error>;
+    async fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error>;
 
     /// Trait for using various Waveforms from different LUTs
     /// E.g. for partial refreshes
@@ -231,14 +220,13 @@ where
     async fn set_lut(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error>;
 
     /// Wait until the display has stopped processing data
     ///
     /// You can call this to make sure a frame is displayed before goin further
-    async fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY)
+    async fn wait_until_idle(&mut self, spi: &mut SPI)
         -> Result<(), SPI::Error>;
 }
 
@@ -267,40 +255,37 @@ where
 ///# let busy_in = pin::Mock::new(&expectations);
 ///# let dc = pin::Mock::new(&expectations);
 ///# let rst = pin::Mock::new(&expectations);
-///# let mut delay = delay::NoopDelay::new();
 ///#
 ///# // Setup EPD
-///# let mut epd = Epd4in2::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
+///# let mut epd = Epd4in2::new(&mut spi, busy_in, dc, rst, None)?;
 ///let (x, y, frame_width, frame_height) = (20, 40, 80,80);
 ///
 ///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];
 ///let mut display = VarDisplay::new(frame_width, frame_height, &mut buffer,false).unwrap();
 ///
-///epd.update_partial_old_frame(&mut spi, &mut delay, display.buffer(), x, y, frame_width, frame_height)
+///epd.update_partial_old_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
 ///  .ok();
 ///
 ///display.clear(Color::White).ok();
 ///// Execute drawing commands here.
 ///
-///epd.update_partial_new_frame(&mut spi, &mut delay, display.buffer(), x, y, frame_width, frame_height)
+///epd.update_partial_new_frame(&mut spi, display.buffer(), x, y, frame_width, frame_height)
 ///  .ok();
 ///# Ok(())
 ///# }
 ///```
-pub trait QuickRefresh<SPI, BUSY, DC, RST, DELAY>
+pub trait QuickRefresh<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     /// Updates the old frame.
     async fn update_old_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Updates the new frame.
@@ -308,14 +293,12 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Displays the new frame
     async fn display_new_frame(
         &mut self,
         spi: &mut SPI,
-        _delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Updates and displays the new frame.
@@ -323,7 +306,6 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error>;
 
     /// Updates the old frame for a portion of the display.
@@ -331,7 +313,6 @@ where
     async fn update_partial_old_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -344,7 +325,6 @@ where
     async fn update_partial_new_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -357,7 +337,6 @@ where
     async fn clear_partial_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         x: u32,
         y: u32,
         width: u32,

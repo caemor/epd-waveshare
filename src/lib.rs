@@ -28,7 +28,7 @@
 //!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd1in54::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
+//!let mut epd = Epd1in54::new(&mut spi, busy_in, dc, rst, &mut None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display1in54::default();

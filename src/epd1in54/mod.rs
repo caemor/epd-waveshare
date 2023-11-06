@@ -17,10 +17,9 @@
 //!# let busy_in = pin::Mock::new(&expectations);
 //!# let dc = pin::Mock::new(&expectations);
 //!# let rst = pin::Mock::new(&expectations);
-//!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd1in54::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
+//!let mut epd = Epd1in54::new(&mut spi, busy_in, dc, rst, None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display1in54::default();
@@ -35,11 +34,11 @@
 //!    .draw(&mut display);
 //!
 //!// Display updated frame
-//!epd.update_frame(&mut spi, &display.buffer(), &mut delay)?;
-//!epd.display_frame(&mut spi, &mut delay)?;
+//!epd.update_frame(&mut spi, &display.buffer())?;
+//!epd.display_frame(&mut spi)?;
 //!
 //!// Set the EPD to sleep
-//!epd.sleep(&mut spi, &mut delay)?;
+//!epd.sleep(&mut spi)?;
 //!# Ok(())
 //!# }
 //!```
@@ -55,7 +54,7 @@ const IS_BUSY_LOW: bool = false;
 const SINGLE_BYTE_WRITE: bool = true;
 
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, digital::Wait, spi::SpiDevice};
+use embedded_hal_async::{digital::Wait, spi::SpiDevice};
 
 use crate::type_a::{
     command::Command,
@@ -80,25 +79,24 @@ pub type Display1in54 = crate::graphics::Display<
 >;
 
 /// Epd1in54 driver
-pub struct Epd1in54<SPI, BUSY, DC, RST, DELAY> {
+pub struct Epd1in54<SPI, BUSY, DC, RST> {
     /// SPI
-    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, SINGLE_BYTE_WRITE>,
     /// Color
     background_color: Color,
     /// Refresh LUT
     refresh: RefreshLut,
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> Epd1in54<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> Epd1in54<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
-    async fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.reset(delay, 10_000, 10_000).await;
+    async fn init(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.interface.reset(spi, 10_000, 10_000).await;
 
         // 3 Databytes:
         // A[7:0]
@@ -143,21 +141,20 @@ where
             .cmd_with_data(spi, Command::DataEntryModeSetting, &[0x03])
             .await?;
 
-        self.set_lut(spi, delay, None).await?;
+        self.set_lut(spi, None).await?;
 
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         Ok(())
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
-    for Epd1in54<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> WaveshareDisplay<SPI, BUSY, DC, RST>
+    for Epd1in54<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -173,7 +170,6 @@ where
         busy: BUSY,
         dc: DC,
         rst: RST,
-        delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(busy, dc, rst, delay_us);
@@ -184,17 +180,17 @@ where
             refresh: RefreshLut::Full,
         };
 
-        epd.init(spi, delay).await?;
+        epd.init(spi).await?;
 
         Ok(epd)
     }
 
-    async fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.init(spi, delay).await
+    async fn wake_up(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.init(spi).await
     }
 
-    async fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+    async fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
         // 0x00 for Normal mode (Power on Reset), 0x01 for Deep Sleep Mode
         //TODO: is 0x00 needed here or would 0x01 be even more efficient?
         self.interface
@@ -207,10 +203,9 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
-        self.use_full_frame(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
+        self.use_full_frame(spi).await?;
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)
             .await?;
@@ -221,17 +216,16 @@ where
     async fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
         width: u32,
         height: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
-        self.set_ram_area(spi, delay, x, y, x + width, y + height)
+        self.wait_until_idle(spi).await?;
+        self.set_ram_area(spi, x, y, x + width, y + height)
             .await?;
-        self.set_ram_counter(spi, delay, x, y).await?;
+        self.set_ram_counter(spi, x, y).await?;
 
         self.interface
             .cmd_with_data(spi, Command::WriteRam, buffer)
@@ -239,8 +233,8 @@ where
         Ok(())
     }
 
-    async fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+    async fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
         // enable clock signal, enable cp, display pattern -> 0xC4 (tested with the arduino version)
         //TODO: test control_1 or control_2 with default value 0xFF (from the datasheet)
         self.interface
@@ -258,16 +252,15 @@ where
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer, delay).await?;
-        self.display_frame(spi, delay).await?;
+        self.update_frame(spi, buffer).await?;
+        self.display_frame(spi).await?;
         Ok(())
     }
 
-    async fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
-        self.use_full_frame(spi, delay).await?;
+    async fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
+        self.use_full_frame(spi).await?;
 
         // clear the ram with the background color
         let color = self.background_color.get_byte_value();
@@ -290,59 +283,54 @@ where
     async fn set_lut(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
         match self.refresh {
-            RefreshLut::Full => self.set_lut_helper(spi, delay, &LUT_FULL_UPDATE).await,
-            RefreshLut::Quick => self.set_lut_helper(spi, delay, &LUT_PARTIAL_UPDATE).await,
+            RefreshLut::Full => self.set_lut_helper(spi, &LUT_FULL_UPDATE).await,
+            RefreshLut::Quick => self.set_lut_helper(spi, &LUT_PARTIAL_UPDATE).await,
         }
     }
 
     async fn wait_until_idle(
         &mut self,
-        _spi: &mut SPI,
-        delay: &mut DELAY,
+        spi: &mut SPI,
     ) -> Result<(), SPI::Error> {
-        let _ = self.interface.wait_until_idle(delay, IS_BUSY_LOW).await;
+        let _ = self.interface.wait_until_idle(spi, IS_BUSY_LOW).await;
         Ok(())
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> Epd1in54<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> Epd1in54<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     pub(crate) async fn use_full_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         // choose full frame/ram
-        self.set_ram_area(spi, delay, 0, 0, WIDTH - 1, HEIGHT - 1)
+        self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)
             .await?;
 
         // start from the beginning
-        self.set_ram_counter(spi, delay, 0, 0).await
+        self.set_ram_counter(spi, 0, 0).await
     }
 
     pub(crate) async fn set_ram_area(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         start_x: u32,
         start_y: u32,
         end_x: u32,
         end_y: u32,
     ) -> Result<(), SPI::Error> {
-        let _ = self.wait_until_idle(spi, delay).await;
+        let _ = self.wait_until_idle(spi).await;
         assert!(start_x < end_x);
         assert!(start_y < end_y);
 
@@ -375,11 +363,10 @@ where
     pub(crate) async fn set_ram_counter(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         x: u32,
         y: u32,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface
@@ -400,10 +387,9 @@ where
     async fn set_lut_helper(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         buffer: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         assert!(buffer.len() == 30);
 
         self.interface
