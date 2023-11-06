@@ -51,7 +51,7 @@ const IS_BUSY_LOW: bool = false;
 const SINGLE_BYTE_WRITE: bool = true;
 
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, spi::SpiDevice};
+use embedded_hal_async::{delay::DelayUs, digital::Wait, spi::SpiDevice};
 
 use crate::type_a::{
     command::Command,
@@ -89,7 +89,7 @@ pub struct Epd2in9<SPI, BUSY, DC, RST, DELAY> {
 impl<SPI, BUSY, DC, RST, DELAY> Epd2in9<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -146,7 +146,7 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd2in9<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -309,7 +309,7 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd2in9<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,

@@ -8,7 +8,7 @@
 //!
 
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, spi::SpiDevice};
+use embedded_hal_async::{delay::DelayUs, digital::Wait, spi::SpiDevice};
 
 use crate::color::TriColor;
 use crate::interface::DisplayInterface;
@@ -57,7 +57,7 @@ impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
     for Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -97,7 +97,7 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, D
     for Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -152,7 +152,7 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -302,7 +302,7 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd7in5<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,

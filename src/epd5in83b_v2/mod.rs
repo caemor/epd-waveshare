@@ -7,7 +7,7 @@
 //! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epd5in83b_V2.py)
 
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, spi::SpiDevice};
+use embedded_hal_async::{delay::DelayUs, digital::Wait, spi::SpiDevice};
 
 use crate::color::Color;
 use crate::interface::DisplayInterface;
@@ -51,7 +51,7 @@ impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
     for Epd5in83<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -100,7 +100,7 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, D
     for Epd5in83<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -146,7 +146,7 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd5in83<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -321,7 +321,7 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd5in83<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,

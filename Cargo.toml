@@ -18,7 +18,7 @@ edition = "2021"
 [dependencies]
 embedded-graphics-core = { version = "0.4", optional = true }
 embedded-hal = { version = "1.0.0-rc.1" }
-embedded-hal-async = { optional = true, version = "1.0.0-rc.1", git="https://github.com/rust-embedded/embedded-hal" }
+embedded-hal-async = { optional = true, version = "1.0.0-rc.1" }
 
 bit_field = "0.10.1"
 

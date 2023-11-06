@@ -1,8 +1,7 @@
 use crate::traits::Command;
 use core::marker::PhantomData;
-use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, spi::SpiDevice};
-
+use embedded_hal::digital::{InputPin, OutputPin, ErrorType};
+use embedded_hal_async::{delay::DelayUs, spi::SpiDevice, digital::Wait};
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
 /// SINGLE_BYTE_WRITE defines if a data block is written bytewise
@@ -26,7 +25,7 @@ impl<SPI, BUSY, DC, RST, DELAY, const SINGLE_BYTE_WRITE: bool>
     DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -139,18 +138,20 @@ where
     ///  - FALSE for epd2in9, epd1in54 (for all Display Type A ones?)
     ///
     /// Most likely there was a mistake with the 2in9 busy connection
-    pub(crate) async fn wait_until_idle(&mut self, delay: &mut DELAY, is_busy_low: bool) {
-        while self.is_busy(is_busy_low) {
-            // This has been removed and added many time :
-            // - it is faster to not have it
-            // - it is complicated to pass the delay everywhere all the time
-            // - busy waiting can consume more power that delaying
-            // - delay waiting enables task switching on realtime OS
-            // -> keep it and leave the decision to the user
-            if self.delay_us > 0 {
-                delay.delay_us(self.delay_us).await;
-            }
+    pub(crate) async fn wait_until_idle(&mut self, delay: &mut DELAY, is_busy_low: bool) -> Result<(), BUSY::Error> {
+
+        if is_busy_low {
+            self.busy.wait_for_high().await?;
         }
+        else {
+            self.busy.wait_for_low().await?;
+        }
+
+        // TODO: remove
+        if self.delay_us > 0 {
+            delay.delay_us(self.delay_us).await;
+        }
+        Ok(())
     }
 
     /// Same as `wait_until_idle` for device needing a command to probe Busy pin
@@ -165,6 +166,7 @@ where
         if self.delay_us > 0 {
             delay.delay_us(self.delay_us).await;
         }
+
         while self.is_busy(is_busy_low) {
             self.cmd(spi, status_command).await?;
             if self.delay_us > 0 {

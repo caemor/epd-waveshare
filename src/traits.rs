@@ -1,6 +1,6 @@
 use core::marker::Sized;
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal_async::{delay::DelayUs, spi::SpiDevice};
+use embedded_hal_async::{delay::DelayUs, spi::SpiDevice, digital::Wait};
 
 /// All commands need to have this trait which gives the address of the command
 /// which needs to be send via SPI with activated CommandsPin (Data/Command Pin in CommandMode)
@@ -22,7 +22,7 @@ pub enum RefreshLut {
 pub(crate) trait InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -45,7 +45,7 @@ pub trait WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>:
     WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -130,7 +130,7 @@ where
 pub trait WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
@@ -290,7 +290,7 @@ where
 pub trait QuickRefresh<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayUs,
