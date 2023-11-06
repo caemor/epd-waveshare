@@ -1,14 +1,14 @@
 [package]
-authors = ["Christoph Groß <caemor@mailbox.org>"]
+authors = ["Christoph Groß <caemor@mailbox.org>", "Dirk Van Haerenborgh <vhdirk@gmail.com>"]
 categories = ["embedded", "hardware-support", "no-std"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare formerly published as eink-waveshare-rs"
 documentation = "https://docs.rs/epd-waveshare"
-homepage = "https://github.com/caemor/epd-waveshare"
+homepage = "https://github.com/vhdirk/epd-waveshare-async"
 keywords = ["ePaper", "Display", "epd", "eink"]
 license = "ISC"
-name = "epd-waveshare"
+name = "epd-waveshare-async"
 readme = "README.md"
-repository = "https://github.com/Caemor/epd-waveshare.git"
+repository = "https://github.com/vhdirk/epd-waveshare-async.git"
 version = "0.5.0"
 edition = "2021"
 
@@ -17,18 +17,18 @@ edition = "2021"
 
 [dependencies]
 embedded-graphics-core = { version = "0.4", optional = true }
-
-embedded-hal = { version = "1.0.0-rc.1" }
-embedded-hal-bus = { version = "0.1.0-rc.1", git="https://github.com/rust-embedded/embedded-hal" }
-embedded-hal-async = { optional = true, version = "1.0.0-rc.1", git="https://github.com/rust-embedded/embedded-hal" }
+embedded-hal = { version = "1.0" }
+embedded-hal-async = { version = "1.0" }
 
 bit_field = "0.10.1"
 
 [dev-dependencies]
-embedded-graphics = "0.8"
-embedded-hal-mock = { version = "=0.10.0", default-features = false, features = [
+embedded-graphics = "0.8.1"
+embedded-hal-bus = { version = "0.2.0", features = ["async"] }
+embedded-hal-mock = { version="0.11.1", default-features = false, features = [
     "eh1",
 ] }
+embassy-time = { version = "0.3.1" }
 anyhow = { version = "1.0", default-features = false}
 
 [target.'cfg(unix)'.dev-dependencies]
@@ -56,13 +56,13 @@ required-features = ["linux-dev"]
 
 [features]
 # Remove the linux-dev feature to build the tests on non  unix systems
-default = ["async", "epd2in13_v3"] #["dep:embedded-hal", "graphics", "linux-dev", "epd2in13_v3"]
+default = ["async", "graphics", "linux-dev", "epd2in13_v3"]
 
 graphics = ["embedded-graphics-core"]
 epd2in13_v2 = []
 epd2in13_v3 = []
 linux-dev = []
-async = ["dep:embedded-hal-async", "embedded-hal-bus/async"]
+async = ["dep:embedded-hal-async"]
 
 # Offers an alternative fast full lut for type_a displays, but the refreshed screen isnt as clean looking
 type_a_alternative_faster_lut = []

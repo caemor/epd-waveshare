@@ -64,7 +64,7 @@ fn main() -> Result<(), anyhow::Error> {
     let mut delay = Delay {};
 
     let mut epd2in13 =
-        Epd2in13::new(&mut spi, busy, dc, rst, &mut delay, None).expect("eink initalize error");
+        Epd2in13::new(&mut spi, busy, dc, rst, None).expect("eink initalize error");
 
     //println!("Test all the rotations");
     let mut display = Display2in13::default();
@@ -82,10 +82,10 @@ fn main() -> Result<(), anyhow::Error> {
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
     epd2in13
-        .update_frame(&mut spi, display.buffer(), &mut delay)
+        .update_frame(&mut spi, display.buffer()).await
         .map_err(anyhow::Error::msg)?;
     epd2in13
-        .display_frame(&mut spi, &mut delay)
+        .display_frame(&mut spi, &mut delay).await
         .expect("display frame new graphics");
     delay.delay_ms(5000);
 
@@ -127,9 +127,10 @@ fn main() -> Result<(), anyhow::Error> {
     // Demonstrating how to use the partial refresh feature of the screen.
     // Real animations can be used.
     epd2in13
-        .set_refresh(&mut spi, &mut delay, RefreshLut::Quick)
-        .unwrap();
-    epd2in13.clear_frame(&mut spi, &mut delay).unwrap();
+        .set_refresh(&mut spi, &mut delay, RefreshLut::Quick).await
+        .map_err(anyhow::Error::msg)?;
+    epd2in13.clear_frame(&mut spi, &mut delay).await
+        .map_err(anyhow::Error::msg)?;
 
     // a moving `Hello World!`
     let limit = 10;
@@ -146,8 +147,8 @@ fn main() -> Result<(), anyhow::Error> {
     // the screen can refresh for this kind of change (small single character)
     display.clear(Color::White).ok();
     epd2in13
-        .update_and_display_frame(&mut spi, display.buffer(), &mut delay)
-        .unwrap();
+        .update_and_display_frame(&mut spi, display.buffer(), &mut delay).await
+        .map_err(anyhow::Error::msg)?;
 
     let spinner = ["|", "/", "-", "\\"];
     for i in 0..10 {
@@ -160,7 +161,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     println!("Finished tests - going to sleep");
     epd2in13
-        .sleep(&mut spi, &mut delay)
+        .sleep(&mut spi).await
         .map_err(anyhow::Error::msg)
 }
 

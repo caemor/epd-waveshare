@@ -8,7 +8,7 @@ use embedded_graphics::{
     text::{Baseline, Text, TextStyleBuilder},
 };
 use embedded_hal::delay::DelayNs;
-use epd_waveshare::{
+use epd_waveshare_async::{
     color::*,
     epd2in13bc::{Display2in13bc, Epd2in13bc},
     graphics::DisplayRotation,
@@ -73,7 +73,7 @@ fn main() -> Result<(), anyhow::Error> {
     let mut delay = Delay {};
 
     let mut epd2in13 =
-        Epd2in13bc::new(&mut spi, busy, dc, rst, &mut delay, None).expect("eink initalize error");
+        Epd2in13bc::new(&mut spi, busy, dc, rst, None).expect("eink initalize error");
 
     println!("Test all the rotations");
     let mut display = Display2in13bc::default();
@@ -141,10 +141,9 @@ fn main() -> Result<(), anyhow::Error> {
     epd2in13
         .update_color_frame(
             &mut spi,
-            &mut delay,
             display.bw_buffer(),
             display.chromatic_buffer(),
-        )
+        ).await
         .map_err(anyhow::Error::msg)?;
     epd2in13
         .display_frame(&mut spi, &mut delay)
@@ -158,18 +157,19 @@ fn main() -> Result<(), anyhow::Error> {
     epd2in13
         .update_color_frame(
             &mut spi,
-            &mut delay,
             display.bw_buffer(),
             display.chromatic_buffer(),
-        )
+        ).await
         .map_err(anyhow::Error::msg)?;
     epd2in13
-        .display_frame(&mut spi, &mut delay)
+        .display_frame(&mut spi)
+        .await
         .map_err(anyhow::Error::msg)?;
 
     println!("Finished tests - going to sleep");
     epd2in13
-        .sleep(&mut spi, &mut delay)
+        .sleep(&mut spi)
+        .await
         .map_err(anyhow::Error::msg)
 }
 

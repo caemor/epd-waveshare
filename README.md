@@ -38,10 +38,10 @@ let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
 
 // Draw some text at a certain point using the specified text style
 let _ = Text::with_text_style("It's working-WoB!", Point::new(175, 250), style, text_style)
-    .draw(&mut display);
+    .draw(&mut display).await;
 
 // Going to sleep
-epd4in2.sleep(&mut spi, &mut delay)
+epd4in2.sleep(&mut spi).await
 ```
 > Check the complete example [here](./examples/epd4in2.rs).
 

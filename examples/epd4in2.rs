@@ -63,7 +63,7 @@ fn main() -> Result<(), anyhow::Error> {
     let mut delay = Delay {};
 
     let mut epd4in2 =
-        Epd4in2::new(&mut spi, busy, dc, rst, &mut delay, None).expect("eink initalize error");
+        Epd4in2::new(&mut spi, busy, dc, rst, None).expect("eink initalize error");
 
     println!("Test all the rotations");
     let mut display = Display4in2::default();
@@ -81,10 +81,10 @@ fn main() -> Result<(), anyhow::Error> {
     draw_text(&mut display, "Rotate 270!", 5, 50);
 
     epd4in2
-        .update_frame(&mut spi, display.buffer(), &mut delay)
+        .update_frame(&mut spi, display.buffer(), &mut delay).await
         .map_err(anyhow::Error::msg)?;
     epd4in2
-        .display_frame(&mut spi, &mut delay)
+        .display_frame(&mut spi, &mut delay).await
         .expect("display frame new graphics");
     delay.delay_ms(5000);
 
@@ -131,19 +131,19 @@ fn main() -> Result<(), anyhow::Error> {
     // a moving `Hello World!`
     let limit = 10;
     epd4in2
-        .set_lut(&mut spi, &mut delay, Some(RefreshLut::Quick))
+        .set_lut(&mut spi, Some(RefreshLut::Quick)).await
         .unwrap();
-    epd4in2.clear_frame(&mut spi, &mut delay).unwrap();
+    epd4in2.clear_frame(&mut spi, &mut delay).await.unwrap();
     for i in 0..limit {
         //println!("Moving Hello World. Loop {} from {}", (i + 1), limit);
 
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd4in2
-            .update_frame(&mut spi, display.buffer(), &mut delay)
-            .unwrap();
+            .update_frame(&mut spi, display.buffer(), &mut delay).await
+        .map_err(anyhow::Error::msg)?;
         epd4in2
-            .display_frame(&mut spi, &mut delay)
+            .display_frame(&mut spi, &mut delay).await
             .expect("display frame new graphics");
 
         delay.delay_ms(1_000);
@@ -151,7 +151,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     println!("Finished tests - going to sleep");
     epd4in2
-        .sleep(&mut spi, &mut delay)
+        .sleep(&mut spi).await
         .map_err(anyhow::Error::msg)
 }
 

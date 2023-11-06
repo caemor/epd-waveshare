@@ -60,16 +60,16 @@ fn main() -> Result<(), anyhow::Error> {
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
     let mut epd =
-        Epd1in54::new(&mut spi, busy, dc, rst, &mut delay, Some(5)).map_err(anyhow::Error::msg)?;
+        Epd1in54::new(&mut spi, busy, dc, rst, Some(5)).await.map_err(anyhow::Error::msg)?;
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)
+    epd.clear_frame(&mut spi).await
         .map_err(anyhow::Error::msg)?;
-    epd.display_frame(&mut spi, &mut delay)
+    epd.display_frame(&mut spi).await
         .map_err(anyhow::Error::msg)?;
 
     // Speeddemo
-    epd.set_lut(&mut spi, &mut delay, Some(RefreshLut::Quick))
+    epd.set_lut(&mut spi, Some(RefreshLut::Quick)).await
         .map_err(anyhow::Error::msg)?;
     let small_buffer = [Color::Black.get_byte_value(); 32]; //16x16
     let number_of_runs = 1;
@@ -77,44 +77,43 @@ fn main() -> Result<(), anyhow::Error> {
         let offset = i * 8 % 150;
         epd.update_partial_frame(
             &mut spi,
-            &mut delay,
             &small_buffer,
             25 + offset,
             25 + offset,
             16,
             16,
-        )
+        ).await
         .map_err(anyhow::Error::msg)?;
-        epd.display_frame(&mut spi, &mut delay)
+        epd.display_frame(&mut spi).await
             .map_err(anyhow::Error::msg)?;
     }
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)
+    epd.clear_frame(&mut spi).await
         .map_err(anyhow::Error::msg)?;
-    epd.display_frame(&mut spi, &mut delay)
+    epd.display_frame(&mut spi).await
         .map_err(anyhow::Error::msg)?;
 
     // Draw some squares
     let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
-    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 20, 20, 160, 160)
+    epd.update_partial_frame(&mut spi, &small_buffer, 20, 20, 160, 160).await
         .map_err(anyhow::Error::msg)?;
 
     let small_buffer = [Color::White.get_byte_value(); 800]; //80x80
-    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 60, 60, 80, 80)
+    epd.update_partial_frame(&mut spi, &small_buffer, 60, 60, 80, 80).await
         .map_err(anyhow::Error::msg)?;
 
     let small_buffer = [Color::Black.get_byte_value(); 8]; //8x8
-    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 96, 96, 8, 8)
+    epd.update_partial_frame(&mut spi, &small_buffer, 96, 96, 8, 8).await
         .map_err(anyhow::Error::msg)?;
 
     // Display updated frame
-    epd.display_frame(&mut spi, &mut delay)
+    epd.display_frame(&mut spi).await
         .map_err(anyhow::Error::msg)?;
     delay.delay_ms(5000);
 
     // Set the EPD to sleep
-    epd.sleep(&mut spi, &mut delay)
+    epd.sleep(&mut spi, &mut delay).await
         .map_err(anyhow::Error::msg)?;
 
     Ok(())

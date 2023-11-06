@@ -51,9 +51,8 @@
 //!# }
 //!```
 use core::fmt::{Debug, Display};
-use embedded_hal::delay::DelayNs;
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal::spi::SpiDevice;
+use embedded_hal_async::{digital::Wait, spi::SpiDevice};
 
 use crate::error::ErrorKind;
 use crate::interface::DisplayInterface;
@@ -96,149 +95,146 @@ pub type Display2in13bc = crate::graphics::Display<
 >;
 
 /// Epd2in13bc driver
-pub struct Epd2in13bc<SPI, BUSY, DC, RST, DELAY> {
-    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
+pub struct Epd2in13bc<SPI, BUSY, DC, RST> {
+    interface: DisplayInterface<SPI, BUSY, DC, RST, SINGLE_BYTE_WRITE>,
     color: TriColor,
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> ErrorType<SPI, BUSY, DC, RST>
-    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> ErrorType<SPI, BUSY, DC, RST> for Epd2in13bc<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
     type Error = ErrorKind<SPI, BUSY, DC, RST>;
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> InternalWiAdditions<SPI, BUSY, DC, RST> for Epd2in13bc<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
+    async fn init(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
         // Values taken from datasheet and sample code
 
-        self.interface.reset(delay, 10_000, 10_000)?;
+        self.interface.reset(spi, 10_000, 10_000).await?;
 
         // start the booster
         self.interface
-            .cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])?;
+            .cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])
+            .await?;
 
         // power on
-        self.command(spi, Command::PowerOn)?;
-        delay.delay_us(5000);
-        self.wait_until_idle(spi, delay)?;
+        self.command(spi, Command::PowerOn).await?;
+        self.interface.delay(spi, 5000).await?;
+        self.wait_until_idle(spi).await?;
 
         // set the panel settings
-        self.cmd_with_data(spi, Command::PanelSetting, &[0x8F])?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x8F])
+            .await?;
 
         self.cmd_with_data(
             spi,
             Command::VcomAndDataIntervalSetting,
             &[WHITE_BORDER | VCOM_DATA_INTERVAL],
-        )?;
+        )
+        .await?;
 
         // set resolution
-        self.send_resolution(spi)?;
+        self.send_resolution(spi).await?;
 
-        self.cmd_with_data(spi, Command::VcmDcSetting, &[0x0A])?;
+        self.cmd_with_data(spi, Command::VcmDcSetting, &[0x0A])
+            .await?;
 
-        self.wait_until_idle(spi, delay)?;
+        self.wait_until_idle(spi).await?;
 
         Ok(())
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> WaveshareThreeColorDisplay<SPI, BUSY, DC, RST>
+    for Epd2in13bc<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
-    fn update_color_frame(
+    async fn update_color_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         black: &[u8],
         chromatic: &[u8],
     ) -> Result<(), Self::Error> {
-        self.update_achromatic_frame(spi, delay, black)?;
-        self.update_chromatic_frame(spi, delay, chromatic)
+        self.update_achromatic_frame(spi, black).await?;
+        self.update_chromatic_frame(spi, chromatic).await
     }
 
     /// Update only the black/white data of the display.
     ///
     /// Finish by calling `update_chromatic_frame`.
-    fn update_achromatic_frame(
+    async fn update_achromatic_frame(
         &mut self,
         spi: &mut SPI,
-        _delay: &mut DELAY,
         black: &[u8],
     ) -> Result<(), Self::Error> {
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
-        self.interface.data(spi, black)?;
+        self.interface
+            .cmd(spi, Command::DataStartTransmission1)
+            .await?;
+        self.interface.data(spi, black).await?;
         Ok(())
     }
 
     /// Update only chromatic data of the display.
     ///
     /// This data takes precedence over the black/white data.
-    fn update_chromatic_frame(
+    async fn update_chromatic_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         chromatic: &[u8],
     ) -> Result<(), Self::Error> {
-        self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface.data(spi, chromatic)?;
+        self.interface
+            .cmd(spi, Command::DataStartTransmission2)
+            .await?;
+        self.interface.data(spi, chromatic).await?;
 
-        self.wait_until_idle(spi, delay)?;
+        self.wait_until_idle(spi).await?;
         Ok(())
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
-    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> WaveshareDisplay<SPI, BUSY, DC, RST> for Epd2in13bc<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
     type DisplayColor = TriColor;
-    fn new(
+    async fn new(
         spi: &mut SPI,
         busy: BUSY,
         dc: DC,
         rst: RST,
-        delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, Self::Error> {
         let interface = DisplayInterface::new(busy, dc, rst, delay_us);
@@ -246,30 +242,32 @@ where
 
         let mut epd = Epd2in13bc { interface, color };
 
-        epd.init(spi, delay)?;
+        epd.init(spi).await?;
 
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
+    async fn sleep(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
         // Section 8.2 from datasheet
-        self.interface.cmd_with_data(
-            spi,
-            Command::VcomAndDataIntervalSetting,
-            &[FLOATING_BORDER | VCOM_DATA_INTERVAL],
-        )?;
+        self.interface
+            .cmd_with_data(
+                spi,
+                Command::VcomAndDataIntervalSetting,
+                &[FLOATING_BORDER | VCOM_DATA_INTERVAL],
+            )
+            .await?;
 
-        self.command(spi, Command::PowerOff)?;
+        self.command(spi, Command::PowerOff).await?;
         // The example STM code from Github has a wait after PowerOff
-        self.wait_until_idle(spi, delay)?;
+        self.wait_until_idle(spi).await?;
 
-        self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
+        self.cmd_with_data(spi, Command::DeepSleep, &[0xA5]).await?;
 
         Ok(())
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
-        self.init(spi, delay)
+    async fn wake_up(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
+        self.init(spi).await
     }
 
     fn set_background_color(&mut self, color: TriColor) {
@@ -288,31 +286,31 @@ where
         HEIGHT
     }
 
-    fn update_frame(
-        &mut self,
-        spi: &mut SPI,
-        buffer: &[u8],
-        delay: &mut DELAY,
-    ) -> Result<(), Self::Error> {
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
+    async fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), Self::Error> {
+        self.interface
+            .cmd(spi, Command::DataStartTransmission1)
+            .await?;
 
-        self.interface.data(spi, buffer)?;
+        self.interface.data(spi, buffer).await?;
 
         // Clear the chromatic layer
         let color = self.color.get_byte_value();
 
-        self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
+        self.interface
+            .cmd(spi, Command::DataStartTransmission2)
+            .await?;
+        self.interface
+            .data_x_times(spi, color, NUM_DISPLAY_BITS)
+            .await?;
 
-        self.wait_until_idle(spi, delay)?;
+        self.wait_until_idle(spi).await?;
         Ok(())
     }
 
     #[allow(unused)]
-    fn update_partial_frame(
+    async fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
-        delay: &mut DELAY,
         buffer: &[u8],
         x: u32,
         y: u32,
@@ -322,110 +320,114 @@ where
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
-        self.command(spi, Command::DisplayRefresh)?;
+    async fn display_frame(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
+        self.command(spi, Command::DisplayRefresh).await?;
 
-        self.wait_until_idle(spi, delay)?;
+        self.wait_until_idle(spi).await?;
         Ok(())
     }
 
-    fn update_and_display_frame(
+    async fn update_and_display_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), Self::Error> {
-        self.update_frame(spi, buffer, delay)?;
-        self.display_frame(spi, delay)?;
+        self.update_frame(spi, buffer).await?;
+        self.display_frame(spi).await?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
-        self.send_resolution(spi)?;
+    async fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
+        self.send_resolution(spi).await?;
 
         let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
 
         // Clear the black
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
+        self.interface
+            .cmd(spi, Command::DataStartTransmission1)
+            .await?;
 
-        self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
+        self.interface
+            .data_x_times(spi, color, NUM_DISPLAY_BITS)
+            .await?;
 
         // Clear the chromatic
-        self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, color, NUM_DISPLAY_BITS)?;
+        self.interface
+            .cmd(spi, Command::DataStartTransmission2)
+            .await?;
+        self.interface
+            .data_x_times(spi, color, NUM_DISPLAY_BITS)
+            .await?;
 
-        self.wait_until_idle(spi, delay)?;
+        self.wait_until_idle(spi).await?;
         Ok(())
     }
 
-    fn set_lut(
+    async fn set_lut(
         &mut self,
         _spi: &mut SPI,
-        _delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), Self::Error> {
-        Ok(())
+        unimplemented!()
     }
 
-    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
-        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
-        Ok(())
+    async fn wait_until_idle(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
+        self.interface.wait_until_idle(spi, IS_BUSY_LOW).await
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> Epd2in13bc<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
-    fn command(
+    async fn command(
         &mut self,
         spi: &mut SPI,
         command: Command,
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.interface.cmd(spi, command)
+        self.interface.cmd(spi, command).await
     }
 
-    fn send_data(
+    async fn send_data(
         &mut self,
         spi: &mut SPI,
         data: &[u8],
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.interface.data(spi, data)
+        self.interface.data(spi, data).await
     }
 
-    fn cmd_with_data(
+    async fn cmd_with_data(
         &mut self,
         spi: &mut SPI,
         command: Command,
         data: &[u8],
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.interface.cmd_with_data(spi, command, data)
+        self.interface.cmd_with_data(spi, command, data).await
     }
 
-    fn send_resolution(
+    async fn send_resolution(
         &mut self,
         spi: &mut SPI,
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         let w = self.width();
         let h = self.height();
 
-        self.command(spi, Command::ResolutionSetting)?;
+        self.command(spi, Command::ResolutionSetting).await?;
 
-        self.send_data(spi, &[w as u8])?;
-        self.send_data(spi, &[(h >> 8) as u8])?;
-        self.send_data(spi, &[h as u8])
+        self.send_data(spi, &[w as u8]).await?;
+        self.send_data(spi, &[(h >> 8) as u8]).await?;
+        self.send_data(spi, &[h as u8]).await
     }
 
     /// Set the outer border of the display to the chosen color.
-    pub fn set_border_color(
+    pub async fn set_border_color(
         &mut self,
         spi: &mut SPI,
         color: TriColor,
@@ -440,5 +442,6 @@ where
             Command::VcomAndDataIntervalSetting,
             &[border | VCOM_DATA_INTERVAL],
         )
+        .await
     }
 }

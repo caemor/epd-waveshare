@@ -10,9 +10,8 @@
 //! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epd7in5_HD.py)
 //!
 use core::fmt::{Debug, Display};
-use embedded_hal::delay::DelayNs;
 use embedded_hal::digital::{InputPin, OutputPin};
-use embedded_hal::spi::SpiDevice;
+use embedded_hal_async::{digital::Wait, spi::SpiDevice};
 
 use crate::color::Color;
 use crate::error::ErrorKind;
@@ -44,104 +43,107 @@ const SINGLE_BYTE_WRITE: bool = false;
 
 /// EPD7in5 (HD) driver
 ///
-pub struct Epd7in5<SPI, BUSY, DC, RST, DELAY> {
+pub struct Epd7in5<SPI, BUSY, DC, RST> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: Color,
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> ErrorType<SPI, BUSY, DC, RST> for Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> ErrorType<SPI, BUSY, DC, RST> for Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
     type Error = ErrorKind<SPI, BUSY, DC, RST>;
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> InternalWiAdditions<SPI, BUSY, DC, RST> for Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
+    async fn init(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
         // Reset the device
-        self.interface.reset(delay, 10_000, 2_000)?;
+        self.interface.reset(spi, 10_000, 2_000).await?;
 
         // HD procedure as described here:
         // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epd7in5_HD.py
         // and as per specs:
         // https://www.waveshare.com/w/upload/2/27/7inch_HD_e-Paper_Specification.pdf
 
-        self.wait_until_idle(spi, delay)?;
-        self.command(spi, Command::SwReset)?;
-        self.wait_until_idle(spi, delay)?;
+        self.wait_until_idle(spi).await?;
+        self.command(spi, Command::SwReset).await?;
+        self.wait_until_idle(spi).await?;
 
-        self.cmd_with_data(spi, Command::AutoWriteRed, &[0xF7])?;
-        self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::AutoWriteBw, &[0xF7])?;
-        self.wait_until_idle(spi, delay)?;
+        self.cmd_with_data(spi, Command::AutoWriteRed, &[0xF7])
+            .await?;
+        self.wait_until_idle(spi).await?;
+        self.cmd_with_data(spi, Command::AutoWriteBw, &[0xF7])
+            .await?;
+        self.wait_until_idle(spi).await?;
 
-        self.cmd_with_data(spi, Command::SoftStart, &[0xAE, 0xC7, 0xC3, 0xC0, 0x40])?;
+        self.cmd_with_data(spi, Command::SoftStart, &[0xAE, 0xC7, 0xC3, 0xC0, 0x40])
+            .await?;
 
-        self.cmd_with_data(spi, Command::DriverOutputControl, &[0xAF, 0x02, 0x01])?;
+        self.cmd_with_data(spi, Command::DriverOutputControl, &[0xAF, 0x02, 0x01])
+            .await?;
 
-        self.cmd_with_data(spi, Command::DataEntry, &[0x01])?;
+        self.cmd_with_data(spi, Command::DataEntry, &[0x01]).await?;
 
-        self.cmd_with_data(spi, Command::SetRamXStartEnd, &[0x00, 0x00, 0x6F, 0x03])?;
-        self.cmd_with_data(spi, Command::SetRamYStartEnd, &[0xAF, 0x02, 0x00, 0x00])?;
+        self.cmd_with_data(spi, Command::SetRamXStartEnd, &[0x00, 0x00, 0x6F, 0x03])
+            .await?;
+        self.cmd_with_data(spi, Command::SetRamYStartEnd, &[0xAF, 0x02, 0x00, 0x00])
+            .await?;
 
-        self.cmd_with_data(spi, Command::VbdControl, &[0x05])?;
+        self.cmd_with_data(spi, Command::VbdControl, &[0x05])
+            .await?;
 
-        self.cmd_with_data(spi, Command::TemperatureSensorControl, &[0x80])?;
+        self.cmd_with_data(spi, Command::TemperatureSensorControl, &[0x80])
+            .await?;
 
-        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xB1])?;
+        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xB1])
+            .await?;
 
-        self.command(spi, Command::MasterActivation)?;
-        self.wait_until_idle(spi, delay)?;
+        self.command(spi, Command::MasterActivation).await?;
+        self.wait_until_idle(spi).await?;
 
-        self.cmd_with_data(spi, Command::SetRamXAc, &[0x00, 0x00])?;
-        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
-
-        Ok(())
+        self.cmd_with_data(spi, Command::SetRamXAc, &[0x00, 0x00])
+            .await?;
+        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])
+            .await
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> WaveshareDisplay<SPI, BUSY, DC, RST> for Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
     type DisplayColor = Color;
-    fn new(
+    async fn new(
         spi: &mut SPI,
         busy: BUSY,
         dc: DC,
         rst: RST,
-        delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, Self::Error> {
         let interface = DisplayInterface::new(busy, dc, rst, delay_us);
@@ -149,38 +151,32 @@ where
 
         let mut epd = Epd7in5 { interface, color };
 
-        epd.init(spi, delay)?;
+        epd.init(spi).await?;
 
         Ok(epd)
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
-        self.init(spi, delay)
+    async fn wake_up(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
+        self.init(spi).await
     }
 
-    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
-        self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::DeepSleep, &[0x01])?;
-        Ok(())
+    async fn sleep(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
+        self.wait_until_idle(spi).await?;
+        self.cmd_with_data(spi, Command::DeepSleep, &[0x01]).await
     }
 
-    fn update_frame(
-        &mut self,
-        spi: &mut SPI,
-        buffer: &[u8],
-        delay: &mut DELAY,
-    ) -> Result<(), Self::Error> {
-        self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
-        self.cmd_with_data(spi, Command::WriteRamBw, buffer)?;
-        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
-        Ok(())
+    async fn update_frame(&mut self, spi: &mut SPI, buffer: &[u8]) -> Result<(), Self::Error> {
+        self.wait_until_idle(spi).await?;
+        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])
+            .await?;
+        self.cmd_with_data(spi, Command::WriteRamBw, buffer).await?;
+        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])
+            .await
     }
 
-    fn update_partial_frame(
+    async fn update_partial_frame(
         &mut self,
         _spi: &mut SPI,
-        _delay: &mut DELAY,
         _buffer: &[u8],
         _x: u32,
         _y: u32,
@@ -190,40 +186,39 @@ where
         unimplemented!();
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
-        self.command(spi, Command::MasterActivation)?;
-        self.wait_until_idle(spi, delay)?;
-        Ok(())
+    async fn display_frame(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
+        self.command(spi, Command::MasterActivation).await?;
+        self.wait_until_idle(spi).await
     }
 
-    fn update_and_display_frame(
+    async fn update_and_display_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), Self::Error> {
-        self.update_frame(spi, buffer, delay)?;
-        self.display_frame(spi, delay)?;
-        Ok(())
+        self.update_frame(spi, buffer).await?;
+        self.display_frame(spi).await
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
+    async fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
         let pixel_count = WIDTH / 8 * HEIGHT;
         let background_color_byte = self.color.get_byte_value();
 
-        self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])?;
+        self.wait_until_idle(spi).await?;
+        self.cmd_with_data(spi, Command::SetRamYAc, &[0x00, 0x00])
+            .await?;
 
         for cmd in &[Command::WriteRamBw, Command::WriteRamRed] {
-            self.command(spi, *cmd)?;
+            self.command(spi, *cmd).await?;
             self.interface
-                .data_x_times(spi, background_color_byte, pixel_count)?;
+                .data_x_times(spi, background_color_byte, pixel_count)
+                .await?;
         }
 
-        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
-        self.command(spi, Command::MasterActivation)?;
-        self.wait_until_idle(spi, delay)?;
-        Ok(())
+        self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])
+            .await?;
+        self.command(spi, Command::MasterActivation).await?;
+        self.wait_until_idle(spi).await
     }
 
     fn set_background_color(&mut self, color: Color) {
@@ -242,48 +237,45 @@ where
         HEIGHT
     }
 
-    fn set_lut(
+    async fn set_lut(
         &mut self,
         _spi: &mut SPI,
-        _delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), Self::Error> {
         unimplemented!();
     }
 
-    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
-        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
-        Ok(())
+    async fn wait_until_idle(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
+        self.interface.wait_until_idle(spi, IS_BUSY_LOW).await
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    SPI::Error: Debug + Display,
-    BUSY: InputPin,
-    BUSY::Error: Debug + Display,
+    SPI::Error: Copy + Debug + Display,
+    BUSY: InputPin + Wait,
+    BUSY::Error: Copy + Debug + Display,
     DC: OutputPin,
-    DC::Error: Debug + Display,
+    DC::Error: Copy + Debug + Display,
     RST: OutputPin,
-    RST::Error: Debug + Display,
-    DELAY: DelayNs,
+    RST::Error: Copy + Debug + Display,
 {
-    fn command(
+    async fn command(
         &mut self,
         spi: &mut SPI,
         command: Command,
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.interface.cmd(spi, command)
+        self.interface.cmd(spi, command).await
     }
 
-    fn cmd_with_data(
+    async fn cmd_with_data(
         &mut self,
         spi: &mut SPI,
         command: Command,
         data: &[u8],
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.interface.cmd_with_data(spi, command, data)
+        self.interface.cmd_with_data(spi, command, data).await
     }
 }
 

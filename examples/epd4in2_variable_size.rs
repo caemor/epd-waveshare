@@ -64,7 +64,7 @@ fn main() -> Result<(), anyhow::Error> {
     let mut delay = Delay {};
 
     let mut epd4in2 =
-        Epd4in2::new(&mut spi, busy, dc, rst, &mut delay, None).expect("eink initalize error");
+        Epd4in2::new(&mut spi, busy, dc, rst, None).expect("eink initalize error");
 
     println!("Test all the rotations");
 
@@ -141,10 +141,10 @@ fn main() -> Result<(), anyhow::Error> {
         draw_text(&mut display, "  Hello World! ", 5 + i * 12, 50);
 
         epd4in2
-            .update_partial_frame(&mut spi, &mut delay, display.buffer(), x, y, width, height)
-            .unwrap();
+            .update_partial_frame(&mut spi, isplay.buffer(), x, y, width, height).await
+        .map_err(anyhow::Error::msg)?;
         epd4in2
-            .display_frame(&mut spi, &mut delay)
+            .display_frame(&mut spi).await
             .expect("display frame new graphics");
 
         delay.delay_ms(1_000);
@@ -152,7 +152,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     println!("Finished tests - going to sleep");
     epd4in2
-        .sleep(&mut spi, &mut delay)
+        .sleep(&mut spi).await
         .map_err(anyhow::Error::msg)
 }
 
