@@ -10,11 +10,8 @@
 //! Revision V2 has been released on 2019.11, the resolution is upgraded to 800×480, from 640×384 of V1.
 //! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
-use embedded_hal::{
-    delay::DelayUs,
-    digital::{InputPin, OutputPin},
-    spi::SpiDevice,
-};
+use embedded_hal::digital::{InputPin, OutputPin};
+use embedded_hal_async::{digital::Wait, spi::SpiDevice};
 
 use crate::color::Color;
 use crate::interface::DisplayInterface;
@@ -45,62 +42,66 @@ const SINGLE_BYTE_WRITE: bool = false;
 
 /// Epd7in5 (V2) driver
 ///
-pub struct Epd7in5<SPI, BUSY, DC, RST, DELAY> {
+pub struct Epd7in5<SPI, BUSY, DC, RST> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: Color,
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> InternalWiAdditions<SPI, BUSY, DC, RST>
+    for Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    async fn init(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         // Reset the device
-        self.interface.reset(delay, 10_000, 2_000);
+        self.interface.reset(spi, 10_000, 2_000).await;
 
         // V2 procedure as described here:
         // https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5bc_V2.py
         // and as per specs:
         // https://www.waveshare.com/w/upload/6/60/7.5inch_e-Paper_V2_Specification.pdf
 
-        self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x27, 0x17])?;
-        self.cmd_with_data(spi, Command::PowerSetting, &[0x07, 0x17, 0x3F, 0x3F])?;
-        self.command(spi, Command::PowerOn)?;
-        self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::PanelSetting, &[0x1F])?;
-        self.cmd_with_data(spi, Command::PllControl, &[0x06])?;
-        self.cmd_with_data(spi, Command::TconResolution, &[0x03, 0x20, 0x01, 0xE0])?;
-        self.cmd_with_data(spi, Command::DualSpi, &[0x00])?;
-        self.cmd_with_data(spi, Command::TconSetting, &[0x22])?;
-        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x10, 0x07])?;
-        self.wait_until_idle(spi, delay)?;
+        self.cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x27, 0x17])
+            .await?;
+        self.cmd_with_data(spi, Command::PowerSetting, &[0x07, 0x17, 0x3F, 0x3F])
+            .await?;
+        self.command(spi, Command::PowerOn).await?;
+        self.wait_until_idle(spi).await?;
+        self.cmd_with_data(spi, Command::PanelSetting, &[0x1F])
+            .await?;
+        self.cmd_with_data(spi, Command::PllControl, &[0x06])
+            .await?;
+        self.cmd_with_data(spi, Command::TconResolution, &[0x03, 0x20, 0x01, 0xE0])
+            .await?;
+        self.cmd_with_data(spi, Command::DualSpi, &[0x00]).await?;
+        self.cmd_with_data(spi, Command::TconSetting, &[0x22])
+            .await?;
+        self.cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x10, 0x07])
+            .await?;
+        self.wait_until_idle(spi).await?;
         Ok(())
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
-    for Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> WaveshareDisplay<SPI, BUSY, DC, RST>
+    for Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
     type DisplayColor = Color;
-    fn new(
+    async fn new(
         spi: &mut SPI,
         busy: BUSY,
         dc: DC,
         rst: RST,
-        delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let interface = DisplayInterface::new(busy, dc, rst, delay_us);
@@ -108,38 +109,37 @@ where
 
         let mut epd = Epd7in5 { interface, color };
 
-        epd.init(spi, delay)?;
+        epd.init(spi).await?;
 
         Ok(epd)
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.init(spi, delay)
+    async fn wake_up(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.init(spi).await
     }
 
-    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay)?;
-        self.command(spi, Command::PowerOff)?;
-        self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
+    async fn sleep(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
+        self.command(spi, Command::PowerOff).await?;
+        self.wait_until_idle(spi).await?;
+        self.cmd_with_data(spi, Command::DeepSleep, &[0xA5]).await?;
         Ok(())
     }
 
-    fn update_frame(
+    async fn update_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay)?;
-        self.cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
+        self.wait_until_idle(spi).await?;
+        self.cmd_with_data(spi, Command::DataStartTransmission2, buffer)
+            .await?;
         Ok(())
     }
 
-    fn update_partial_frame(
+    async fn update_partial_frame(
         &mut self,
-        _spi: &mut SPI,
-        _delay: &mut DELAY,
+        spi: &mut SPI,
         _buffer: &[u8],
         _x: u32,
         _y: u32,
@@ -149,34 +149,37 @@ where
         unimplemented!();
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay)?;
-        self.command(spi, Command::DisplayRefresh)?;
+    async fn display_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
+        self.command(spi, Command::DisplayRefresh).await?;
         Ok(())
     }
 
-    fn update_and_display_frame(
+    async fn update_and_display_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
-        delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer, delay)?;
-        self.command(spi, Command::DisplayRefresh)?;
+        self.update_frame(spi, buffer).await?;
+        self.command(spi, Command::DisplayRefresh).await?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.wait_until_idle(spi, delay)?;
-        self.send_resolution(spi)?;
+    async fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+        self.wait_until_idle(spi).await?;
+        self.send_resolution(spi).await?;
 
-        self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+        self.command(spi, Command::DataStartTransmission1).await?;
+        self.interface
+            .data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)
+            .await?;
 
-        self.command(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+        self.command(spi, Command::DataStartTransmission2).await?;
+        self.interface
+            .data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)
+            .await?;
 
-        self.command(spi, Command::DisplayRefresh)?;
+        self.command(spi, Command::DisplayRefresh).await?;
         Ok(())
     }
 
@@ -196,55 +199,57 @@ where
         HEIGHT
     }
 
-    fn set_lut(
+    async fn set_lut(
         &mut self,
-        _spi: &mut SPI,
-        _delay: &mut DELAY,
+        spi: &mut SPI,
         _refresh_rate: Option<RefreshLut>,
     ) -> Result<(), SPI::Error> {
         unimplemented!();
     }
 
-    fn wait_until_idle(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    async fn wait_until_idle(
+        &mut self,
+        spi: &mut SPI,
+    ) -> Result<(), SPI::Error> {
         self.interface
-            .wait_until_idle_with_cmd(spi, delay, IS_BUSY_LOW, Command::GetStatus)
+            .wait_until_idle_with_cmd(spi, IS_BUSY_LOW, Command::GetStatus)
+            .await
     }
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> Epd7in5<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST> Epd7in5<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: InputPin + Wait,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
 {
-    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
-        self.interface.cmd(spi, command)
+    async fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
+        self.interface.cmd(spi, command).await
     }
 
-    fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
-        self.interface.data(spi, data)
+    async fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
+        self.interface.data(spi, data).await
     }
 
-    fn cmd_with_data(
+    async fn cmd_with_data(
         &mut self,
         spi: &mut SPI,
         command: Command,
         data: &[u8],
     ) -> Result<(), SPI::Error> {
-        self.interface.cmd_with_data(spi, command, data)
+        self.interface.cmd_with_data(spi, command, data).await
     }
 
-    fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    async fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
         let w = self.width();
         let h = self.height();
 
-        self.command(spi, Command::TconResolution)?;
-        self.send_data(spi, &[(w >> 8) as u8])?;
-        self.send_data(spi, &[w as u8])?;
-        self.send_data(spi, &[(h >> 8) as u8])?;
-        self.send_data(spi, &[h as u8])
+        self.command(spi, Command::TconResolution).await?;
+        self.send_data(spi, &[(w >> 8) as u8]).await?;
+        self.send_data(spi, &[w as u8]).await?;
+        self.send_data(spi, &[(h >> 8) as u8]).await?;
+        self.send_data(spi, &[h as u8]).await
     }
 }
 

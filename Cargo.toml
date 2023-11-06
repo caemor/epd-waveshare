@@ -18,6 +18,8 @@ edition = "2021"
 [dependencies]
 embedded-graphics-core = { version = "0.4", optional = true }
 embedded-hal = { version = "1.0.0-rc.1" }
+embedded-hal-async = { optional = true, version = "1.0.0-rc.1" }
+
 bit_field = "0.10.1"
 
 [dev-dependencies]
@@ -54,12 +56,13 @@ required-features = ["linux-dev"]
 
 [features]
 # Remove the linux-dev feature to build the tests on non  unix systems
-default = ["graphics", "linux-dev", "epd2in13_v3"]
+default = ["async", "graphics", "linux-dev", "epd2in13_v3"]
 
 graphics = ["embedded-graphics-core"]
 epd2in13_v2 = []
 epd2in13_v3 = []
 linux-dev = []
+async = ["dep:embedded-hal-async"]
 
 # Offers an alternative fast full lut for type_a displays, but the refreshed screen isnt as clean looking
 type_a_alternative_faster_lut = []

@@ -58,11 +58,11 @@ fn main() -> Result<(), SPIError> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = Epd1in54::new(&mut spi, busy, dc, rst, &mut delay, Some(5))?;
+    let mut epd = Epd1in54::new(&mut spi, busy, dc, rst, &mut delay, Some(5)).await?;
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)?;
-    epd.display_frame(&mut spi, &mut delay)?;
+    epd.clear_frame(&mut spi, &mut delay).await?;
+    epd.display_frame(&mut spi, &mut delay).await?;
 
     // Speeddemo
     epd.set_lut(&mut spi, &mut delay, Some(RefreshLut::Quick))?;

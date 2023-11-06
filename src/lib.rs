@@ -28,7 +28,7 @@
 //!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd1in54::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
+//!let mut epd = Epd1in54::new(&mut spi, busy_in, dc, rst, &mut None)?;
 //!
 //!// Use display graphics from embedded-graphics
 //!let mut display = Display1in54::default();
@@ -62,6 +62,9 @@
 //!
 #![no_std]
 #![deny(missing_docs)]
+#![allow(stable_features)]
+#![cfg_attr(feature = "async", feature(async_fn_in_trait, impl_trait_projections))]
+#![cfg_attr(feature = "async", allow(incomplete_features, async_fn_in_trait))]
 
 #[cfg(feature = "graphics")]
 pub mod graphics;
