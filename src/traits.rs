@@ -24,7 +24,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -47,7 +47,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -132,7 +132,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// The Color Type used by the Display
     type DisplayColor;
@@ -291,7 +291,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// Updates the old frame.
     fn update_old_frame(

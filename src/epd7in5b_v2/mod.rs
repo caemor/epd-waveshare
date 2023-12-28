@@ -11,7 +11,7 @@
 //! The hardware and interface of V2 are compatible with V1, however, the related software should be updated.
 
 use embedded_hal::{
-    delay::DelayUs,
+    delay::DelayNs,
     digital::{InputPin, OutputPin},
     spi::SpiDevice,
 };
@@ -61,7 +61,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the device
@@ -110,7 +110,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     type DisplayColor = TriColor;
     fn new(
@@ -247,7 +247,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// temporary replacement for missing delay in the trait to call wait_until_idle
     #[allow(clippy::too_many_arguments)]

@@ -1,11 +1,11 @@
 #![deny(warnings)]
 
-use embedded_hal::delay::DelayUs;
+use embedded_hal::delay::DelayNs;
 use epd_waveshare::{epd1in54::Epd1in54, prelude::*};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, SPIError, Spidev, SysfsPin,
+    Delay, SPIError, SpidevDevice, SysfsPin,
 };
 
 // activate spi, gpio in raspi-config
@@ -15,7 +15,7 @@ use linux_embedded_hal::{
 fn main() -> Result<(), SPIError> {
     // Configure SPI
     // SPI settings are from eink-waveshare-rs documenation
-    let mut spi = Spidev::open("/dev/spidev0.0")?;
+    let mut spi = SpidevDevice::open("/dev/spidev0.0")?;
     let options = SpidevOptions::new()
         .bits_per_word(8)
         .max_speed_hz(4_000_000)
