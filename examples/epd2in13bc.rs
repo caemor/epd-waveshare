@@ -6,7 +6,7 @@ use embedded_graphics::{
     primitives::{Circle, Line, PrimitiveStyle},
     text::{Baseline, Text, TextStyleBuilder},
 };
-use embedded_hal::delay::DelayUs;
+use embedded_hal::delay::DelayNs;
 use epd_waveshare::{
     color::*,
     epd2in13bc::{Display2in13bc, Epd2in13bc},
@@ -16,7 +16,7 @@ use epd_waveshare::{
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, SPIError, Spidev, SysfsPin,
+    Delay, SPIError, SpidevDevice, SysfsPin,
 };
 
 // activate spi, gpio in raspi-config
@@ -61,7 +61,7 @@ fn main() -> Result<(), SPIError> {
 
     // Configure SPI
     // Settings are taken from
-    let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
+    let mut spi = SpidevDevice::open("/dev/spidev0.0").expect("spidev directory");
     let options = SpidevOptions::new()
         .bits_per_word(8)
         .max_speed_hz(10_000_000)
