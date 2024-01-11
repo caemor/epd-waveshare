@@ -9,15 +9,33 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## Still unreleased: [v0.6.0] - 2022-12-??
+
+### Added
+
 - Added support for positive and negatives modes of rendering in TriColor display in #92 (thanks to @akashihi)
 - Added Epd 5in83 V2 (B) support in #92 (thanks to @akashihi)
-- Added Epd 7in5 (B) V2 and V3 support
+- Added Epd 7in5 (B) V2 and V3 support in #118 thanks to @peckpeck (and @CyanBlob in #109)
+- Added GDEH0154D67 aka Epd 1in54 V2 support in #106 thanks to @jcard0na
+- Added convert traits for Tricolor displays in #110 thanks to @pbert519
+- Added embedded graphics traits for color thanks to peckpeck in #132
 
 ### Changed
 
+- Graphics rework: Make Display more generic and remove lot of redundant code in #123 thanks to @peckpeck
+- Improved delay handling by allowing busy or sleep loops in wait_for_idle in #125 thanks to @peckpeck
+- Migrate DelayMs<u8> to DelayUs<u32> in #131 thanks to @peckpeck
+- 2in9 V2: Improved speed and stability thanks to @mike-kfed in #103
 - Made Examples and Linux embedded hal optional (linux only) and therefore allowed building on other hosts (#101, #94)
+- Migrate to rust 2021 editon thanks to @peckpeck
 
 ### Fixed
+
+- Fix pins for epd2in13_v2 example in #91 Universal e-Paper Raw Panel Driver HAT (thanks to @ole-treichel)
 
 ## [v0.5.0] - 2021-11-28
 
@@ -31,7 +49,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added Color conversion methods in #87 & #88 (thanks to @crzysdrs)
 - Provide full QuickRefresh interface for 4.2 inch display in #81 (thanks to @sirhcel)
 
-
 ### Changed
 
 - Updated embedded-graphics to 0.7 and switch to e-g-core #78 (@Irbalt) & #85 (@jamwaffles)
@@ -41,7 +58,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Added Delay to QuickRefresh Trait due to #74 (thanks to @andber1)
 - Write data over SPI 1 byte at a time due to #82 (thanks to @belak)
 - Enable drawing in three colors for epd2in13bc in #76 (thanks to @Irbalt)
-
 
 ## [v0.4.0] - 2020-04-06
 
