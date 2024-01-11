@@ -41,7 +41,7 @@ pub const HEIGHT: u32 = 480;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
-const NUM_DISPLAY_BYTES: usize = WIDTH as usize * HEIGHT as usize / 8;
+const NUM_DISPLAY_BYTES: usize = WIDTH as usize / 8 * HEIGHT as usize;
 const IS_BUSY_LOW: bool = true;
 const SINGLE_BYTE_WRITE: bool = false;
 
