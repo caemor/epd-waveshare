@@ -22,7 +22,7 @@ bit_field = "0.10.1"
 
 [dev-dependencies]
 embedded-graphics = "0.8"
-embedded-hal-mock = { version = "=0.10.0-rc.4", default-features = false, features = [
+embedded-hal-mock = { version = "=0.10.0", default-features = false, features = [
     "eh1",
 ] }
 
