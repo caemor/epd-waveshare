@@ -1,8 +1,5 @@
 use core::marker::Sized;
-use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
-};
+use embedded_hal::{delay::*, digital::*, spi::SpiDevice};
 
 /// All commands need to have this trait which gives the address of the command
 /// which needs to be send via SPI with activated CommandsPin (Data/Command Pin in CommandMode)
@@ -11,29 +8,23 @@ pub(crate) trait Command: Copy {
 }
 
 /// Seperates the different LUT for the Display Refresh process
-#[derive(Debug, Clone, PartialEq, Eq, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy, Default)]
 pub enum RefreshLut {
     /// The "normal" full Lookuptable for the Refresh-Sequence
+    #[default]
     Full,
     /// The quick LUT where not the full refresh sequence is followed.
     /// This might lead to some
     Quick,
 }
 
-impl Default for RefreshLut {
-    fn default() -> Self {
-        RefreshLut::Full
-    }
-}
-
-pub(crate) trait InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
+pub(crate) trait InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -49,15 +40,14 @@ where
 }
 
 /// Functions to interact with three color panels
-pub trait WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>:
-    WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>:
+    WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -99,8 +89,8 @@ where
 /// # Example
 ///
 ///```rust, no_run
-///# use embedded_hal_mock::*;
-///# fn main() -> Result<(), MockError> {
+///# use embedded_hal_mock::eh1::*;
+///# fn main() -> Result<(), embedded_hal::spi::ErrorKind> {
 ///use embedded_graphics::{
 ///    pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyle},
 ///};
@@ -113,10 +103,10 @@ where
 ///# let busy_in = pin::Mock::new(&expectations);
 ///# let dc = pin::Mock::new(&expectations);
 ///# let rst = pin::Mock::new(&expectations);
-///# let mut delay = delay::MockNoop::new();
+///# let mut delay = delay::NoopDelay::new();
 ///
 ///// Setup EPD
-///let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
+///let mut epd = Epd4in2::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
 ///
 ///// Use display graphics from embedded-graphics
 ///let mut display = Display4in2::default();
@@ -136,14 +126,13 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     /// The Color Type used by the Display
     type DisplayColor;
@@ -156,7 +145,6 @@ where
     /// This already initialises the device.
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
@@ -262,8 +250,8 @@ where
 /// (todo: Example ommitted due to CI failures.)
 /// Example:
 ///```rust, no_run
-///# use embedded_hal_mock::*;
-///# fn main() -> Result<(), MockError> {
+///# use embedded_hal_mock::eh1::*;
+///# fn main() -> Result<(), embedded_hal::spi::ErrorKind> {
 ///# use embedded_graphics::{
 ///#   pixelcolor::BinaryColor::On as Black, prelude::*, primitives::{Line, PrimitiveStyle},
 ///# };
@@ -277,10 +265,10 @@ where
 ///# let busy_in = pin::Mock::new(&expectations);
 ///# let dc = pin::Mock::new(&expectations);
 ///# let rst = pin::Mock::new(&expectations);
-///# let mut delay = delay::MockNoop::new();
+///# let mut delay = delay::NoopDelay::new();
 ///#
 ///# // Setup EPD
-///# let mut epd = Epd4in2::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
+///# let mut epd = Epd4in2::new(&mut spi, busy_in, dc, rst, &mut delay, None)?;
 ///let (x, y, frame_width, frame_height) = (20, 40, 80,80);
 ///
 ///let mut buffer = [DEFAULT_BACKGROUND_COLOR.get_byte_value(); 80 / 8 * 80];
@@ -297,14 +285,13 @@ where
 ///# Ok(())
 ///# }
 ///```
-pub trait QuickRefresh<SPI, CS, BUSY, DC, RST, DELAY>
+pub trait QuickRefresh<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     /// Updates the old frame.
     fn update_old_frame(

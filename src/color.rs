@@ -66,7 +66,7 @@ pub enum OctColor {
 }
 
 /// Color trait for use in `Display`s
-pub trait ColorType: PixelColor {
+pub trait ColorType {
     /// Number of bit used to represent this color type in a single buffer.
     /// To get the real number of bits per pixel you should multiply this by `BUFFER_COUNT`
     const BITS_PER_PIXEL_PER_BUFFER: usize;
