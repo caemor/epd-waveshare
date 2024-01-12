@@ -8,7 +8,7 @@
 use core::slice::from_raw_parts;
 
 use embedded_hal::{
-    delay::DelayUs,
+    delay::DelayNs,
     digital::{InputPin, OutputPin},
     spi::SpiDevice,
 };
@@ -58,7 +58,7 @@ pub struct Epd2in9d<'a, SPI, BUSY, DC, RST, DELAY> {
     color: Color,
     /// Refresh LUT
     refresh: RefreshLut,
-    // 存放旧数据，以供部分刷新使用
+    // Storing old data for partial refreshes
     old_data: &'a [u8],
     // 标记是否局刷的状态
     is_partial_refresh: bool,
@@ -71,7 +71,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10_000, 2_000);
@@ -103,7 +103,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     type DisplayColor = Color;
     fn new(
@@ -166,8 +166,8 @@ where
         HEIGHT
     }
 
-    // 对应的是Display函数
-    // 用于将要显示的数据写入屏幕SRAM
+    // Corresponds to the Display function.
+    // Used to write the data to be displayed to the screen SRAM.
     fn update_frame(
         &mut self,
         spi: &mut SPI,
@@ -175,7 +175,7 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         if self.is_partial_refresh {
-            // 若进行全刷则修改局刷状态
+            // Modify local refresh status if full refresh is performed.
             self.is_partial_refresh = false;
         }
         self.wait_until_idle(spi, delay)?;
@@ -202,7 +202,7 @@ where
         height: u32,
     ) -> Result<(), SPI::Error> {
         if !self.is_partial_refresh {
-            // 仅在初次调用时初始化
+            // Initialize only on first call
             self.set_part_reg(spi, delay)?;
             self.is_partial_refresh = true;
         }
@@ -289,12 +289,12 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
-    /// 唤醒屏幕
+    /// Wake Up Screen
     ///
-    /// 在屏幕执行sleep之后，会进入深度睡眠模式。在深度睡眠模式下若需要刷新屏幕，必须先执行awaken()
-    /// 唤醒屏幕
+    /// After the screen sleeps, it enters deep sleep mode. If you need to refresh the screen while in deep sleep mode, you must first execute awaken().
+    /// Wake the screen.
     // fn awaken(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
     //     // reset the device
     //     self.interface.reset(delay, 20_000, 2_000);
@@ -316,43 +316,43 @@ where
     // }
 
     fn set_part_reg(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        // 重置EPD驱动电路
+        // Reset the EPD driver circuit
         //TODO: 这里在微雪的例程中反复刷新了3次，后面有显示问题再进行修改
         self.interface.reset(delay, 10_000, 2_000);
 
-        // 电源设置
-        //TODO: 文档中的数据为[0x03,0x00,0x2b,0x2b,0x09]
+        // Power settings
+        //TODO: The data in the document is [0x03,0x00,0x2b,0x2b,0x09].
         self.interface.cmd_with_data(
             spi,
             Command::PowerSetting,
             &[0x03, 0x00, 0x2b, 0x2b, 0x03],
         )?;
 
-        // 软启动
+        // Soft start
         self.interface
             .cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])?;
 
-        // 面板设置
+        // Panel settings
         self.interface
             .cmd_with_data(spi, Command::PanelSetting, &[0xbf, 0x0D])?;
 
-        // 设置刷新率
+        // Setting the refresh rate
         // 3a 100HZ | 29 150Hz | 39 200HZ | 31 171HZ
-        // 例程中使用3a
+        // 3a is used in the example
         self.interface
             .cmd_with_data(spi, Command::PllControl, &[0x3C])?;
 
-        // 分辨率设置
+        // Resolution Settings
         self.interface
             .cmd_with_data(spi, Command::ResolutionSetting, &[0x80, 0x01, 0x28])?;
 
-        // vcom_DC设置
+        // vcom_DC settings
         self.interface
             .cmd_with_data(spi, Command::VcmDcSetting, &[0x12])?;
 
         self.set_lut(spi, delay, None)?;
 
-        // 开启电源
+        // Power on
         // self.interface.cmd_with_data(
         //     spi,
         //     Command::PowerOn,
@@ -360,11 +360,11 @@ where
         // );
         self.interface.cmd(spi, Command::PowerOn)?;
 
-        // 获取BUSY电平，高电平继续执行，低电平则等待屏幕响应
-        //TODO: 这里是文档推荐的步骤，但我看其他屏幕的也没等待就先忽略了
+        // Get the BUSY level, high to continue, low to wait for the screen to respond.
+        //TODO: This is the recommended step in the documentation, but I've ignored it since I've seen other screens that don't wait.
         self.wait_until_idle(spi, delay)?;
 
-        // vcom和数据间隔设置
+        // vcom and data interval settings
         // self.interface
         //     .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])?;
 
