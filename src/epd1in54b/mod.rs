@@ -279,12 +279,12 @@ where
 
         // Uses 2 bits per pixel
         self.interface
-            .data_x_times(spi, color, 2 * (WIDTH * HEIGHT / 8))?;
+            .data_x_times(spi, color, 2 * (WIDTH / 8 * HEIGHT))?;
 
         // Clear the red
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface
-            .data_x_times(spi, color, WIDTH * HEIGHT / 8)?;
+            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
         Ok(())
     }
 
