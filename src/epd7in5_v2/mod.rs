@@ -171,10 +171,10 @@ where
         self.send_resolution(spi)?;
 
         self.command(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+        self.interface.data_x_times(spi, 0x00, WIDTH / 8 * HEIGHT)?;
 
         self.command(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, 0x00, WIDTH * HEIGHT / 8)?;
+        self.interface.data_x_times(spi, 0x00, WIDTH / 8 * HEIGHT)?;
 
         self.command(spi, Command::DisplayRefresh)?;
         Ok(())

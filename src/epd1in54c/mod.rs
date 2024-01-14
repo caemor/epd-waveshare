@@ -14,7 +14,7 @@ pub const HEIGHT: u32 = 152;
 /// Default Background Color (white)
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
-const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
+const NUM_DISPLAY_BITS: u32 = WIDTH / 8 * HEIGHT;
 const SINGLE_BYTE_WRITE: bool = true;
 
 use crate::color::Color;

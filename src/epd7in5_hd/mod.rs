@@ -185,7 +185,7 @@ where
     }
 
     fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        let pixel_count = WIDTH * HEIGHT / 8;
+        let pixel_count = WIDTH / 8 * HEIGHT;
         let background_color_byte = self.color.get_byte_value();
 
         self.wait_until_idle(spi, delay)?;

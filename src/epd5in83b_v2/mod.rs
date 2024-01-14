@@ -38,7 +38,7 @@ pub const HEIGHT: u32 = 480;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
-const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
+const NUM_DISPLAY_BITS: u32 = WIDTH / 8 * HEIGHT;
 const SINGLE_BYTE_WRITE: bool = true;
 
 /// Epd7in5 driver

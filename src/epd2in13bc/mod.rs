@@ -65,7 +65,7 @@ pub const HEIGHT: u32 = 212;
 pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
 /// Number of bits for b/w buffer and same for chromatic buffer
-const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
+const NUM_DISPLAY_BITS: u32 = WIDTH / 8 * HEIGHT;
 
 const IS_BUSY_LOW: bool = true;
 const VCOM_DATA_INTERVAL: u8 = 0x07;
