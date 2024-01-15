@@ -68,9 +68,6 @@ where
 
         self.set_ram_area(spi, delay, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
-        self.interface
-            .cmd_with_data(spi, Command::BorderWaveformControl, &[0x1])?;
-
         self.interface.cmd_with_data(
             spi,
             Command::TemperatureSensorSelection,
@@ -81,6 +78,9 @@ where
             .cmd_with_data(spi, Command::TemperatureSensorControl, &[0xB1, 0x20])?;
 
         self.set_ram_counter(spi, delay, 0, 0)?;
+
+        //Initialize the lookup table with a refresh waveform
+        self.set_lut(spi, delay, None)?;
 
         self.wait_until_idle(spi, delay)?;
         Ok(())
