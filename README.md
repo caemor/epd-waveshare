@@ -59,6 +59,7 @@ epd.update_and_display_frame( & mut spi, & display.buffer()) ?;
 | [2.9 Inch B/W (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.9 Inch B/W V2 (A)](https://www.waveshare.com/product/2.9inch-e-paper-module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
 | [2.7 Inch 3 Color (B)](https://www.waveshare.com/2.7inch-e-paper-b.htm) | Black, White, Red | ✕ | ✔ | ✔ | ✔ |
+| [2.66 Inch 3 Color (B)](https://www.waveshare.com/wiki/Pico-ePaper-2.66-B) | Black, White, Red | ✕ | ✕ | ✔ | ✔ |
 | [1.54 Inch B/W/Y (C) (Discontinued)](https://www.waveshare.com/1.54inch-e-paper-module-c.htm) | Black, White, Yellow | ✕ | ✕ | ✔ | ✔ |
 | [1.54 Inch B/W/R (B)](https://www.waveshare.com/1.54inch-e-Paper-B.htm) | Black, White, Red | ✕ | ✕ | ✔ | ✔ |
 | [1.54 Inch B/W (A)](https://www.waveshare.com/1.54inch-e-Paper-Module.htm) | Black, White | ✕ | ✔ | ✔ | ✔ |
