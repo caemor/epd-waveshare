@@ -1,6 +1,6 @@
 #![deny(warnings)]
 
-use embedded_hal::delay::DelayNs;
+use embedded_hal_async::delay::DelayNs;
 use epd_waveshare::{epd1in54::Epd1in54, prelude::*};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
