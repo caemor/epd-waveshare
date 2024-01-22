@@ -7,7 +7,7 @@ use embedded_graphics::{
     primitives::{Circle, Line, PrimitiveStyleBuilder},
     text::{Baseline, Text, TextStyleBuilder},
 };
-use embedded_hal::delay::DelayNs;
+use embedded_hal_async::delay::DelayNs;
 use epd_waveshare::{
     color::*,
     epd4in2::{self, Epd4in2},
