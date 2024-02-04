@@ -44,7 +44,7 @@ pub enum TriColor {
     Chromatic,
 }
 
-/// For the 5in65 7 Color Display
+/// For the 7 Color Display
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum OctColor {
     /// Black Color
