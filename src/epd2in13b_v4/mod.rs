@@ -52,8 +52,9 @@
 //!```
 // Original Waveforms from Waveshare
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    delay::DelayNs,
+    spi::SpiDevice,
+    digital::{InputPin, OutputPin},
 };
 
 use crate::buffer_len;
@@ -69,6 +70,8 @@ use self::command::{
     DataEntryModeDir, DataEntryModeIncr, DeepSleepMode, DisplayUpdateControl, DriverOutput,
     RamOption,
 };
+
+const SINGLE_BYTE_WRITE: bool = true;
 
 /// Full size buffer for use with the 2.13" v4 EPD
 #[cfg(feature = "graphics")]
@@ -91,23 +94,22 @@ pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 const IS_BUSY_LOW: bool = false;
 
 /// Epd2in13b (V4) driver
-pub struct Epd2in13b<SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct Epd2in13b<SPI, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
 
     /// Background Color
     background_color: TriColor,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13b<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13b<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // HW reset
@@ -161,15 +163,14 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13b<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13b<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     fn update_color_frame(
         &mut self,
@@ -205,20 +206,18 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13b<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13b<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     type DisplayColor = TriColor;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
@@ -226,7 +225,7 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let mut epd = Epd2in13b {
-            interface: DisplayInterface::new(cs, busy, dc, rst, delay_us),
+            interface: DisplayInterface::new(busy, dc, rst, delay_us),
             background_color: DEFAULT_BACKGROUND_COLOR,
         };
 
@@ -328,14 +327,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in13b<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd2in13b<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     fn set_display_update_control(
         &mut self,
