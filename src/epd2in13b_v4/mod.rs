@@ -5,7 +5,7 @@
 //! # Example for the 2.13" B V4 E-Ink Display
 //!
 //!```rust, no_run
-//!# use embedded_hal_mock::*;
+//!# use embedded_hal_mock::eh1::*;
 //!# fn main() -> Result<(), MockError> {
 //!use embedded_graphics::{prelude::*, primitives::{Line, PrimitiveStyle, PrimitiveStyleBuilder}};
 //!use epd_waveshare::{epd2in13b_v4::*, prelude::*};
@@ -17,10 +17,10 @@
 //!# let busy_in = pin::Mock::new(&expectations);
 //!# let dc = pin::Mock::new(&expectations);
 //!# let rst = pin::Mock::new(&expectations);
-//!# let mut delay = delay::MockNoop::new();
+//!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
-//!let mut epd = Epd2in13b::new(&mut spi, cs_pin, busy_in, dc, rst, &mut delay, None)?;
+//!let mut epd = Epd2in13b::new(&mut spi, busy_in, dc, rst, &mut delay, None).unwrap();
 //!
 //!// Use display graphics from embedded-graphics
 //!// This display is for the black/white/chromatic pixels
@@ -42,11 +42,11 @@
 //!    &mut delay,
 //!    &tricolor_display.bw_buffer(),
 //!    &tricolor_display.chromatic_buffer()
-//!)?;
-//!epd.display_frame(&mut spi, &mut delay)?;
+//!).unwrap();
+//!epd.display_frame(&mut spi, &mut delay).unwrap();
 //!
 //!// Set the EPD to sleep
-//!epd.sleep(&mut spi, &mut delay)?;
+//!epd.sleep(&mut spi, &mut delay).unwrap();
 //!# Ok(())
 //!# }
 //!```
