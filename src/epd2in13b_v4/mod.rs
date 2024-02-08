@@ -53,8 +53,8 @@
 // Original Waveforms from Waveshare
 use embedded_hal::{
     delay::DelayNs,
-    spi::SpiDevice,
     digital::{InputPin, OutputPin},
+    spi::SpiDevice,
 };
 
 use crate::buffer_len;
