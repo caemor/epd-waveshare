@@ -151,7 +151,7 @@ where
             command::DisplayUpdateControl {
                 red_ram_option: RamOption::Normal,
                 bw_ram_option: RamOption::Normal,
-                source_output_mode: false,
+                source_output_mode: true,
             },
         )?;
 
