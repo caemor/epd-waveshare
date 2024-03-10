@@ -290,7 +290,22 @@ impl From<u8> for Color {
 
 #[cfg(feature = "graphics")]
 impl PixelColor for Color {
-    type Raw = ();
+    type Raw = embedded_graphics_core::pixelcolor::raw::RawU1;
+}
+
+#[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::raw::RawU1 {
+    fn from(color: Color) -> Self {
+        embedded_graphics_core::pixelcolor::raw::RawU1::new(color.get_bit_value())
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::raw::RawU1> for Color {
+    fn from(b: embedded_graphics_core::pixelcolor::raw::RawU1) -> Self {
+        use embedded_graphics_core::prelude::RawData;
+        Color::from_u8(b.into_inner())
+    }
 }
 
 #[cfg(feature = "graphics")]
