@@ -301,6 +301,13 @@ impl From<embedded_graphics_core::pixelcolor::raw::RawU1> for Color {
 }
 
 #[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::raw::RawU1 {
+    fn from(color: Color) -> Self {
+        Self::new(color.get_bit_value())
+    }
+}
+
+#[cfg(feature = "graphics")]
 impl PixelColor for Color {
     type Raw = embedded_graphics_core::pixelcolor::raw::RawU1;
 }
