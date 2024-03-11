@@ -312,8 +312,8 @@ impl From<embedded_graphics_core::pixelcolor::raw::RawU1> for Color {
 impl From<BinaryColor> for Color {
     fn from(b: BinaryColor) -> Color {
         match b {
-            BinaryColor::On => Color::Black,
-            BinaryColor::Off => Color::White,
+            BinaryColor::On => Color::White,
+            BinaryColor::Off => Color::Black,
         }
     }
 }
@@ -342,8 +342,8 @@ impl From<Color> for embedded_graphics_core::pixelcolor::Rgb888 {
     fn from(color: Color) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
         match color {
-            Color::Black => embedded_graphics_core::pixelcolor::Rgb888::BLACK,
-            Color::White => embedded_graphics_core::pixelcolor::Rgb888::WHITE,
+            Color::Black => Self::BLACK,
+            Color::White => Self::WHITE,
         }
     }
 }
