@@ -323,15 +323,15 @@ impl From<embedded_graphics_core::pixelcolor::Rgb888> for Color {
     fn from(rgb: embedded_graphics_core::pixelcolor::Rgb888) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
         if rgb == RgbColor::BLACK {
-            Color::Black
-        } else if rgb == RgbColor::WHITE {
             Color::White
+        } else if rgb == RgbColor::WHITE {
+            Color::Black
         } else {
             // choose closest color
             if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
-                Color::White
-            } else {
                 Color::Black
+            } else {
+                Color::White
             }
         }
     }
@@ -342,8 +342,8 @@ impl From<Color> for embedded_graphics_core::pixelcolor::Rgb888 {
     fn from(color: Color) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
         match color {
-            Color::Black => Self::BLACK,
-            Color::White => Self::WHITE,
+            Color::White => Self::BLACK,
+            Color::Black => Self::WHITE,
         }
     }
 }
@@ -353,15 +353,15 @@ impl From<embedded_graphics_core::pixelcolor::Rgb565> for Color {
     fn from(rgb: embedded_graphics_core::pixelcolor::Rgb565) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
         if rgb == RgbColor::BLACK {
-            Color::Black
-        } else if rgb == RgbColor::WHITE {
             Color::White
+        } else if rgb == RgbColor::WHITE {
+            Color::Black
         } else {
             // choose closest color
             if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
-                Color::White
-            } else {
                 Color::Black
+            } else {
+                Color::White
             }
         }
     }
@@ -372,8 +372,8 @@ impl From<Color> for embedded_graphics_core::pixelcolor::Rgb565 {
     fn from(color: Color) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
         match color {
-            Color::Black => Self::BLACK,
-            Color::White => Self::WHITE,
+            Color::White => Self::BLACK,
+            Color::Black => Self::WHITE,
         }
     }
 }
@@ -383,15 +383,15 @@ impl From<embedded_graphics_core::pixelcolor::Rgb555> for Color {
     fn from(rgb: embedded_graphics_core::pixelcolor::Rgb555) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
         if rgb == RgbColor::BLACK {
-            Color::Black
-        } else if rgb == RgbColor::WHITE {
             Color::White
+        } else if rgb == RgbColor::WHITE {
+            Color::Black
         } else {
             // choose closest color
             if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
-                Color::White
-            } else {
                 Color::Black
+            } else {
+                Color::White
             }
         }
     }
@@ -403,8 +403,8 @@ impl From<Color> for embedded_graphics_core::pixelcolor::Rgb555 {
         use embedded_graphics_core::pixelcolor::RgbColor;
         // println!("Here!");
         match color {
-            Color::Black => Self::BLACK,
-            Color::White => Self::WHITE,
+            Color::White => Self::BLACK,
+            Color::Black => Self::WHITE,
         }
     }
 }
