@@ -348,6 +348,67 @@ impl From<Color> for embedded_graphics_core::pixelcolor::Rgb888 {
     }
 }
 
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb565> for Color {
+    fn from(rgb: embedded_graphics_core::pixelcolor::Rgb565) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        if rgb == RgbColor::BLACK {
+            Color::Black
+        } else if rgb == RgbColor::WHITE {
+            Color::White
+        } else {
+            // choose closest color
+            if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
+                Color::White
+            } else {
+                Color::Black
+            }
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::Rgb565 {
+    fn from(color: Color) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        match color {
+            Color::Black => Self::BLACK,
+            Color::White => Self::WHITE,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb555> for Color {
+    fn from(rgb: embedded_graphics_core::pixelcolor::Rgb555) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        if rgb == RgbColor::BLACK {
+            Color::Black
+        } else if rgb == RgbColor::WHITE {
+            Color::White
+        } else {
+            // choose closest color
+            if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
+                Color::White
+            } else {
+                Color::Black
+            }
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::Rgb555 {
+    fn from(color: Color) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        // println!("Here!");
+        match color {
+            Color::Black => Self::BLACK,
+            Color::White => Self::WHITE,
+        }
+    }
+}
+
 impl TriColor {
     /// Get the color encoding of the color for one bit
     pub fn get_bit_value(self) -> u8 {
