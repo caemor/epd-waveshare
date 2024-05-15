@@ -5,7 +5,10 @@
 //! [Reference code](https://github.com/waveshareteam/e-Paper/blob/master/RaspberryPi_JetsonNano/c/lib/e-Paper/EPD_2in9b_V4.c)
 
 use crate::{
-    buffer_len, color::TriColor, interface::DisplayInterface, traits::{InternalWiAdditions, WaveshareDisplay, WaveshareThreeColorDisplay}
+    buffer_len,
+    color::TriColor,
+    interface::DisplayInterface,
+    traits::{InternalWiAdditions, WaveshareDisplay, WaveshareThreeColorDisplay},
 };
 use embedded_hal::{
     delay::DelayNs,
@@ -45,11 +48,12 @@ pub struct Epd2in9b<SPI, BUSY, DC, RST, DELAY> {
     background_color: TriColor,
 }
 
+#[allow(dead_code)]
 enum DisplayMode {
     Default,
     Partial,
-    Fast,
-    Base
+    Fast, // TODO: Add support in future
+    Base,
 }
 
 impl<SPI, BUSY, DC, RST, DELAY> Epd2in9b<SPI, BUSY, DC, RST, DELAY>
@@ -58,17 +62,17 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayNs {
-
+    DELAY: DelayNs,
+{
     /// set the base image before partially update
-    /// 
+    ///
     /// https://github.com/waveshareteam/e-Paper/blob/bc23f8ee814486edb6a364c802847224e079e523/RaspberryPi_JetsonNano/c/examples/EPD_2in9b_V4_test.c#L130
     pub fn update_and_display_frame_base(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    )-> Result<(), <SPI>::Error> {
+    ) -> Result<(), <SPI>::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.turn_on_display(spi, delay, DisplayMode::Base)?;
 
@@ -79,10 +83,14 @@ where
     }
 
     /// display frame partially
-    /// 
+    ///
     /// To perform partial update, it need to call update_and_display_frame_base
     /// than call update_partial_frame before call display_frame_partial
-    pub fn display_frame_partial(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), <SPI>::Error> {
+    pub fn display_frame_partial(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), <SPI>::Error> {
         self.turn_on_display(spi, delay, DisplayMode::Partial)?;
         Ok(())
     }
@@ -107,7 +115,7 @@ where
             DisplayMode::Default => 0xf7,
             DisplayMode::Partial => 0x1c,
             DisplayMode::Fast => 0xc7,
-            DisplayMode::Base => 0xf4
+            DisplayMode::Base => 0xf4,
         };
 
         self.send_data(spi, &[data])?;
@@ -115,7 +123,6 @@ where
         self.wait_until_idle(spi, delay)?;
         Ok(())
     }
-
 }
 
 impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
@@ -316,18 +323,21 @@ where
         let y_start = y;
         let mut y_end = y + height;
 
-        if (x_start % 8 + x_end % 8 == 8 && x_start % 8 > x_end % 8) || x_start % 8 + x_end % 8 == 0 || (x_end - x_start) % 8 == 0 {
-            x_start = x_start / 8;
-            x_end = x_end / 8;
+        if (x_start % 8 + x_end % 8 == 8 && x_start % 8 > x_end % 8)
+            || x_start % 8 + x_end % 8 == 0
+            || (x_end - x_start) % 8 == 0
+        {
+            x_start /= 8;
+            x_end /= 8;
         } else {
-            x_start = x_start / 8;
+            x_start /= 8;
             x_end = if x_end % 8 == 0 {
                 x_end / 8
             } else {
                 x_end / 8 + 1
             };
         }
-        
+
         x_end -= 1;
         y_end -= 1;
 
