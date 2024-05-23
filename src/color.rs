@@ -290,15 +290,30 @@ impl From<u8> for Color {
 
 #[cfg(feature = "graphics")]
 impl PixelColor for Color {
-    type Raw = ();
+    type Raw = embedded_graphics_core::pixelcolor::raw::RawU1;
+}
+
+#[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::raw::RawU1 {
+    fn from(color: Color) -> Self {
+        embedded_graphics_core::pixelcolor::raw::RawU1::new(color.get_bit_value())
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::raw::RawU1> for Color {
+    fn from(b: embedded_graphics_core::pixelcolor::raw::RawU1) -> Self {
+        use embedded_graphics_core::prelude::RawData;
+        Color::from_u8(b.into_inner())
+    }
 }
 
 #[cfg(feature = "graphics")]
 impl From<BinaryColor> for Color {
     fn from(b: BinaryColor) -> Color {
         match b {
-            BinaryColor::On => Color::Black,
-            BinaryColor::Off => Color::White,
+            BinaryColor::On => Color::White,
+            BinaryColor::Off => Color::Black,
         }
     }
 }
@@ -308,15 +323,15 @@ impl From<embedded_graphics_core::pixelcolor::Rgb888> for Color {
     fn from(rgb: embedded_graphics_core::pixelcolor::Rgb888) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
         if rgb == RgbColor::BLACK {
-            Color::Black
-        } else if rgb == RgbColor::WHITE {
             Color::White
+        } else if rgb == RgbColor::WHITE {
+            Color::Black
         } else {
             // choose closest color
             if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
-                Color::White
-            } else {
                 Color::Black
+            } else {
+                Color::White
             }
         }
     }
@@ -327,8 +342,69 @@ impl From<Color> for embedded_graphics_core::pixelcolor::Rgb888 {
     fn from(color: Color) -> Self {
         use embedded_graphics_core::pixelcolor::RgbColor;
         match color {
-            Color::Black => embedded_graphics_core::pixelcolor::Rgb888::BLACK,
-            Color::White => embedded_graphics_core::pixelcolor::Rgb888::WHITE,
+            Color::White => Self::BLACK,
+            Color::Black => Self::WHITE,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb565> for Color {
+    fn from(rgb: embedded_graphics_core::pixelcolor::Rgb565) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        if rgb == RgbColor::BLACK {
+            Color::White
+        } else if rgb == RgbColor::WHITE {
+            Color::Black
+        } else {
+            // choose closest color
+            if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
+                Color::Black
+            } else {
+                Color::White
+            }
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::Rgb565 {
+    fn from(color: Color) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        match color {
+            Color::White => Self::BLACK,
+            Color::Black => Self::WHITE,
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::Rgb555> for Color {
+    fn from(rgb: embedded_graphics_core::pixelcolor::Rgb555) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        if rgb == RgbColor::BLACK {
+            Color::White
+        } else if rgb == RgbColor::WHITE {
+            Color::Black
+        } else {
+            // choose closest color
+            if (rgb.r() as u16 + rgb.g() as u16 + rgb.b() as u16) > 255 * 3 / 2 {
+                Color::Black
+            } else {
+                Color::White
+            }
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
+impl From<Color> for embedded_graphics_core::pixelcolor::Rgb555 {
+    fn from(color: Color) -> Self {
+        use embedded_graphics_core::pixelcolor::RgbColor;
+        // println!("Here!");
+        match color {
+            Color::White => Self::BLACK,
+            Color::Black => Self::WHITE,
         }
     }
 }
