@@ -70,14 +70,19 @@ where
     pub fn update_and_display_frame_base(
         &mut self,
         spi: &mut SPI,
-        buffer: &[u8],
+        black: &[u8],
+        chromatic: Option<&[u8]>,
         delay: &mut DELAY,
     ) -> Result<(), <SPI>::Error> {
-        self.update_frame(spi, buffer, delay)?;
+        self.update_frame(spi, black, delay)?;
+        if let Some(chromatic) = chromatic {
+            self.update_chromatic_frame(spi, delay, chromatic)?;
+        }
+
         self.turn_on_display(spi, delay, DisplayMode::Base)?;
 
         self.command(spi, Command::WriteRedData)?;
-        self.send_data(spi, buffer)?;
+        self.send_data(spi, black)?;
 
         Ok(())
     }
