@@ -1,21 +1,22 @@
 #![deny(warnings)]
 
+use anyhow;
 use embedded_hal::delay::DelayNs;
 use epd_waveshare::{epd1in54::Epd1in54, prelude::*};
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, SPIError, SpidevDevice, SysfsPin,
+    Delay, SpidevDevice, SysfsPin,
 };
 
 // activate spi, gpio in raspi-config
 // needs to be run with sudo because of some sysfs_gpio permission problems and follow-up timing problems
 // see https://github.com/rust-embedded/rust-sysfs-gpio/issues/5 and follow-up issues
 
-fn main() -> Result<(), SPIError> {
+fn main() -> Result<(), anyhow::Error> {
     // Configure SPI
     // SPI settings are from eink-waveshare-rs documenation
-    let mut spi = SpidevDevice::open("/dev/spidev0.0")?;
+    let mut spi = SpidevDevice::open("/dev/spidev0.0").map_err(anyhow::Error::msg)?;
     let options = SpidevOptions::new()
         .bits_per_word(8)
         .max_speed_hz(4_000_000)
@@ -58,14 +59,18 @@ fn main() -> Result<(), SPIError> {
 
     // Setup of the needed pins is finished here
     // Now the "real" usage of the eink-waveshare-rs crate begins
-    let mut epd = Epd1in54::new(&mut spi, busy, dc, rst, &mut delay, Some(5))?;
+    let mut epd =
+        Epd1in54::new(&mut spi, busy, dc, rst, &mut delay, Some(5)).map_err(anyhow::Error::msg)?;
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)?;
-    epd.display_frame(&mut spi, &mut delay)?;
+    epd.clear_frame(&mut spi, &mut delay)
+        .map_err(anyhow::Error::msg)?;
+    epd.display_frame(&mut spi, &mut delay)
+        .map_err(anyhow::Error::msg)?;
 
     // Speeddemo
-    epd.set_lut(&mut spi, &mut delay, Some(RefreshLut::Quick))?;
+    epd.set_lut(&mut spi, &mut delay, Some(RefreshLut::Quick))
+        .map_err(anyhow::Error::msg)?;
     let small_buffer = [Color::Black.get_byte_value(); 32]; //16x16
     let number_of_runs = 1;
     for i in 0..number_of_runs {
@@ -78,30 +83,39 @@ fn main() -> Result<(), SPIError> {
             25 + offset,
             16,
             16,
-        )?;
-        epd.display_frame(&mut spi, &mut delay)?;
+        )
+        .map_err(anyhow::Error::msg)?;
+        epd.display_frame(&mut spi, &mut delay)
+            .map_err(anyhow::Error::msg)?;
     }
 
     // Clear the full screen
-    epd.clear_frame(&mut spi, &mut delay)?;
-    epd.display_frame(&mut spi, &mut delay)?;
+    epd.clear_frame(&mut spi, &mut delay)
+        .map_err(anyhow::Error::msg)?;
+    epd.display_frame(&mut spi, &mut delay)
+        .map_err(anyhow::Error::msg)?;
 
     // Draw some squares
     let small_buffer = [Color::Black.get_byte_value(); 3200]; //160x160
-    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 20, 20, 160, 160)?;
+    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 20, 20, 160, 160)
+        .map_err(anyhow::Error::msg)?;
 
     let small_buffer = [Color::White.get_byte_value(); 800]; //80x80
-    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 60, 60, 80, 80)?;
+    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 60, 60, 80, 80)
+        .map_err(anyhow::Error::msg)?;
 
     let small_buffer = [Color::Black.get_byte_value(); 8]; //8x8
-    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 96, 96, 8, 8)?;
+    epd.update_partial_frame(&mut spi, &mut delay, &small_buffer, 96, 96, 8, 8)
+        .map_err(anyhow::Error::msg)?;
 
     // Display updated frame
-    epd.display_frame(&mut spi, &mut delay)?;
+    epd.display_frame(&mut spi, &mut delay)
+        .map_err(anyhow::Error::msg)?;
     delay.delay_ms(5000);
 
     // Set the EPD to sleep
-    epd.sleep(&mut spi, &mut delay)?;
+    epd.sleep(&mut spi, &mut delay)
+        .map_err(anyhow::Error::msg)?;
 
     Ok(())
 }

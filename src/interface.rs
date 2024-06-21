@@ -1,6 +1,11 @@
-use crate::traits::Command;
+use crate::{error::ErrorKind, traits::Command};
+use core::fmt::{Debug, Display};
 use core::marker::PhantomData;
-use embedded_hal::{delay::*, digital::*, spi::SpiDevice};
+use embedded_hal::{
+    delay::DelayNs,
+    digital::{InputPin, OutputPin},
+    spi::SpiDevice,
+};
 
 /// The Connection Interface of all (?) Waveshare EPD-Devices
 ///
@@ -25,9 +30,13 @@ impl<SPI, BUSY, DC, RST, DELAY, const SINGLE_BYTE_WRITE: bool>
     DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     /// Creates a new `DisplayInterface` struct
@@ -49,9 +58,13 @@ where
     /// Basic function for sending [Commands](Command).
     ///
     /// Enables direct interaction with the device with the help of [data()](DisplayInterface::data())
-    pub(crate) fn cmd<T: Command>(&mut self, spi: &mut SPI, command: T) -> Result<(), SPI::Error> {
+    pub(crate) fn cmd<T: Command>(
+        &mut self,
+        spi: &mut SPI,
+        command: T,
+    ) -> Result<(), ErrorKind<SPI, BUSY, DC, RST>> {
         // low for commands
-        let _ = self.dc.set_low();
+        let _ = self.dc.set_low().map_err(ErrorKind::DcError)?;
 
         // Transfer the command over spi
         self.write(spi, &[command.address()])
@@ -60,9 +73,13 @@ where
     /// Basic function for sending an array of u8-values of data over spi
     ///
     /// Enables direct interaction with the device with the help of [command()](Epd4in2::command())
-    pub(crate) fn data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
+    pub(crate) fn data(
+        &mut self,
+        spi: &mut SPI,
+        data: &[u8],
+    ) -> Result<(), ErrorKind<SPI, BUSY, DC, RST>> {
         // high for data
-        let _ = self.dc.set_high();
+        let _ = self.dc.set_high().map_err(ErrorKind::DcError)?;
 
         if SINGLE_BYTE_WRITE {
             for val in data.iter().copied() {
@@ -84,7 +101,7 @@ where
         spi: &mut SPI,
         command: T,
         data: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), ErrorKind<SPI, BUSY, DC, RST>> {
         self.cmd(spi, command)?;
         self.data(spi, data)
     }
@@ -97,9 +114,9 @@ where
         spi: &mut SPI,
         val: u8,
         repetitions: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), ErrorKind<SPI, BUSY, DC, RST>> {
         // high for data
-        let _ = self.dc.set_high();
+        let _ = self.dc.set_high().map_err(ErrorKind::DcError)?;
         // Transfer data (u8) over spi
         for _ in 0..repetitions {
             self.write(spi, &[val])?;
@@ -108,17 +125,17 @@ where
     }
 
     // spi write helper/abstraction function
-    fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
+    fn write(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), ErrorKind<SPI, BUSY, DC, RST>> {
         // transfer spi data
         // Be careful!! Linux has a default limit of 4096 bytes per spi transfer
         // see https://raspberrypi.stackexchange.com/questions/65595/spi-transfer-fails-with-buffer-size-greater-than-4096
         if cfg!(target_os = "linux") {
             for data_chunk in data.chunks(4096) {
-                spi.write(data_chunk)?;
+                spi.write(data_chunk).map_err(ErrorKind::SpiError)?;
             }
             Ok(())
         } else {
-            spi.write(data)
+            spi.write(data).map_err(ErrorKind::SpiError)
         }
     }
 
@@ -155,7 +172,7 @@ where
         delay: &mut DELAY,
         is_busy_low: bool,
         status_command: T,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), ErrorKind<SPI, BUSY, DC, RST>> {
         self.cmd(spi, status_command)?;
         if self.delay_us > 0 {
             delay.delay_us(self.delay_us);
@@ -194,15 +211,21 @@ where
     /// The timing of keeping the reset pin low seems to be important and different per device.
     /// Most displays seem to require keeping it low for 10ms, but the 7in5_v2 only seems to reset
     /// properly with 2ms
-    pub(crate) fn reset(&mut self, delay: &mut DELAY, initial_delay: u32, duration: u32) {
-        let _ = self.rst.set_high();
+    pub(crate) fn reset(
+        &mut self,
+        delay: &mut DELAY,
+        initial_delay: u32,
+        duration: u32,
+    ) -> Result<(), ErrorKind<SPI, BUSY, DC, RST>> {
+        let _ = self.rst.set_high().map_err(ErrorKind::RstError)?;
         delay.delay_us(initial_delay);
 
-        let _ = self.rst.set_low();
+        let _ = self.rst.set_low().map_err(ErrorKind::RstError)?;
         delay.delay_us(duration);
-        let _ = self.rst.set_high();
+        let _ = self.rst.set_high().map_err(ErrorKind::RstError)?;
         //TODO: the upstream libraries always sleep for 200ms here
         // 10ms works fine with just for the 7in5_v2 but this needs to be validated for other devices
         delay.delay_us(200_000);
+        Ok(())
     }
 }

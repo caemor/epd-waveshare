@@ -1,5 +1,6 @@
 #![deny(warnings)]
 
+use anyhow;
 use embedded_graphics::{
     mono_font::MonoTextStyleBuilder,
     prelude::*,
@@ -16,7 +17,7 @@ use epd_waveshare::{
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, SPIError, SpidevDevice, SysfsPin,
+    Delay, SpidevDevice, SysfsPin,
 };
 
 // activate spi, gpio in raspi-config
@@ -34,7 +35,7 @@ use linux_embedded_hal::{
 //
 // after finishing, put the display to sleep
 
-fn main() -> Result<(), SPIError> {
+fn main() -> Result<(), anyhow::Error> {
     let busy = SysfsPin::new(24); // GPIO 24, board J-18
     busy.export().expect("busy export");
     while !busy.is_exported() {}
@@ -137,12 +138,14 @@ fn main() -> Result<(), SPIError> {
 
     // we used three colors, so we need to update both bw-buffer and chromatic-buffer
 
-    epd2in13.update_color_frame(
-        &mut spi,
-        &mut delay,
-        display.bw_buffer(),
-        display.chromatic_buffer(),
-    )?;
+    epd2in13
+        .update_color_frame(
+            &mut spi,
+            &mut delay,
+            display.bw_buffer(),
+            display.chromatic_buffer(),
+        )
+        .map_err(anyhow::Error::msg)?;
     epd2in13
         .display_frame(&mut spi, &mut delay)
         .expect("display frame new graphics");
@@ -152,16 +155,22 @@ fn main() -> Result<(), SPIError> {
 
     // clear both bw buffer and chromatic buffer
     display.clear(TriColor::White).ok();
-    epd2in13.update_color_frame(
-        &mut spi,
-        &mut delay,
-        display.bw_buffer(),
-        display.chromatic_buffer(),
-    )?;
-    epd2in13.display_frame(&mut spi, &mut delay)?;
+    epd2in13
+        .update_color_frame(
+            &mut spi,
+            &mut delay,
+            display.bw_buffer(),
+            display.chromatic_buffer(),
+        )
+        .map_err(anyhow::Error::msg)?;
+    epd2in13
+        .display_frame(&mut spi, &mut delay)
+        .map_err(anyhow::Error::msg)?;
 
     println!("Finished tests - going to sleep");
-    epd2in13.sleep(&mut spi, &mut delay)
+    epd2in13
+        .sleep(&mut spi, &mut delay)
+        .map_err(anyhow::Error::msg)
 }
 
 fn draw_text(display: &mut Display2in13bc, text: &str, x: i32, y: i32) {
