@@ -6,17 +6,20 @@
 //! - [Waveshare C driver](https://github.com/waveshareteam/e-Paper/blob/8be47b27f1a6808fd82ea9ceeac04c172e4ee9a8/RaspberryPi_JetsonNano/c/lib/e-Paper/EPD_7in3f.c)
 //! - [Waveshare Python driver](https://github.com/waveshareteam/e-Paper/blob/8be47b27f1a6808fd82ea9ceeac04c172e4ee9a8/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epd7in3f.py)
 
+use core::fmt::{Debug, Display};
+
+use embedded_hal::spi::SpiDevice;
 use embedded_hal::{
     delay::DelayNs,
     digital::{InputPin, OutputPin},
-    spi::SpiDevice,
 };
 
 use crate::{
     buffer_len,
     color::OctColor,
     interface::DisplayInterface,
-    traits::{InternalWiAdditions, WaveshareDisplay},
+    prelude::ErrorKind,
+    traits::{ErrorType, InternalWiAdditions, WaveshareDisplay},
 };
 
 use self::command::Command;
@@ -50,17 +53,37 @@ pub struct Epd7in3f<SPI, BUSY, DC, RST, DELAY> {
     color: OctColor,
 }
 
+impl<SPI, BUSY, DC, RST, DELAY> ErrorType<SPI, BUSY, DC, RST>
+    for Epd7in3f<SPI, BUSY, DC, RST, DELAY>
+where
+    SPI: SpiDevice,
+    SPI::Error: Debug + Display,
+    BUSY: InputPin,
+    BUSY::Error: Debug + Display,
+    DC: OutputPin,
+    DC::Error: Debug + Display,
+    RST: OutputPin,
+    RST::Error: Debug + Display,
+    DELAY: DelayNs,
+{
+    type Error = ErrorKind<SPI, BUSY, DC, RST>;
+}
+
 impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
     for Epd7in3f<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), <SPI>::Error> {
-        self.interface.reset(delay, 20_000, 2_000);
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
+        self.interface.reset(delay, 20_000, 2_000)?;
         self.wait_busy_low(delay);
         delay.delay_ms(30);
 
@@ -90,9 +113,13 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd7in3f<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     type DisplayColor = OctColor;
@@ -104,7 +131,7 @@ where
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
-    ) -> Result<Self, <SPI>::Error>
+    ) -> Result<Self, Self::Error>
     where
         Self: Sized,
     {
@@ -118,11 +145,11 @@ where
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), <SPI>::Error> {
+    fn sleep(&mut self, spi: &mut SPI, _delay: &mut DELAY) -> Result<(), Self::Error> {
         self.cmd_with_data(spi, Command::DeepSleep, &[0xA5])
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), <SPI>::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.init(spi, delay)
     }
 
@@ -147,7 +174,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), <SPI>::Error> {
+    ) -> Result<(), Self::Error> {
         self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::DataStartTransmission, buffer)
     }
@@ -161,11 +188,11 @@ where
         _y: u32,
         _width: u32,
         _height: u32,
-    ) -> Result<(), <SPI>::Error> {
+    ) -> Result<(), Self::Error> {
         unimplemented!()
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), <SPI>::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.command(spi, Command::PowerOn)?;
         self.wait_busy_low(delay);
 
@@ -183,12 +210,12 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), <SPI>::Error> {
+    ) -> Result<(), Self::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), <SPI>::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         let bg = OctColor::colors_byte(self.color, self.color);
 
         self.wait_busy_low(delay);
@@ -203,11 +230,11 @@ where
         _spi: &mut SPI,
         _delay: &mut DELAY,
         _refresh_rate: Option<crate::traits::RefreshLut>,
-    ) -> Result<(), <SPI>::Error> {
+    ) -> Result<(), Self::Error> {
         unimplemented!()
     }
 
-    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), <SPI>::Error> {
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.wait_busy_low(delay);
         Ok(())
     }
@@ -216,12 +243,20 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd7in3f<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
-    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
+    fn command(
+        &mut self,
+        spi: &mut SPI,
+        command: Command,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.cmd(spi, command)
     }
 
@@ -230,7 +265,7 @@ where
         spi: &mut SPI,
         command: Command,
         data: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.cmd_with_data(spi, command, data)
     }
 
@@ -239,7 +274,11 @@ where
     }
 
     /// Show 7 blocks of color, used for quick testing
-    pub fn show_7block(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    pub fn show_7block(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         let color_7 = [
             OctColor::Black,
             OctColor::White,

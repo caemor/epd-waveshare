@@ -2,6 +2,8 @@
 //!
 //! GDEH0154D67
 
+mod constants;
+
 /// Width of the display
 pub const WIDTH: u32 = 200;
 /// Height of the display
@@ -11,16 +13,22 @@ pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
 const SINGLE_BYTE_WRITE: bool = true;
 
-use embedded_hal::{delay::*, digital::*, spi::SpiDevice};
+use core::fmt::{Debug, Display};
+use embedded_hal::{
+    delay::*,
+    digital::{InputPin, OutputPin},
+    spi::SpiDevice,
+};
 
-use crate::type_a::command::Command;
-
-mod constants;
-use crate::epd1in54_v2::constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
-
-use crate::color::Color;
-
-use crate::traits::{RefreshLut, WaveshareDisplay};
+use crate::{
+    color::Color,
+    error::ErrorKind,
+    traits::{ErrorType, InternalWiAdditions, RefreshLut, WaveshareDisplay},
+    type_a::{
+        command::Command,
+        constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE},
+    },
+};
 
 use crate::interface::DisplayInterface;
 
@@ -38,16 +46,37 @@ pub struct Epd1in54<SPI, BUSY, DC, RST, DELAY> {
     refresh: RefreshLut,
 }
 
-impl<SPI, BUSY, DC, RST, DELAY> Epd1in54<SPI, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> ErrorType<SPI, BUSY, DC, RST>
+    for Epd1in54<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.reset(delay, 10_000, 10_000);
+    type Error = ErrorKind<SPI, BUSY, DC, RST>;
+}
+
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd1in54<SPI, BUSY, DC, RST, DELAY>
+where
+    SPI: SpiDevice,
+    SPI::Error: Debug + Display,
+    BUSY: InputPin,
+    BUSY::Error: Debug + Display,
+    DC: OutputPin,
+    DC::Error: Debug + Display,
+    RST: OutputPin,
+    RST::Error: Debug + Display,
+    DELAY: DelayNs,
+{
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
+        self.interface.reset(delay, 10_000, 10_000)?;
         self.wait_until_idle(spi, delay)?;
         self.interface.cmd(spi, Command::SwReset)?;
         self.wait_until_idle(spi, delay)?;
@@ -91,9 +120,13 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd1in54<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     type DisplayColor = Color;
@@ -112,7 +145,7 @@ where
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
-    ) -> Result<Self, SPI::Error> {
+    ) -> Result<Self, Self::Error> {
         let interface = DisplayInterface::new(busy, dc, rst, delay_us);
 
         let mut epd = Epd1in54 {
@@ -126,11 +159,11 @@ where
         Ok(epd)
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.wait_until_idle(spi, delay)?;
         self.interface
             .cmd_with_data(spi, Command::DeepSleepMode, &[0x01])?;
@@ -142,7 +175,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.wait_until_idle(spi, delay)?;
         self.use_full_frame(spi, delay)?;
         self.interface
@@ -160,7 +193,7 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.wait_until_idle(spi, delay)?;
         self.set_ram_area(spi, delay, x, y, x + width, y + height)?;
         self.set_ram_counter(spi, delay, x, y)?;
@@ -170,7 +203,7 @@ where
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.wait_until_idle(spi, delay)?;
         if self.refresh == RefreshLut::Full {
             self.interface
@@ -183,8 +216,7 @@ where
         self.interface.cmd(spi, Command::MasterActivation)?;
         // MASTER Activation should not be interupted to avoid currption of panel images
         // therefore a terminate command is send
-        self.interface.cmd(spi, Command::Nop)?;
-        Ok(())
+        self.interface.cmd(spi, Command::Nop)
     }
 
     fn update_and_display_frame(
@@ -192,13 +224,13 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.wait_until_idle(spi, delay)?;
         self.use_full_frame(spi, delay)?;
 
@@ -209,9 +241,7 @@ where
         self.interface
             .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
         self.interface.cmd(spi, Command::WriteRam2)?;
-        self.interface
-            .data_x_times(spi, color, WIDTH / 8 * HEIGHT)?;
-        Ok(())
+        self.interface.data_x_times(spi, color, WIDTH / 8 * HEIGHT)
     }
 
     fn set_background_color(&mut self, background_color: Color) {
@@ -227,7 +257,7 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
@@ -255,7 +285,7 @@ where
         Ok(())
     }
 
-    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.interface.wait_until_idle(delay, IS_BUSY_LOW);
         Ok(())
     }
@@ -264,16 +294,20 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd1in54<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     pub(crate) fn use_full_frame(
         &mut self,
         spi: &mut SPI,
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         // choose full frame/ram
         self.set_ram_area(spi, delay, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
@@ -289,7 +323,7 @@ where
         start_y: u32,
         end_x: u32,
         end_y: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.wait_until_idle(spi, delay)?;
         assert!(start_x < end_x);
         assert!(start_y < end_y);
@@ -322,7 +356,7 @@ where
         delay: &mut DELAY,
         x: u32,
         y: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.wait_until_idle(spi, delay)?;
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
@@ -334,8 +368,7 @@ where
             spi,
             Command::SetRamYAddressCounter,
             &[y as u8, (y >> 8) as u8],
-        )?;
-        Ok(())
+        )
     }
 
     fn set_lut_helper(
@@ -343,7 +376,7 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
         buffer: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.wait_until_idle(spi, delay)?;
         assert!(buffer.len() == 159);
 
@@ -364,9 +397,7 @@ where
             &[buffer[155], buffer[156], buffer[157]],
         )?;
         self.interface
-            .cmd_with_data(spi, Command::WriteVcomRegister, &[buffer[158]])?;
-
-        Ok(())
+            .cmd_with_data(spi, Command::WriteVcomRegister, &[buffer[158]])
     }
 }
 

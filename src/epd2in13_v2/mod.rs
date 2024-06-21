@@ -15,6 +15,7 @@
 //! - [Controller Datasheet SS1780](http://www.e-paper-display.com/download_detail/downloadsId=682.html)
 //!
 
+use core::fmt::{Debug, Display};
 use embedded_hal::{
     delay::DelayNs,
     digital::{InputPin, OutputPin},
@@ -23,8 +24,9 @@ use embedded_hal::{
 
 use crate::buffer_len;
 use crate::color::Color;
+use crate::error::ErrorKind;
 use crate::interface::DisplayInterface;
-use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
+use crate::traits::{ErrorType, InternalWiAdditions, RefreshLut, WaveshareDisplay};
 
 pub(crate) mod command;
 use self::command::{
@@ -80,18 +82,38 @@ pub struct Epd2in13<SPI, BUSY, DC, RST, DELAY> {
     refresh: RefreshLut,
 }
 
+impl<SPI, BUSY, DC, RST, DELAY> ErrorType<SPI, BUSY, DC, RST>
+    for Epd2in13<SPI, BUSY, DC, RST, DELAY>
+where
+    SPI: SpiDevice,
+    SPI::Error: Debug + Display,
+    BUSY: InputPin,
+    BUSY::Error: Debug + Display,
+    DC: OutputPin,
+    DC::Error: Debug + Display,
+    RST: OutputPin,
+    RST::Error: Debug + Display,
+    DELAY: DelayNs,
+{
+    type Error = ErrorKind<SPI, BUSY, DC, RST>;
+}
+
 impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
     for Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         // HW reset
-        self.interface.reset(delay, 10_000, 10_000);
+        self.interface.reset(delay, 10_000, 10_000)?;
 
         if self.refresh == RefreshLut::Quick {
             self.set_vcom_register(spi, (-9).vcom())?;
@@ -177,9 +199,13 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     type DisplayColor = Color;
@@ -190,7 +216,7 @@ where
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
-    ) -> Result<Self, SPI::Error> {
+    ) -> Result<Self, Self::Error> {
         let mut epd = Epd2in13 {
             interface: DisplayInterface::new(busy, dc, rst, delay_us),
             sleep_mode: DeepSleepMode::Mode1,
@@ -202,11 +228,11 @@ where
         Ok(epd)
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.init(spi, delay)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.wait_until_idle(spi, delay)?;
 
         // All sample code enables and disables analog/clocks...
@@ -229,7 +255,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         assert!(buffer.len() == buffer_len(WIDTH as usize, HEIGHT as usize));
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
         self.set_ram_address_counters(spi, delay, 0, 0)?;
@@ -258,7 +284,7 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         assert!((width * height / 8) as usize == buffer.len());
 
         // This should not be used when doing partial refresh. The RAM_RED must
@@ -287,7 +313,7 @@ where
 
     /// Never use directly this function when using partial refresh, or also
     /// keep the base buffer in syncd using `set_partial_base_buffer` function.
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         if self.refresh == RefreshLut::Full {
             self.set_display_update_control_2(
                 spi,
@@ -312,7 +338,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
 
@@ -322,7 +348,7 @@ where
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         let color = self.background_color.get_byte_value();
 
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
@@ -371,7 +397,7 @@ where
         spi: &mut SPI,
         _delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         let buffer = match refresh_rate {
             Some(RefreshLut::Full) | None => &LUT_FULL_UPDATE,
             Some(RefreshLut::Quick) => &LUT_PARTIAL_UPDATE,
@@ -380,7 +406,7 @@ where
         self.cmd_with_data(spi, Command::WriteLutRegister, buffer)
     }
 
-    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.interface.wait_until_idle(delay, IS_BUSY_LOW);
         Ok(())
     }
@@ -389,9 +415,13 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     /// When using partial refresh, the controller uses the provided buffer for
@@ -401,7 +431,7 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
         buffer: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         assert!(buffer_len(WIDTH as usize, HEIGHT as usize) == buffer.len());
         self.set_ram_area(spi, 0, 0, WIDTH - 1, HEIGHT - 1)?;
         self.set_ram_address_counters(spi, delay, 0, 0)?;
@@ -422,7 +452,7 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
         refresh: RefreshLut,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         if self.refresh != refresh {
             self.refresh = refresh;
             self.init(spi, delay)?;
@@ -434,7 +464,7 @@ where
         &mut self,
         spi: &mut SPI,
         start: u16,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         assert!(start <= 295);
         self.cmd_with_data(
             spi,
@@ -447,7 +477,7 @@ where
         &mut self,
         spi: &mut SPI,
         borderwaveform: BorderWaveForm,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(
             spi,
             Command::BorderWaveformControl,
@@ -455,7 +485,11 @@ where
         )
     }
 
-    fn set_vcom_register(&mut self, spi: &mut SPI, vcom: Vcom) -> Result<(), SPI::Error> {
+    fn set_vcom_register(
+        &mut self,
+        spi: &mut SPI,
+        vcom: Vcom,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(spi, Command::WriteVcomRegister, &[vcom.0])
     }
 
@@ -463,7 +497,7 @@ where
         &mut self,
         spi: &mut SPI,
         voltage: GateDrivingVoltage,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(spi, Command::GateDrivingVoltageCtrl, &[voltage.0])
     }
 
@@ -471,12 +505,16 @@ where
         &mut self,
         spi: &mut SPI,
         number_of_lines: u8,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         assert!(number_of_lines <= 127);
         self.cmd_with_data(spi, Command::SetDummyLinePeriod, &[number_of_lines])
     }
 
-    fn set_gate_line_width(&mut self, spi: &mut SPI, width: u8) -> Result<(), SPI::Error> {
+    fn set_gate_line_width(
+        &mut self,
+        spi: &mut SPI,
+        width: u8,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(spi, Command::SetGateLineWidth, &[width & 0x0F])
     }
 
@@ -487,7 +525,7 @@ where
         vsh1: SourceDrivingVoltage,
         vsh2: SourceDrivingVoltage,
         vsl: SourceDrivingVoltage,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(
             spi,
             Command::SourceDrivingVoltageCtrl,
@@ -501,16 +539,24 @@ where
         &mut self,
         spi: &mut SPI,
         value: DisplayUpdateControl2,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(spi, Command::DisplayUpdateControl2, &[value.0])
     }
 
     /// Triggers the deep sleep mode
-    fn set_sleep_mode(&mut self, spi: &mut SPI, mode: DeepSleepMode) -> Result<(), SPI::Error> {
+    fn set_sleep_mode(
+        &mut self,
+        spi: &mut SPI,
+        mode: DeepSleepMode,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(spi, Command::DeepSleepMode, &[mode as u8])
     }
 
-    fn set_driver_output(&mut self, spi: &mut SPI, output: DriverOutput) -> Result<(), SPI::Error> {
+    fn set_driver_output(
+        &mut self,
+        spi: &mut SPI,
+        output: DriverOutput,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(spi, Command::DriverOutputControl, &output.to_bytes())
     }
 
@@ -521,7 +567,7 @@ where
         spi: &mut SPI,
         counter_incr_mode: DataEntryModeIncr,
         counter_direction: DataEntryModeDir,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         let mode = counter_incr_mode as u8 | counter_direction as u8;
         self.cmd_with_data(spi, Command::DataEntryModeSetting, &[mode])
     }
@@ -534,7 +580,7 @@ where
         start_y: u32,
         end_x: u32,
         end_y: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.cmd_with_data(
             spi,
             Command::SetRamXAddressStartEndPosition,
@@ -560,7 +606,7 @@ where
         delay: &mut DELAY,
         x: u32,
         y: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.wait_until_idle(spi, delay)?;
         self.cmd_with_data(spi, Command::SetRamXAddressCounter, &[(x >> 3) as u8])?;
 
@@ -572,7 +618,11 @@ where
         Ok(())
     }
 
-    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
+    fn command(
+        &mut self,
+        spi: &mut SPI,
+        command: Command,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.cmd(spi, command)
     }
 
@@ -581,7 +631,7 @@ where
         spi: &mut SPI,
         command: Command,
         data: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.cmd_with_data(spi, command, data)
     }
 }

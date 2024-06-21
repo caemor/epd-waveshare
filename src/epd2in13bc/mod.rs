@@ -50,11 +50,15 @@
 //!# Ok(())
 //!# }
 //!```
-use embedded_hal::{delay::*, digital::*, spi::SpiDevice};
+use core::fmt::{Debug, Display};
+use embedded_hal::delay::DelayNs;
+use embedded_hal::digital::{InputPin, OutputPin};
+use embedded_hal::spi::SpiDevice;
 
+use crate::error::ErrorKind;
 use crate::interface::DisplayInterface;
 use crate::traits::{
-    InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
+    ErrorType, InternalWiAdditions, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
 };
 
 /// Width of epd2in13bc in pixels
@@ -97,19 +101,39 @@ pub struct Epd2in13bc<SPI, BUSY, DC, RST, DELAY> {
     color: TriColor,
 }
 
+impl<SPI, BUSY, DC, RST, DELAY> ErrorType<SPI, BUSY, DC, RST>
+    for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
+where
+    SPI: SpiDevice,
+    SPI::Error: Debug + Display,
+    BUSY: InputPin,
+    BUSY::Error: Debug + Display,
+    DC: OutputPin,
+    DC::Error: Debug + Display,
+    RST: OutputPin,
+    RST::Error: Debug + Display,
+    DELAY: DelayNs,
+{
+    type Error = ErrorKind<SPI, BUSY, DC, RST>;
+}
+
 impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
     for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         // Values taken from datasheet and sample code
 
-        self.interface.reset(delay, 10_000, 10_000);
+        self.interface.reset(delay, 10_000, 10_000)?;
 
         // start the booster
         self.interface
@@ -144,9 +168,13 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareThreeColorDisplay<SPI, BUSY, DC, RST, D
     for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     fn update_color_frame(
@@ -155,7 +183,7 @@ where
         delay: &mut DELAY,
         black: &[u8],
         chromatic: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.update_achromatic_frame(spi, delay, black)?;
         self.update_chromatic_frame(spi, delay, chromatic)
     }
@@ -168,7 +196,7 @@ where
         spi: &mut SPI,
         _delay: &mut DELAY,
         black: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface.data(spi, black)?;
         Ok(())
@@ -182,7 +210,7 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
         chromatic: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface.data(spi, chromatic)?;
 
@@ -195,9 +223,13 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     type DisplayColor = TriColor;
@@ -208,7 +240,7 @@ where
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
-    ) -> Result<Self, SPI::Error> {
+    ) -> Result<Self, Self::Error> {
         let interface = DisplayInterface::new(busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
 
@@ -219,7 +251,7 @@ where
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         // Section 8.2 from datasheet
         self.interface.cmd_with_data(
             spi,
@@ -236,7 +268,7 @@ where
         Ok(())
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.init(spi, delay)
     }
 
@@ -261,7 +293,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
 
         self.interface.data(spi, buffer)?;
@@ -286,11 +318,11 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.command(spi, Command::DisplayRefresh)?;
 
         self.wait_until_idle(spi, delay)?;
@@ -302,13 +334,13 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.send_resolution(spi)?;
 
         let color = DEFAULT_BACKGROUND_COLOR.get_byte_value();
@@ -331,11 +363,11 @@ where
         _spi: &mut SPI,
         _delay: &mut DELAY,
         _refresh_rate: Option<RefreshLut>,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.interface.wait_until_idle(delay, IS_BUSY_LOW);
         Ok(())
     }
@@ -344,16 +376,28 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd2in13bc<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
-    fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
+    fn command(
+        &mut self,
+        spi: &mut SPI,
+        command: Command,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.cmd(spi, command)
     }
 
-    fn send_data(&mut self, spi: &mut SPI, data: &[u8]) -> Result<(), SPI::Error> {
+    fn send_data(
+        &mut self,
+        spi: &mut SPI,
+        data: &[u8],
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.data(spi, data)
     }
 
@@ -362,11 +406,14 @@ where
         spi: &mut SPI,
         command: Command,
         data: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.cmd_with_data(spi, command, data)
     }
 
-    fn send_resolution(&mut self, spi: &mut SPI) -> Result<(), SPI::Error> {
+    fn send_resolution(
+        &mut self,
+        spi: &mut SPI,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         let w = self.width();
         let h = self.height();
 
@@ -378,7 +425,11 @@ where
     }
 
     /// Set the outer border of the display to the chosen color.
-    pub fn set_border_color(&mut self, spi: &mut SPI, color: TriColor) -> Result<(), SPI::Error> {
+    pub fn set_border_color(
+        &mut self,
+        spi: &mut SPI,
+        color: TriColor,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         let border = match color {
             TriColor::Black => BLACK_BORDER,
             TriColor::White => WHITE_BORDER,
