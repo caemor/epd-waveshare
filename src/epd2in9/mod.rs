@@ -377,7 +377,7 @@ where
         x: u32,
         y: u32,
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         // x is positioned in bytes, so the last 3 bits which show the position inside a byte in the ram
         // aren't relevant
         self.interface
@@ -401,7 +401,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         assert!(buffer.len() == 30);
         self.interface
             .cmd_with_data(spi, Command::WriteLutRegister, buffer)

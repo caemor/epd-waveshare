@@ -221,8 +221,7 @@ where
     type Error = ErrorKind<SPI, BUSY, DC, RST>;
 }
 
-impl<SPI, BUSY, DC, RST> InternalWiAdditions<SPI, BUSY, DC, RST>
-    for Epd2in66b<SPI, BUSY, DC, RST>
+impl<SPI, BUSY, DC, RST> InternalWiAdditions<SPI, BUSY, DC, RST> for Epd2in66b<SPI, BUSY, DC, RST>
 where
     SPI: SpiDevice,
     SPI::Error: Copy + Debug + Display,
@@ -440,6 +439,7 @@ where
 
     async fn hw_reset(
         &mut self,
+        spi: &mut SPI,
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         // The initial delay is taken from other code here, the 2 ms comes from the SSD1675B datasheet.
         self.interface.reset(spi, 20_000, 2_000).await?;

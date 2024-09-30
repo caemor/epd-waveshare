@@ -387,7 +387,7 @@ where
         command: Command,
         data: &[u8],
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.interface.cmd_with_data(spi, command, data)
+        self.interface.cmd_with_data(spi, command, data).await
     }
 
     async fn send_resolution(

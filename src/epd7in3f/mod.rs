@@ -259,7 +259,10 @@ where
         self.interface.cmd_with_data(spi, command, data).await
     }
 
-    async fn wait_busy_low(&mut self) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
+    async fn wait_busy_low(
+        &mut self,
+        spi: &mut SPI,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.wait_until_idle(spi, true).await
     }
 

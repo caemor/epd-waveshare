@@ -413,7 +413,10 @@ where
         self.interface.cmd_with_data(spi, command, data).await
     }
 
-    async fn send_resolution(&mut self, spi: &mut SPI    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
+    async fn send_resolution(
+        &mut self,
+        spi: &mut SPI,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         let w = self.width();
         let h = self.height();
 
@@ -527,7 +530,7 @@ where
 
     /// This is a wrapper around `display_frame` for using this device as a true
     /// `QuickRefresh` device.
-    async fn display_new_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
+    async fn display_new_frame(&mut self, spi: &mut SPI) -> Result<(), Self::Error> {
         self.display_frame(spi).await
     }
 

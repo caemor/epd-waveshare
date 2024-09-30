@@ -428,7 +428,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
-        self.wait_until_idle(spi, delay).await?;
+        self.wait_until_idle(spi).await?;
         self.interface
             .cmd_with_data(spi, Command::WriteLutRegister, buffer)
             .await?;
@@ -496,7 +496,7 @@ where
     }
 
     /// For a quick refresh of the new updated frame. To be used immediately after `update_new_frame`
-    fn display_new_frame(
+    async fn display_new_frame(
         &mut self,
         spi: &mut SPI,
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {

@@ -1,5 +1,8 @@
 [package]
-authors = ["Christoph Groß <caemor@mailbox.org>", "Dirk Van Haerenborgh <vhdirk@gmail.com>"]
+authors = [
+    "Christoph Groß <caemor@mailbox.org>",
+    "Dirk Van Haerenborgh <vhdirk@gmail.com>",
+]
 categories = ["embedded", "hardware-support", "no-std"]
 description = "An embedded-hal based driver for ePaper displays from Waveshare formerly published as eink-waveshare-rs"
 documentation = "https://docs.rs/epd-waveshare"
@@ -25,10 +28,10 @@ bit_field = "0.10.2"
 embedded-graphics = "0.8.1"
 embedded-hal-bus = { version = "0.2.0", features = ["async"] }
 embassy-time = { version = "0.3.1" }
-embedded-hal-mock = { version="0.11.1", default-features = false, features = [
+embedded-hal-mock = { version = "0.11.1", default-features = false, features = [
     "eh1",
 ] }
-anyhow = { version = "1.0", default-features = false}
+anyhow = { version = "1.0", default-features = false }
 
 [target.'cfg(unix)'.dev-dependencies]
 linux-embedded-hal = "0.4.0"
@@ -55,13 +58,12 @@ required-features = ["linux-dev"]
 
 [features]
 # Remove the linux-dev feature to build the tests on non  unix systems
-default = ["async", "graphics", "linux-dev", "epd2in13_v3"]
+default = ["graphics", "linux-dev", "epd2in13_v3"]
 
 graphics = ["embedded-graphics-core"]
 epd2in13_v2 = []
 epd2in13_v3 = []
 linux-dev = []
-async = ["dep:embedded-hal-async"]
 
 # Offers an alternative fast full lut for type_a displays, but the refreshed screen isnt as clean looking
 type_a_alternative_faster_lut = []

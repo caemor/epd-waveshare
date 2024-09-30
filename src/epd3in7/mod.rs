@@ -272,7 +272,10 @@ where
         self.display_frame(spi).await
     }
 
-    async fn clear_frame(&mut self, spi: &mut SPI) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
+    async fn clear_frame(
+        &mut self,
+        spi: &mut SPI,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface
             .cmd_with_data(spi, Command::SetRamXAddressCounter, &[0x00, 0x00])
             .await?;
@@ -304,7 +307,7 @@ where
 
     async fn wait_until_idle(
         &mut self,
-        _spi: &mut SPI,
+        spi: &mut SPI,
     ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         self.interface.wait_until_idle(spi, IS_BUSY_LOW).await
     }
