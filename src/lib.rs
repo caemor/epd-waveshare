@@ -73,6 +73,7 @@ pub mod color;
 /// Interface for the physical connection between display and the controlling device
 mod interface;
 
+pub mod epd1in02;
 pub mod epd1in54;
 pub mod epd1in54_v2;
 pub mod epd1in54b;
