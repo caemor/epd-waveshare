@@ -1,4 +1,4 @@
-//! A simple Driver for the Waveshare 7.5" (B) E-Ink Display (V2) via SPI
+//! A simple Driver for the Waveshare 7.5" (B) E-Ink Display (V2 and V3) via SPI
 //!
 //! # References
 //!
