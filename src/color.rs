@@ -78,7 +78,7 @@ pub trait ColorType {
     /// Return the data used to set a pixel color
     ///
     /// * bwrbit is used to tell the value of the unused bit when a chromatic
-    /// color is set (TriColor only as for now)
+    ///   color is set (TriColor only as for now)
     /// * pos is the pixel position in the line, used to know which pixels must be set
     ///
     /// Return values are :
@@ -405,7 +405,7 @@ mod tests {
     // test all values aside from 0 and 1 which all should panic
     #[test]
     fn from_u8_panic() {
-        for val in 2..=u8::max_value() {
+        for val in 2..=u8::MAX {
             extern crate std;
             let result = std::panic::catch_unwind(|| Color::from(val));
             assert!(result.is_err());

@@ -12,24 +12,17 @@ use crate::traits;
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
-    ///
     GateSetting = 0x01,
-    ///
     PowerOff = 0x02,
-    ///
     Sleep2 = 0x07,
-    ///
     GateVoltage = 0x03,
-    ///
     GateVoltageSource = 0x04,
-    ///
     BoosterSoftStartControl = 0x0C,
     /// After this command initiated, the chip will enter Deep Sleep Mode,
     /// BUSY pad will keep output high.
     ///
     /// Note: To exit Deep Sleep Mode, User required to send HWRESET to the driver.
     DeepSleep = 0x10,
-    ///
     DataEntrySequence = 0x11,
     /// This command resets commands and parameters to their S/W Reset default values,
     /// except Deep Sleep Mode.
@@ -58,9 +51,7 @@ pub(crate) enum Command {
     /// This command writes LUT register from MCU interface (105 bytes),
     /// which contains the content of VS [nx-LUT], TP #[nX], RP #[n]
     WriteLutRegister = 0x32,
-    ///
     DisplayOption = 0x37,
-    ///
     BorderWaveformControl = 0x3C,
     /// This command specifies the start/end positions of the window address in the X direction,
     /// by an address unit of RAM.
@@ -68,15 +59,12 @@ pub(crate) enum Command {
     /// This command specifies the start/end positions of the window address in the Y direction,
     /// by an address unit of RAM.
     SetRamYAddressStartEndPosition = 0x45,
-    ///
     AutoWriteRedRamRegularPattern = 0x46,
-    ///
     AutoWriteBwRamRegularPattern = 0x47,
     /// This command makes the initial settings for the RAM X address in the address counter (AC)
     SetRamXAddressCounter = 0x4E,
     /// This command makes the initial settings for the RAM Y address in the address counter (AC)
     SetRamYAddressCounter = 0x4F,
-    ///
     Sleep = 0x50,
 }
 

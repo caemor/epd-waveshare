@@ -1,5 +1,4 @@
 #![deny(warnings)]
-#![deny(warnings)]
 
 use embedded_graphics::{
     mono_font::MonoTextStyleBuilder,
