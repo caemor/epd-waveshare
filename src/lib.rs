@@ -66,6 +66,7 @@
 #[cfg(feature = "graphics")]
 pub mod graphics;
 
+mod error;
 mod traits;
 
 pub mod color;
@@ -105,6 +106,8 @@ pub mod prelude {
     pub use crate::traits::{
         QuickRefresh, RefreshLut, WaveshareDisplay, WaveshareThreeColorDisplay,
     };
+
+    pub use crate::error::*;
 
     pub use crate::SPI_MODE;
 
