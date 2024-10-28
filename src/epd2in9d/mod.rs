@@ -3,7 +3,7 @@
 //!
 //! 参考[Waveshare](https://www.waveshare.net/wiki/2.9inch_e-Paper_HAT_%28D%29)的文档/例程进行构建
 //!
-//! Specification: https://www.waveshare.net/w/upload/b/b5/2.9inch_e-Paper_%28D%29_Specification.pdf
+//! Specification: <https://www.waveshare.net/w/upload/b/b5/2.9inch_e-Paper_%28D%29_Specification.pdf>
 
 use core::slice::from_raw_parts;
 

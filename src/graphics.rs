@@ -24,7 +24,7 @@ const fn line_bytes(width: u32, bits_per_pixel: usize) -> usize {
     (width as usize * bits_per_pixel + 7) / 8
 }
 
-/// Display bffer used for drawing with embedded graphics
+/// Display buffer used for drawing with embedded graphics
 /// This can be rendered on EPD using ...
 ///
 /// - WIDTH: width in pixel when display is not rotated
@@ -32,17 +32,17 @@ const fn line_bytes(width: u32, bits_per_pixel: usize) -> usize {
 /// - BWRBIT: mandatory value of the B/W when chromatic bit is set, can be any value for non
 ///           tricolor epd
 /// - COLOR: color type used by the target display
-/// - BYTECOUNT: This is redundant with prvious data and should be removed when const generic
+/// - BYTECOUNT: This is redundant with previous data and should be removed when const generic
 ///              expressions are stabilized
 ///
 /// More on BWRBIT:
 ///
 /// Different chromatic displays differently treat the bits in chromatic color planes.
 /// Some of them ([crate::epd2in13bc]) will render a color pixel if bit is set for that pixel,
-/// which is a [DisplayColorRendering::Positive] mode.
+/// which is a `BWRBIT = true` mode.
 ///
 /// Other displays, like [crate::epd5in83b_v2] in opposite, will draw color pixel if bit is
-/// cleared for that pixel, which is a [DisplayColorRendering::Negative] mode.
+/// cleared for that pixel, which is a `BWRBIT = false` mode.
 ///
 /// BWRBIT=true: chromatic doesn't override white, white bit cleared for black, white bit set for white, both bits set for chromatic
 /// BWRBIT=false: chromatic does override white, both bits cleared for black, white bit set for white, red bit set for black

@@ -7,6 +7,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -Dwarnings
     strategy:
       matrix:
         rust:
