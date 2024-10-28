@@ -99,10 +99,10 @@ where
 ///# let expectations = [];
 ///# let mut spi = spi::Mock::new(&expectations);
 ///# let expectations = [];
-///# let cs_pin = pin::Mock::new(&expectations);
-///# let busy_in = pin::Mock::new(&expectations);
-///# let dc = pin::Mock::new(&expectations);
-///# let rst = pin::Mock::new(&expectations);
+///# let cs_pin = digital::Mock::new(&expectations);
+///# let busy_in = digital::Mock::new(&expectations);
+///# let dc = digital::Mock::new(&expectations);
+///# let rst = digital::Mock::new(&expectations);
 ///# let mut delay = delay::NoopDelay::new();
 ///
 ///// Setup EPD
@@ -261,10 +261,10 @@ where
 ///# let expectations = [];
 ///# let mut spi = spi::Mock::new(&expectations);
 ///# let expectations = [];
-///# let cs_pin = pin::Mock::new(&expectations);
-///# let busy_in = pin::Mock::new(&expectations);
-///# let dc = pin::Mock::new(&expectations);
-///# let rst = pin::Mock::new(&expectations);
+///# let cs_pin = digital::Mock::new(&expectations);
+///# let busy_in = digital::Mock::new(&expectations);
+///# let dc = digital::Mock::new(&expectations);
+///# let rst = digital::Mock::new(&expectations);
 ///# let mut delay = delay::NoopDelay::new();
 ///#
 ///# // Setup EPD
