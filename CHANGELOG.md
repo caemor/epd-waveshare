@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed buffer length in display struct in #128 (thanks to @peckpeck)
 - LUT Fixes for EPD 2in9 v2 in #103 (thanks to @mike-kfed)
 - Fix pins for epd2in13_v2 example in #91 Universal e-Paper Raw Panel Driver HAT (thanks to @ole-treichel)
+- Fix Color Bitmask calculation for OctColor in #190 (thanks to @jetjinser)
 
 ## [v0.5.0] - 2021-11-28
 
