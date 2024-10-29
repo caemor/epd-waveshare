@@ -1,4 +1,4 @@
-//! Rectangle operations
+//! Rectangle operations for bigger displays with multiple _windows_
 use core::cmp;
 
 /// A rectangle
