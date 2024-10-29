@@ -66,7 +66,7 @@ where
 {
     /// set the base image before partially update
     ///
-    /// https://github.com/waveshareteam/e-Paper/blob/bc23f8ee814486edb6a364c802847224e079e523/RaspberryPi_JetsonNano/c/examples/EPD_2in9b_V4_test.c#L130
+    /// <https://github.com/waveshareteam/e-Paper/blob/bc23f8ee814486edb6a364c802847224e079e523/RaspberryPi_JetsonNano/c/examples/EPD_2in9b_V4_test.c#L130>
     pub fn update_and_display_frame_base(
         &mut self,
         spi: &mut SPI,
