@@ -1,3 +1,4 @@
+// This example tests rotations and draws analog clock, tests default fonts of embedded-graphics crate and displays an image of Ferris from examples/assets/ directory.
 use embedded_graphics::{
     image::Image,
     image::ImageRaw,
