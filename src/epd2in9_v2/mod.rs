@@ -418,6 +418,8 @@ where
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
         self.interface
+            .cmd_with_data(spi, Command::WriteRam, buffer)?;
+        self.interface
             .cmd_with_data(spi, Command::WriteRam2, buffer)
     }
 
