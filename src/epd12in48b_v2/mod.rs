@@ -24,7 +24,7 @@ pub use config::*;
 /// A collection of peripherals controlling the EPD
 ///
 /// The display is composed of 4 sub-displays arranged like so:
-/// ```
+/// ```md
 ///     0        648      1304
 ///   0 +--------+--------+
 ///     |   S2   |   M2   |
