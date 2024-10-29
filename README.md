@@ -40,6 +40,9 @@ let text_style = TextStyleBuilder::new().baseline(Baseline::Top).build();
 let _ = Text::with_text_style("It's working-WoB!", Point::new(175, 250), style, text_style)
     .draw(&mut display);
 
+// Show display on e-paper
+epd4in2.update_and_display_frame(&mut spi, display.buffer(), &mut delay).expect("display error");
+
 // Going to sleep
 epd4in2.sleep(&mut spi, &mut delay)
 ```
