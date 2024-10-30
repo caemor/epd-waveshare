@@ -3,8 +3,9 @@
 //! [Documentation](https://www.waveshare.com/wiki/2.7inch_e-Paper_HAT)
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::*,
+    delay::DelayNs,
+    digital::{InputPin, OutputPin},
+    spi::SpiDevice,
 };
 
 use crate::interface::DisplayInterface;
@@ -21,6 +22,7 @@ pub const HEIGHT: u32 = 264;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = true;
+const SINGLE_BYTE_WRITE: bool = true;
 
 use crate::color::Color;
 
@@ -39,22 +41,21 @@ pub type Display2in7 = crate::graphics::Display<
 >;
 
 /// Epd2in7 driver
-pub struct Epd2in7<SPI, CS, BUSY, DC, RST, DELAY> {
+pub struct Epd2in7<SPI, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
     /// Background Color
     color: Color,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in7<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in7<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
@@ -92,27 +93,25 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in7<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in7<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     type DisplayColor = Color;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
-        let interface = DisplayInterface::new(cs, busy, dc, rst, delay_us);
+        let interface = DisplayInterface::new(busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
 
         let mut epd = Epd2in7 { interface, color };
@@ -244,14 +243,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in7<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd2in7<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
