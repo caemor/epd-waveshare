@@ -289,8 +289,20 @@ impl From<u8> for Color {
 }
 
 #[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::raw::RawU1> for Color {
+    fn from(b: embedded_graphics_core::pixelcolor::raw::RawU1) -> Self {
+        use embedded_graphics_core::prelude::RawData;
+        if b.into_inner() == 0 {
+            Color::White
+        } else {
+            Color::Black
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
 impl PixelColor for Color {
-    type Raw = ();
+    type Raw = embedded_graphics_core::pixelcolor::raw::RawU1;
 }
 
 #[cfg(feature = "graphics")]
@@ -352,8 +364,22 @@ impl TriColor {
 }
 
 #[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::raw::RawU2> for TriColor {
+    fn from(b: embedded_graphics_core::pixelcolor::raw::RawU2) -> Self {
+        use embedded_graphics_core::prelude::RawData;
+        if b.into_inner() == 0b00 {
+            TriColor::White
+        } else if b.into_inner() == 0b01 {
+            TriColor::Black
+        } else {
+            TriColor::Chromatic
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
 impl PixelColor for TriColor {
-    type Raw = ();
+    type Raw = embedded_graphics_core::pixelcolor::raw::RawU2;
 }
 
 #[cfg(feature = "graphics")]

@@ -8,7 +8,6 @@ use embedded_graphics::{
     primitives::{Circle, Line, PrimitiveStyleBuilder},
     text::{Baseline, Text, TextStyleBuilder},
 };
-use embedded_graphics_core::pixelcolor::{BinaryColor, PixelColor};
 use embedded_hal::delay::DelayNs;
 #[cfg(feature = "graphics")]
 use epd_waveshare::{color::Color, epd7in5_v2::*, graphics::DisplayRotation, prelude::*};
@@ -147,9 +146,9 @@ fn main() -> Result<(), SPIError> {
     println!("Draw Ferris");
     display.clear(Color::Black).ok();
     let data = include_bytes!("./assets/ferris.raw");
-    let raw_image = ImageRaw::<BinaryColor>::new(data, 460);
+    let raw_image = ImageRaw::<Color>::new(data, 460);
     let image = Image::new(&raw_image, Point::zero());
-    image.draw(&mut display.color_converted()).unwrap();
+    image.draw(&mut display).unwrap();
     epd7in5.update_and_display_frame(&mut spi, display.buffer(), &mut delay)?;
 
     // Clear and sleep
