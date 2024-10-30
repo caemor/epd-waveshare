@@ -1,5 +1,7 @@
 //! A simple Driver for the Waveshare 2.7inch v2 e-Paper HAT Display via SPI
 //!
+//! 4 Gray support and partial refresh is not fully implemented yet.
+//!
 //! # References
 //!
 //! - [Datasheet](https://www.waveshare.com/wiki/2.7inch_e-Paper_HAT_Manual)
