@@ -123,9 +123,9 @@ fn main() -> Result<(), SPIError> {
         &FONT_9X18_BOLD,
         &FONT_10X20,
     ];
-    for n in 0..fonts.len() {
+    for (n, font) in fonts.iter().enumerate() {
         let style = MonoTextStyleBuilder::new()
-            .font(fonts[n])
+            .font(font)
             .text_color(Color::White)
             .background_color(Color::Black)
             .build();
