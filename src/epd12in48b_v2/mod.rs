@@ -291,37 +291,37 @@ where
     /// Note that stored lookup tables need to be activated by setting
     /// [`Config::external_lut`](config::Config::external_lut)`=true`.
     pub fn set_lutc(&mut self, data: &[u8]) -> Result<(), SPI::Error> {
-        self.set_lut(Command::LUTC, data, 60)
+        self.set_lut(Command::LutC, data, 60)
     }
 
     /// Store White-to-White Look-Up Table.
     /// See also [`write_data1`](EpdDriver::set_lutc).
     pub fn set_lutww(&mut self, data: &[u8]) -> Result<(), SPI::Error> {
-        self.set_lut(Command::LUTWW, data, 42)
+        self.set_lut(Command::LutWW, data, 42)
     }
 
     /// Store Black-to-White (KW mode) / Red (KWR mode) Look-Up Table.
     /// See also [`write_data1`](EpdDriver::set_lutc).
     pub fn set_lutkw_lutr(&mut self, data: &[u8]) -> Result<(), SPI::Error> {
-        self.set_lut(Command::LUTKW_LUTR, data, 60)
+        self.set_lut(Command::LutKW_LutR, data, 60)
     }
 
     /// Store White-to-Black (KW mode) / White (KWR mode) Look-Up Table.
     /// See also [`write_data1`](EpdDriver::set_lutc).
     pub fn set_lutwk_lutw(&mut self, data: &[u8]) -> Result<(), SPI::Error> {
-        self.set_lut(Command::LUTWK_LUTW, data, 60)
+        self.set_lut(Command::LutWK_LutW, data, 60)
     }
 
     /// Store Black-to-Black (KW mode) / Black (KWR mode) Look-Up Table.
     /// See also [`write_data1`](EpdDriver::set_lutc).
     pub fn set_lutkk_lutk(&mut self, data: &[u8]) -> Result<(), SPI::Error> {
-        self.set_lut(Command::LUTKK_LUTK, data, 60)
+        self.set_lut(Command::LutKK_LutK, data, 60)
     }
 
     /// Store Border Look-Up Table.
     /// See also [`write_data1`](EpdDriver::set_lutc).
     pub fn set_lutbd(&mut self, data: &[u8]) -> Result<(), SPI::Error> {
-        self.set_lut(Command::LUTBD, data, 42)
+        self.set_lut(Command::LutBD, data, 42)
     }
 
     fn set_lut(&mut self, cmd: Command, data: &[u8], reqd_len: usize) -> Result<(), SPI::Error> {
@@ -610,25 +610,17 @@ where
 
     fn busy_chips(&mut self, chips: CS) -> Result<CS, INPUT::Error> {
         let mut busy = 0;
-        if chips & CS_M1 != 0 {
-            if self.peris.m1_busy.is_low()? {
-                busy |= CS_M1;
-            }
+        if chips & CS_M1 != 0 && self.peris.m1_busy.is_low()? {
+            busy |= CS_M1;
         }
-        if chips & CS_S1 != 0 {
-            if self.peris.s1_busy.is_low()? {
-                busy |= CS_S1;
-            }
+        if chips & CS_S1 != 0 && self.peris.s1_busy.is_low()? {
+            busy |= CS_S1;
         }
-        if chips & CS_M2 != 0 {
-            if self.peris.m2_busy.is_low()? {
-                busy |= CS_M2;
-            }
+        if chips & CS_M2 != 0 && self.peris.m2_busy.is_low()? {
+            busy |= CS_M2;
         }
-        if chips & CS_S2 != 0 {
-            if self.peris.s2_busy.is_low()? {
-                busy |= CS_S2;
-            }
+        if chips & CS_S2 != 0 && self.peris.s2_busy.is_low()? {
+            busy |= CS_S2;
         }
         Ok(busy)
     }
