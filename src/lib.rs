@@ -81,6 +81,7 @@ pub mod epd1in54c;
 pub mod epd2in13_v2;
 pub mod epd2in13bc;
 pub mod epd2in66b;
+pub mod epd2in7;
 pub mod epd2in7_v2;
 pub mod epd2in7b;
 pub mod epd2in9;
