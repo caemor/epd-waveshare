@@ -1,8 +1,8 @@
-//! SPI Commands for the Waveshare 7.5" V3 E-Ink Display
+//! SPI Commands for the Waveshare 1.02" E-Ink Display
 
 use crate::traits;
 
-/// Epd7in5 commands
+/// Epd1in02 commands
 ///
 /// Should rarely (never?) be needed directly.
 ///
@@ -10,8 +10,8 @@ use crate::traits;
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub(crate) enum Command {
-    /// Set Resolution, LUT selection, BWR pixels, gate scan direction, source shift
-    /// direction, booster switch, soft reset.
+    /// Set Resolution, LUT selection, gate scan direction, source shift
+    /// direction, charge pump switch, soft reset.
     PanelSetting = 0x00,
 
     /// Selecting internal and external power
@@ -33,8 +33,8 @@ pub(crate) enum Command {
     /// sequence. Once complete, the BUSY signal will become "1".
     PowerOn = 0x04,
 
-    /// Starting data transmission
-    BoosterSoftStart = 0x06,
+    /// Setting charge pump time interval, driving strength and frequency
+    ChargePumpSetting = 0x06,
 
     /// This command makes the chip enter the deep-sleep mode to save power.
     ///
@@ -43,12 +43,15 @@ pub(crate) enum Command {
     /// The only one parameter is a check code, the command would be excuted if check code = 0xA5.
     DeepSleep = 0x07,
 
-    /// This command starts transmitting data and write them into SRAM. To complete data
-    /// transmission, command DSP (Data Stop) must be issued. Then the chip will start to
+    /// This command starts transmitting B/W data and write them into SRAM. To complete data
+    /// transmission, commands Display Refresh or Data Start Transmission2 must be issued. Then the chip will start to
     /// send data/VCOM for panel.
-    ///
-    /// BLACK/WHITE or OLD_DATA
     DataStartTransmission1 = 0x10,
+
+    /// This command starts transmitting RED data and write them into SRAM. To complete data
+    /// transmission, command Display refresh must be issued. Then the chip will start to
+    /// send data/VCOM for panel.
+    DataStartTransmission2 = 0x13,
 
     /// To stop data transmission, this command must be issued to check the `data_flag`.
     ///
@@ -61,46 +64,25 @@ pub(crate) enum Command {
     ///
     /// After Display Refresh command, BUSY signal will become "0" until the display
     /// update is finished.
+    /// The waiting interval from BUSY falling to the first FLG command must be longer than 200us.
     DisplayRefresh = 0x12,
 
-    /// RED or NEW_DATA
-    DataStartTransmission2 = 0x13,
+    /// This command stores white Look-Up Table
+    SetWhiteLut = 0x23,
 
-    /// Dual SPI - what for?
-    DualSpi = 0x15,
+    /// This command stores black Look-Up Table
+    SetBlackLut = 0x24,
 
-    /// This command builds the VCOM Look-Up Table (LUTC).
-    LutForVcom = 0x20,
-    /// This command builds the Black Look-Up Table (LUTB).
-    LutBlack = 0x21,
-    /// This command builds the White Look-Up Table (LUTW).
-    LutWhite = 0x22,
-    /// This command builds the Gray1 Look-Up Table (LUTG1).
-    LutGray1 = 0x23,
-    /// This command builds the Gray2 Look-Up Table (LUTG2).
-    LutGray2 = 0x24,
-    /// This command builds the Red0 Look-Up Table (LUTR0).
-    LutRed0 = 0x25,
-    /// This command builds the Red1 Look-Up Table (LUTR1).
-    LutRed1 = 0x26,
-    /// This command builds the Red2 Look-Up Table (LUTR2).
-    LutRed2 = 0x27,
-    /// This command builds the Red3 Look-Up Table (LUTR3).
-    LutRed3 = 0x28,
-    /// This command builds the XON Look-Up Table (LUTXON).
-    LutXon = 0x29,
+    /// This command sets XON and the options of LUT.
+    LutOption = 0x2A,
 
     /// The command controls the PLL clock frequency.
     PllControl = 0x30,
 
     /// This command reads the temperature sensed by the temperature sensor.
-    TemperatureSensor = 0x40,
-    /// This command selects the Internal or External temperature sensor.
-    TemperatureCalibration = 0x41,
-    /// This command could write data to the external temperature sensor.
-    TemperatureSensorWrite = 0x42,
-    /// This command could read data from the external temperature sensor.
-    TemperatureSensorRead = 0x43,
+    TemperatureSensorCalibration = 0x40,
+    /// This command selects temperature option.
+    TemperatureSensorSelection = 0x41,
 
     /// This command indicates the interval of Vcom and data output. When setting the
     /// vertical back porch, the total blanking will be kept (20 Hsync).
@@ -111,26 +93,53 @@ pub(crate) enum Command {
 
     /// This command defines non-overlap period of Gate and Source.
     TconSetting = 0x60,
+
     /// This command defines alternative resolution and this setting is of higher priority
     /// than the RES\[1:0\] in R00H (PSR).
     TconResolution = 0x61,
-    /// This command defines MCU host direct access external memory mode.
-    SpiFlashControl = 0x65,
 
-    /// The LUT_REV / Chip Revision is read from OTP address = 25001 and 25000.
+    /// The command reads LUT revision and chip revision.
     Revision = 0x70,
     /// This command reads the IC status.
     GetStatus = 0x71,
+
+    /// This command reads Cyclic redundancy check (CRC) result.
+    ///
+    /// The calculation only incudes image data (DTM1 & DTM2), and don't containt DTM1(0x10) & DTM2(0x13).
+    /// Polynomial = x^16 + x^12 + x^5 + 1, initial value: 0xFFFF
+    ///
+    /// The result will be reset after this command.
+    CyclicRedundancyCheck = 0x72,
 
     /// This command implements related VCOM sensing setting.
     AutoMeasurementVcom = 0x80,
     /// This command gets the VCOM value.
     ReadVcomValue = 0x81,
     /// This command sets `VCOM_DC` value.
-    VcmDcSetting = 0x82,
-    // /// This is in all the Waveshare controllers for Epd7in5, but it's not documented
-    // /// anywhere in the datasheet `¯\_(ツ)_/¯`
-    // FlashMode = 0xE5,
+    VcomDcSetting = 0x82,
+
+    /// Sets window size for the partial update
+    PartialWindow = 0x90,
+    /// Sets chip into partial update mode
+    PartialIn = 0x91,
+    /// Quits partial update mode
+    PartialOut = 0x92,
+
+    /// After this command is issued, the chip would enter the program mode.
+    /// After the programming procedure completed, a hardware reset is necessary for leaving program mode.
+    ProgramMode = 0xA0,
+    /// After this command is transmitted, the programming state machine would be activated.
+    /// The BUSY flag would fall to 0 until the programming is completed.
+    ActiveProgramming = 0xA1,
+    /// The command is used for reading the content of OTP for checking the data of programming.
+    /// The value of (n) is depending on the amount of programmed data, tha max address = 0xFFF.
+    ReadOtp = 0xA2,
+
+    /// This command is set for saving power during refresh period.
+    /// If the output voltage of VCOM / Source is from negative to positive or
+    /// from positive to negative, the power saving mechanism will be activated.
+    /// The active period width is defined by the following two parameters.
+    PowerSaving = 0xE3,
 }
 
 impl traits::Command for Command {

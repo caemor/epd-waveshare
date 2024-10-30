@@ -44,7 +44,7 @@ pub enum TriColor {
     Chromatic,
 }
 
-/// For the 5in65 7 Color Display
+/// For the 7 Color Displays
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum OctColor {
     /// Black Color
@@ -66,7 +66,7 @@ pub enum OctColor {
 }
 
 /// Color trait for use in `Display`s
-pub trait ColorType: PixelColor {
+pub trait ColorType {
     /// Number of bit used to represent this color type in a single buffer.
     /// To get the real number of bits per pixel you should multiply this by `BUFFER_COUNT`
     const BITS_PER_PIXEL_PER_BUFFER: usize;
@@ -78,7 +78,7 @@ pub trait ColorType: PixelColor {
     /// Return the data used to set a pixel color
     ///
     /// * bwrbit is used to tell the value of the unused bit when a chromatic
-    /// color is set (TriColor only as for now)
+    ///   color is set (TriColor only as for now)
     /// * pos is the pixel position in the line, used to know which pixels must be set
     ///
     /// Return values are :
@@ -124,7 +124,7 @@ impl ColorType for OctColor {
     const BITS_PER_PIXEL_PER_BUFFER: usize = 4;
     const BUFFER_COUNT: usize = 1;
     fn bitmask(&self, _bwrbit: bool, pos: u32) -> (u8, u16) {
-        let mask = !(0xF0 >> (pos % 2));
+        let mask = !(0xF0 >> ((pos % 2) * 4));
         let bits = self.get_nibble() as u16;
         (mask, if pos % 2 == 1 { bits } else { bits << 4 })
     }
@@ -289,8 +289,20 @@ impl From<u8> for Color {
 }
 
 #[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::raw::RawU1> for Color {
+    fn from(b: embedded_graphics_core::pixelcolor::raw::RawU1) -> Self {
+        use embedded_graphics_core::prelude::RawData;
+        if b.into_inner() == 0 {
+            Color::White
+        } else {
+            Color::Black
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
 impl PixelColor for Color {
-    type Raw = ();
+    type Raw = embedded_graphics_core::pixelcolor::raw::RawU1;
 }
 
 #[cfg(feature = "graphics")]
@@ -352,8 +364,22 @@ impl TriColor {
 }
 
 #[cfg(feature = "graphics")]
+impl From<embedded_graphics_core::pixelcolor::raw::RawU2> for TriColor {
+    fn from(b: embedded_graphics_core::pixelcolor::raw::RawU2) -> Self {
+        use embedded_graphics_core::prelude::RawData;
+        if b.into_inner() == 0b00 {
+            TriColor::White
+        } else if b.into_inner() == 0b01 {
+            TriColor::Black
+        } else {
+            TriColor::Chromatic
+        }
+    }
+}
+
+#[cfg(feature = "graphics")]
 impl PixelColor for TriColor {
-    type Raw = ();
+    type Raw = embedded_graphics_core::pixelcolor::raw::RawU2;
 }
 
 #[cfg(feature = "graphics")]
@@ -405,7 +431,7 @@ mod tests {
     // test all values aside from 0 and 1 which all should panic
     #[test]
     fn from_u8_panic() {
-        for val in 2..=u8::max_value() {
+        for val in 2..=u8::MAX {
             extern crate std;
             let result = std::panic::catch_unwind(|| Color::from(val));
             assert!(result.is_err());

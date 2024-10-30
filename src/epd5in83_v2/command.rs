@@ -1,8 +1,8 @@
-//! SPI Commands for the Waveshare 7.5"(B) V2 and V3 -Ink Display
+//! SPI Commands for the Waveshare 5.83" E-Ink Display
 
 use crate::traits;
 
-/// Epd7in5 commands
+/// Epd5in83 commands
 ///
 /// Should rarely (never?) be needed directly.
 ///
@@ -43,12 +43,15 @@ pub(crate) enum Command {
     /// The only one parameter is a check code, the command would be excuted if check code = 0xA5.
     DeepSleep = 0x07,
 
-    /// This command starts transmitting data and write them into SRAM. To complete data
-    /// transmission, command DSP (Data Stop) must be issued. Then the chip will start to
+    /// This command starts transmitting B/W data and write them into SRAM. To complete data
+    /// transmission, commands Display Refresh or Data Start Transmission2 must be issued. Then the chip will start to
     /// send data/VCOM for panel.
-    ///
-    /// BLACK/WHITE or OLD_DATA
     DataStartTransmission1 = 0x10,
+
+    /// This command starts transmitting RED data and write them into SRAM. To complete data
+    /// transmission, command Display refresh must be issued. Then the chip will start to
+    /// send data/VCOM for panel.
+    DataStartTransmission2 = 0x13,
 
     /// To stop data transmission, this command must be issued to check the `data_flag`.
     ///
@@ -63,45 +66,16 @@ pub(crate) enum Command {
     /// update is finished.
     DisplayRefresh = 0x12,
 
-    /// RED or NEW_DATA
-    DataStartTransmission2 = 0x13,
-
-    /// Dual SPI - what for?
-    DualSpi = 0x15,
-
-    /// This command builds the VCOM Look-Up Table (LUTC).
-    LutForVcom = 0x20,
-    /// This command builds the Black Look-Up Table (LUTB).
-    LutBlack = 0x21,
-    /// This command builds the White Look-Up Table (LUTW).
-    LutWhite = 0x22,
-    /// This command builds the Gray1 Look-Up Table (LUTG1).
-    LutGray1 = 0x23,
-    /// This command builds the Gray2 Look-Up Table (LUTG2).
-    LutGray2 = 0x24,
-    /// This command builds the Red0 Look-Up Table (LUTR0).
-    LutRed0 = 0x25,
-    /// This command builds the Red1 Look-Up Table (LUTR1).
-    LutRed1 = 0x26,
-    /// This command builds the Red2 Look-Up Table (LUTR2).
-    LutRed2 = 0x27,
-    /// This command builds the Red3 Look-Up Table (LUTR3).
-    LutRed3 = 0x28,
-    /// This command builds the XON Look-Up Table (LUTXON).
-    LutXon = 0x29,
-
-    /// LUT Option
-    LutOpt = 0x2A,
-    /// KW LUT Option
-    KWLutOpt = 0x2B,
+    /// Enables or disables Dual SPI mode
+    DualSPI = 0x15,
 
     /// The command controls the PLL clock frequency.
     PllControl = 0x30,
 
     /// This command reads the temperature sensed by the temperature sensor.
-    TemperatureSensor = 0x40,
+    TemperatureSensorCalibration = 0x40,
     /// This command selects the Internal or External temperature sensor.
-    TemperatureCalibration = 0x41,
+    TemperatureSensorSelection = 0x41,
     /// This command could write data to the external temperature sensor.
     TemperatureSensorWrite = 0x42,
     /// This command could read data from the external temperature sensor.
@@ -119,8 +93,6 @@ pub(crate) enum Command {
     /// This command defines alternative resolution and this setting is of higher priority
     /// than the RES\[1:0\] in R00H (PSR).
     TconResolution = 0x61,
-    /// This command defines MCU host direct access external memory mode.
-    SpiFlashControl = 0x65,
 
     /// The LUT_REV / Chip Revision is read from OTP address = 25001 and 25000.
     Revision = 0x70,
@@ -133,17 +105,13 @@ pub(crate) enum Command {
     ReadVcomValue = 0x81,
     /// This command sets `VCOM_DC` value.
     VcmDcSetting = 0x82,
-    // /// This is in all the Waveshare controllers for Epd7in5, but it's not documented
-    // /// anywhere in the datasheet `¯\_(ツ)_/¯`
-    // FlashMode = 0xE5,
+
     /// Sets window size for the partial update
     PartialWindow = 0x90,
     /// Sets chip into partial update mode
     PartialIn = 0x91,
     /// Quits partial update mode
     PartialOut = 0x92,
-    /// Read OTP
-    ReadOTP = 0xA2,
 }
 
 impl traits::Command for Command {

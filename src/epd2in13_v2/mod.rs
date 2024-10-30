@@ -1,16 +1,24 @@
-//! A Driver for the Waveshare 2.13" E-Ink Display (V2) via SPI
+//! A Driver for the Waveshare 2.13" E-Ink Display (V2 and V3) via SPI
 //!
-//! # References
+//! # References V2
 //!
 //! - [Waveshare product page](https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT)
 //! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/c/lib/e-Paper/EPD_2in13_V2.c)
 //! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd2in13_V2.py)
 //! - [Controller Datasheet SS1780](http://www.e-paper-display.com/download_detail/downloadsId=682.html)
 //!
+//! # References V3
+//!
+//! - [Waveshare product page](https://www.waveshare.com/wiki/2.13inch_e-Paper_HAT)
+//! - [Waveshare C driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi_JetsonNano/c/lib/e-Paper/EPD_2in13_V3.c)
+//! - [Waveshare Python driver](https://github.com/waveshare/e-Paper/blob/master/RaspberryPi_JetsonNano/python/lib/waveshare_epd/epd2in9b_V3.py)
+//! - [Controller Datasheet SS1780](http://www.e-paper-display.com/download_detail/downloadsId=682.html)
+//!
 
 use embedded_hal::{
-    blocking::{delay::*, spi::Write},
-    digital::v2::{InputPin, OutputPin},
+    delay::DelayNs,
+    digital::{InputPin, OutputPin},
+    spi::SpiDevice,
 };
 
 use crate::buffer_len;
@@ -26,9 +34,18 @@ use self::command::{
 };
 
 pub(crate) mod constants;
-use self::constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
 
-/// Full size buffer for use with the 2in13 v2 EPD
+use self::constants::{LUT_FULL_UPDATE, LUT_PARTIAL_UPDATE};
+#[cfg(all(feature = "epd2in13_v2", feature = "epd2in13_v3"))]
+compile_error!(
+    "feature \"epd2in13_v2\" and feature \"epd2in13_v3\" cannot be enabled at the same time"
+);
+#[cfg(not(any(feature = "epd2in13_v2", feature = "epd2in13_v3")))]
+compile_error!(
+    "One of feature \"epd2in13_v2\" and feature \"epd2in13_v3\" needs to be enabled as a feature"
+);
+
+/// Full size buffer for use with the 2in13 v2 and v3 EPD
 #[cfg(feature = "graphics")]
 pub type Display2in13 = crate::graphics::Display<
     WIDTH,
@@ -47,12 +64,14 @@ pub const HEIGHT: u32 = 250;
 /// Default Background Color
 pub const DEFAULT_BACKGROUND_COLOR: Color = Color::White;
 const IS_BUSY_LOW: bool = false;
+const SINGLE_BYTE_WRITE: bool = true;
 
-/// Epd2in13 (V2) driver
+/// Epd2in13 (V2 & V3) driver
 ///
-pub struct Epd2in13<SPI, CS, BUSY, DC, RST, DELAY> {
+/// To use this driver for V2 of the display, feature \"epd2in13_v3\" needs to be disabled and feature \"epd2in13_v2\" enabled.
+pub struct Epd2in13<SPI, BUSY, DC, RST, DELAY> {
     /// Connection Interface
-    interface: DisplayInterface<SPI, CS, BUSY, DC, RST, DELAY>,
+    interface: DisplayInterface<SPI, BUSY, DC, RST, DELAY, SINGLE_BYTE_WRITE>,
 
     sleep_mode: DeepSleepMode,
 
@@ -61,15 +80,14 @@ pub struct Epd2in13<SPI, CS, BUSY, DC, RST, DELAY> {
     refresh: RefreshLut,
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // HW reset
@@ -155,20 +173,18 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, CS, BUSY, DC, RST, DELAY>
-    for Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
+    for Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     type DisplayColor = Color;
     fn new(
         spi: &mut SPI,
-        cs: CS,
         busy: BUSY,
         dc: DC,
         rst: RST,
@@ -176,7 +192,7 @@ where
         delay_us: Option<u32>,
     ) -> Result<Self, SPI::Error> {
         let mut epd = Epd2in13 {
-            interface: DisplayInterface::new(cs, busy, dc, rst, delay_us),
+            interface: DisplayInterface::new(busy, dc, rst, delay_us),
             sleep_mode: DeepSleepMode::Mode1,
             background_color: DEFAULT_BACKGROUND_COLOR,
             refresh: RefreshLut::Full,
@@ -370,14 +386,13 @@ where
     }
 }
 
-impl<SPI, CS, BUSY, DC, RST, DELAY> Epd2in13<SPI, CS, BUSY, DC, RST, DELAY>
+impl<SPI, BUSY, DC, RST, DELAY> Epd2in13<SPI, BUSY, DC, RST, DELAY>
 where
-    SPI: Write<u8>,
-    CS: OutputPin,
+    SPI: SpiDevice,
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs<u32>,
+    DELAY: DelayNs,
 {
     /// When using partial refresh, the controller uses the provided buffer for
     /// comparison with new buffer.

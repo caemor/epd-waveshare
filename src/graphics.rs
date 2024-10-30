@@ -5,9 +5,10 @@ use core::marker::PhantomData;
 use embedded_graphics_core::prelude::*;
 
 /// Display rotation, only 90° increments supported
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub enum DisplayRotation {
     /// No rotation
+    #[default]
     Rotate0,
     /// Rotate by 90 degrees clockwise
     Rotate90,
@@ -17,19 +18,13 @@ pub enum DisplayRotation {
     Rotate270,
 }
 
-impl Default for DisplayRotation {
-    fn default() -> Self {
-        DisplayRotation::Rotate0
-    }
-}
-
 /// count the number of bytes per line knowing that it may contains padding bits
 const fn line_bytes(width: u32, bits_per_pixel: usize) -> usize {
     // round to upper 8 bit count
     (width as usize * bits_per_pixel + 7) / 8
 }
 
-/// Display bffer used for drawing with embedded graphics
+/// Display buffer used for drawing with embedded graphics
 /// This can be rendered on EPD using ...
 ///
 /// - WIDTH: width in pixel when display is not rotated
@@ -37,17 +32,17 @@ const fn line_bytes(width: u32, bits_per_pixel: usize) -> usize {
 /// - BWRBIT: mandatory value of the B/W when chromatic bit is set, can be any value for non
 ///           tricolor epd
 /// - COLOR: color type used by the target display
-/// - BYTECOUNT: This is redundant with prvious data and should be removed when const generic
+/// - BYTECOUNT: This is redundant with previous data and should be removed when const generic
 ///              expressions are stabilized
 ///
 /// More on BWRBIT:
 ///
 /// Different chromatic displays differently treat the bits in chromatic color planes.
 /// Some of them ([crate::epd2in13bc]) will render a color pixel if bit is set for that pixel,
-/// which is a [DisplayColorRendering::Positive] mode.
+/// which is a `BWRBIT = true` mode.
 ///
 /// Other displays, like [crate::epd5in83b_v2] in opposite, will draw color pixel if bit is
-/// cleared for that pixel, which is a [DisplayColorRendering::Negative] mode.
+/// cleared for that pixel, which is a `BWRBIT = false` mode.
 ///
 /// BWRBIT=true: chromatic doesn't override white, white bit cleared for black, white bit set for white, both bits set for chromatic
 /// BWRBIT=false: chromatic does override white, both bits cleared for black, white bit set for white, red bit set for black
@@ -56,7 +51,7 @@ pub struct Display<
     const HEIGHT: u32,
     const BWRBIT: bool,
     const BYTECOUNT: usize,
-    COLOR: ColorType,
+    COLOR: ColorType + PixelColor,
 > {
     buffer: [u8; BYTECOUNT],
     rotation: DisplayRotation,
@@ -68,7 +63,7 @@ impl<
         const HEIGHT: u32,
         const BWRBIT: bool,
         const BYTECOUNT: usize,
-        COLOR: ColorType,
+        COLOR: ColorType + PixelColor,
     > Default for Display<WIDTH, HEIGHT, BWRBIT, BYTECOUNT, COLOR>
 {
     /// Initialize display with the color '0', which may not be the same on all device.
@@ -96,7 +91,7 @@ impl<
         const HEIGHT: u32,
         const BWRBIT: bool,
         const BYTECOUNT: usize,
-        COLOR: ColorType,
+        COLOR: ColorType + PixelColor,
     > DrawTarget for Display<WIDTH, HEIGHT, BWRBIT, BYTECOUNT, COLOR>
 {
     type Color = COLOR;
@@ -119,7 +114,7 @@ impl<
         const HEIGHT: u32,
         const BWRBIT: bool,
         const BYTECOUNT: usize,
-        COLOR: ColorType,
+        COLOR: ColorType + PixelColor,
     > OriginDimensions for Display<WIDTH, HEIGHT, BWRBIT, BYTECOUNT, COLOR>
 {
     fn size(&self) -> Size {
@@ -135,7 +130,7 @@ impl<
         const HEIGHT: u32,
         const BWRBIT: bool,
         const BYTECOUNT: usize,
-        COLOR: ColorType,
+        COLOR: ColorType + PixelColor,
     > Display<WIDTH, HEIGHT, BWRBIT, BYTECOUNT, COLOR>
 {
     /// get internal buffer to use it (to draw in epd)
@@ -187,7 +182,7 @@ impl<const WIDTH: u32, const HEIGHT: u32, const BWRBIT: bool, const BYTECOUNT: u
 /// Same as `Display`, except that its characteristics are defined at runtime.
 /// See display for documentation as everything is the same except that default
 /// is replaced by a `new` method.
-pub struct VarDisplay<'a, COLOR: ColorType> {
+pub struct VarDisplay<'a, COLOR: ColorType + PixelColor> {
     width: u32,
     height: u32,
     bwrbit: bool,
@@ -197,7 +192,7 @@ pub struct VarDisplay<'a, COLOR: ColorType> {
 }
 
 /// For use with embedded_grahics
-impl<'a, COLOR: ColorType> DrawTarget for VarDisplay<'a, COLOR> {
+impl<'a, COLOR: ColorType + PixelColor> DrawTarget for VarDisplay<'a, COLOR> {
     type Color = COLOR;
     type Error = core::convert::Infallible;
 
@@ -213,7 +208,7 @@ impl<'a, COLOR: ColorType> DrawTarget for VarDisplay<'a, COLOR> {
 }
 
 /// For use with embedded_grahics
-impl<'a, COLOR: ColorType> OriginDimensions for VarDisplay<'a, COLOR> {
+impl<'a, COLOR: ColorType + PixelColor> OriginDimensions for VarDisplay<'a, COLOR> {
     fn size(&self) -> Size {
         match self.rotation {
             DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
@@ -233,7 +228,7 @@ pub enum VarDisplayError {
     BufferTooSmall,
 }
 
-impl<'a, COLOR: ColorType> VarDisplay<'a, COLOR> {
+impl<'a, COLOR: ColorType + PixelColor> VarDisplay<'a, COLOR> {
     /// You must allocate the buffer by yourself, it must be large enough to contain all pixels.
     ///
     /// Parameters are documented in `Display` as they are the same as the const generics there.
@@ -317,7 +312,7 @@ impl<'a> VarDisplay<'a, TriColor> {
 // It sets a specific pixel in a buffer to a given color.
 // The big number of parameters is due to the fact that it is an internal function to both
 // strctures.
-fn set_pixel<COLOR: ColorType>(
+fn set_pixel<COLOR: ColorType + PixelColor>(
     buffer: &mut [u8],
     width: u32,
     height: u32,

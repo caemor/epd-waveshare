@@ -9,24 +9,22 @@ license = "ISC"
 name = "epd-waveshare"
 readme = "README.md"
 repository = "https://github.com/Caemor/epd-waveshare.git"
-version = "0.5.0"
+version = "0.6.0"
 edition = "2021"
 
-[badges]
-# travis-ci = { repository = "caemor/epd-waveshare" }
-
 [dependencies]
-embedded-graphics-core = { version = "0.3.2", optional = true}
-embedded-hal = {version = "0.2.4", features = ["unproven"]}
+embedded-graphics-core = { version = "0.4", optional = true }
+embedded-hal = "1.0.0"
 bit_field = "0.10.1"
 
 [dev-dependencies]
-embedded-graphics = "0.7.1"
-
-embedded-hal-mock = "0.8"
+embedded-graphics = "0.8"
+embedded-hal-mock = { version = "0.11", default-features = false, features = [
+    "eh1",
+] }
 
 [target.'cfg(unix)'.dev-dependencies]
-linux-embedded-hal = "0.3"
+linux-embedded-hal = "0.4.0"
 
 [[example]]
 name = "epd1in54_no_graphics"
@@ -50,9 +48,11 @@ required-features = ["linux-dev"]
 
 [features]
 # Remove the linux-dev feature to build the tests on non  unix systems
-default = ["graphics", "linux-dev"]
+default = ["graphics", "linux-dev", "epd2in13_v3"]
 
 graphics = ["embedded-graphics-core"]
+epd2in13_v2 = []
+epd2in13_v3 = []
 linux-dev = []
 
 # Offers an alternative fast full lut for type_a displays, but the refreshed screen isnt as clean looking
