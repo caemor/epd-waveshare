@@ -70,6 +70,8 @@ mod traits;
 
 pub mod color;
 
+pub mod rect;
+
 /// Interface for the physical connection between display and the controlling device
 mod interface;
 
@@ -100,6 +102,7 @@ pub mod epd7in5_hd;
 pub mod epd7in5_v2;
 pub mod epd7in5b_v2;
 pub use epd7in5b_v2 as epd7in5b_v3;
+pub mod epd12in48b_v2;
 
 pub(crate) mod type_a;
 
