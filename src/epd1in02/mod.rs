@@ -521,38 +521,38 @@ mod tests {
 
     #[test]
     fn inside_of_screen() {
-        assert_eq!(is_window_size_ok(0, 0, 80, 128), true);
+        assert!(is_window_size_ok(0, 0, 80, 128));
     }
 
     #[test]
     fn x_too_big() {
-        assert_eq!(is_window_size_ok(8, 8, 80, 1), false);
+        assert!(!is_window_size_ok(8, 8, 80, 1));
     }
 
     #[test]
     fn y_too_big() {
-        assert_eq!(is_window_size_ok(8, 8, 8, 121), false);
+        assert!(!is_window_size_ok(8, 8, 8, 121));
     }
 
     #[test]
     fn x_is_not_multiple_of_8() {
-        assert_eq!(is_window_size_ok(1, 0, 72, 128), false);
+        assert!(!is_window_size_ok(1, 0, 72, 128));
     }
 
     #[test]
     fn width_is_not_multiple_of_8() {
-        assert_eq!(is_window_size_ok(0, 0, 79, 128), false);
+        assert!(!is_window_size_ok(0, 0, 79, 128));
     }
 
     #[test]
     fn buffer_size_incorrect() {
         let buf = [0u8; 10];
-        assert_eq!(is_buffer_size_ok(&buf, 10, 10), false);
+        assert!(!is_buffer_size_ok(&buf, 10, 10));
     }
 
     #[test]
     fn buffer_size_correct() {
         let buf = [0u8; 10];
-        assert_eq!(is_buffer_size_ok(&buf, 8, 10), true);
+        assert!(is_buffer_size_ok(&buf, 8, 10));
     }
 }
