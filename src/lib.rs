@@ -62,6 +62,7 @@
 //!
 #![no_std]
 #![deny(missing_docs)]
+#![allow(async_fn_in_trait)] // https://github.com/rust-embedded/embedded-hal/pull/515#issuecomment-1763525962
 
 #[cfg(feature = "graphics")]
 pub mod graphics;

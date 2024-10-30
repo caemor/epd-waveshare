@@ -7,11 +7,8 @@
 
 use core::slice::from_raw_parts;
 
-use embedded_hal::{
-    delay::DelayNs,
-    digital::{InputPin, OutputPin},
-    spi::SpiDevice,
-};
+use embedded_hal::digital::{InputPin, OutputPin};
+use embedded_hal_async::{delay::DelayNs, digital::Wait, spi::SpiDevice};
 
 use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
@@ -68,29 +65,32 @@ impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
     for Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: Wait + InputPin,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayNs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.reset(delay, 10_000, 2_000);
+    async fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.reset(delay, 10_000, 2_000).await;
 
         //panel setting
         //LUT from OTP，KW-BF   KWR-AF	BWROTP 0f	BWOTP 1f
         self.interface
-            .cmd_with_data(spi, Command::PanelSetting, &[0x1f, 0x0D])?;
+            .cmd_with_data(spi, Command::PanelSetting, &[0x1f, 0x0D])
+            .await?;
 
         //resolution setting
         self.interface
-            .cmd_with_data(spi, Command::ResolutionSetting, &[0x80, 0x01, 0x28])?;
+            .cmd_with_data(spi, Command::ResolutionSetting, &[0x80, 0x01, 0x28])
+            .await?;
 
-        self.interface.cmd(spi, Command::PowerOn)?;
-        self.wait_until_idle(spi, delay)?;
+        self.interface.cmd(spi, Command::PowerOn).await?;
+        self.wait_until_idle(spi, delay).await?;
 
         //VCOM AND DATA INTERVAL SETTING
         self.interface
-            .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])?;
+            .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])
+            .await?;
 
         Ok(())
     }
@@ -100,13 +100,13 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: Wait + InputPin,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayNs,
 {
     type DisplayColor = Color;
-    fn new(
+    async fn new(
         spi: &mut SPI,
         busy: BUSY,
         dc: DC,
@@ -127,26 +127,28 @@ where
             is_partial_refresh,
         };
 
-        epd.init(spi, delay)?;
+        epd.init(spi, delay).await?;
 
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    async fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.is_partial_refresh = false;
         self.interface
-            .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0xf7])?;
-        self.interface.cmd(spi, Command::PowerOff)?;
-        self.wait_until_idle(spi, delay)?;
-        delay.delay_us(100_000);
+            .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0xf7])
+            .await?;
+        self.interface.cmd(spi, Command::PowerOff).await?;
+        self.wait_until_idle(spi, delay).await?;
+        delay.delay_us(100_000).await;
         self.interface
-            .cmd_with_data(spi, Command::DeepSleep, &[0xA5])?;
+            .cmd_with_data(spi, Command::DeepSleep, &[0xA5])
+            .await?;
 
         Ok(())
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.init(spi, delay)?;
+    async fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.init(spi, delay).await?;
         Ok(())
     }
 
@@ -168,7 +170,7 @@ where
 
     // Corresponds to the Display function.
     // Used to write the data to be displayed to the screen SRAM.
-    fn update_frame(
+    async fn update_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
@@ -178,20 +180,23 @@ where
             // Modify local refresh status if full refresh is performed.
             self.is_partial_refresh = false;
         }
-        self.wait_until_idle(spi, delay)?;
-
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0xFF, EPD_ARRAY)?;
+        self.wait_until_idle(spi, delay).await?;
 
         self.interface
-            .cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
+            .cmd(spi, Command::DataStartTransmission1)
+            .await?;
+        self.interface.data_x_times(spi, 0xFF, EPD_ARRAY).await?;
+
+        self.interface
+            .cmd_with_data(spi, Command::DataStartTransmission2, buffer)
+            .await?;
         self.old_data = unsafe { from_raw_parts(buffer.as_ptr(), buffer.len()) };
         Ok(())
     }
 
     // 这个是DisplayPart
     // Partial refresh write address and data
-    fn update_partial_frame(
+    async fn update_partial_frame(
         &mut self,
         spi: &mut SPI,
         delay: &mut DELAY,
@@ -203,65 +208,74 @@ where
     ) -> Result<(), SPI::Error> {
         if !self.is_partial_refresh {
             // Initialize only on first call
-            self.set_part_reg(spi, delay)?;
+            self.set_part_reg(spi, delay).await?;
             self.is_partial_refresh = true;
         }
-        self.interface.cmd(spi, Command::PartialIn)?;
+        self.interface.cmd(spi, Command::PartialIn).await?;
 
-        self.interface.cmd(spi, Command::PartialWindow)?;
-        self.interface.data(spi, &[(x - x % 8) as u8])?;
+        self.interface.cmd(spi, Command::PartialWindow).await?;
+        self.interface.data(spi, &[(x - x % 8) as u8]).await?;
         self.interface
-            .data(spi, &[(((x - x % 8) + width - 1) - 1) as u8])?;
-        self.interface.data(spi, &[(y / 256) as u8])?;
-        self.interface.data(spi, &[(y % 256) as u8])?;
+            .data(spi, &[(((x - x % 8) + width - 1) - 1) as u8])
+            .await?;
+        self.interface.data(spi, &[(y / 256) as u8]).await?;
+        self.interface.data(spi, &[(y % 256) as u8]).await?;
         self.interface
-            .data(spi, &[((y + height - 1) / 256) as u8])?;
+            .data(spi, &[((y + height - 1) / 256) as u8])
+            .await?;
         self.interface
-            .data(spi, &[((y + height - 1) % 256 - 1) as u8])?;
-        self.interface.data(spi, &[0x28])?;
+            .data(spi, &[((y + height - 1) % 256 - 1) as u8])
+            .await?;
+        self.interface.data(spi, &[0x28]).await?;
 
         self.interface
-            .cmd_with_data(spi, Command::DataStartTransmission1, self.old_data)?;
+            .cmd_with_data(spi, Command::DataStartTransmission1, self.old_data)
+            .await?;
 
         self.interface
-            .cmd_with_data(spi, Command::DataStartTransmission2, buffer)?;
+            .cmd_with_data(spi, Command::DataStartTransmission2, buffer)
+            .await?;
         self.old_data = unsafe { from_raw_parts(buffer.as_ptr(), buffer.len()) };
 
         Ok(())
     }
 
     /// actually is the "Turn on Display" sequence
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.cmd(spi, Command::DisplayRefresh)?;
-        delay.delay_us(1_000);
-        self.wait_until_idle(spi, delay)?;
+    async fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface.cmd(spi, Command::DisplayRefresh).await?;
+        delay.delay_us(1_000).await;
+        self.wait_until_idle(spi, delay).await?;
         Ok(())
     }
 
-    fn update_and_display_frame(
+    async fn update_and_display_frame(
         &mut self,
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
-        self.update_frame(spi, buffer, delay)?;
-        self.display_frame(spi, delay)?;
+        self.update_frame(spi, buffer, delay).await?;
+        self.display_frame(spi, delay).await?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.cmd(spi, Command::DataStartTransmission1)?;
-        self.interface.data_x_times(spi, 0x00, EPD_ARRAY)?;
+    async fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+        self.interface
+            .cmd(spi, Command::DataStartTransmission1)
+            .await?;
+        self.interface.data_x_times(spi, 0x00, EPD_ARRAY).await?;
 
-        self.interface.cmd(spi, Command::DataStartTransmission2)?;
-        self.interface.data_x_times(spi, 0xFF, EPD_ARRAY)?;
+        self.interface
+            .cmd(spi, Command::DataStartTransmission2)
+            .await?;
+        self.interface.data_x_times(spi, 0xFF, EPD_ARRAY).await?;
 
-        self.display_frame(spi, delay)?;
+        self.display_frame(spi, delay).await?;
 
         Ok(())
     }
 
-    fn set_lut(
+    async fn set_lut(
         &mut self,
         spi: &mut SPI,
         delay: &mut DELAY,
@@ -272,13 +286,18 @@ where
         }
         self.set_lut_helper(
             spi, delay, &LUT_VCOM1, &LUT_WW1, &LUT_BW1, &LUT_WB1, &LUT_BB1,
-        )?;
+        )
+        .await?;
 
         Ok(())
     }
 
-    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.wait_until_idle(delay, IS_BUSY_LOW);
+    async fn wait_until_idle(
+        &mut self,
+        _spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), SPI::Error> {
+        self.interface.wait_until_idle(delay, IS_BUSY_LOW).await;
         Ok(())
     }
 }
@@ -286,7 +305,7 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
-    BUSY: InputPin,
+    BUSY: Wait + InputPin,
     DC: OutputPin,
     RST: OutputPin,
     DELAY: DelayNs,
@@ -303,11 +322,11 @@ where
     //     // panel setting
     //     // LUT from OTP，KW-BF   KWR-AF	BWROTP 0f	BWOTP 1f
     //     self.interface
-    //         .cmd_with_data(spi, Command::PanelSetting, &[0x1f])?;
+    //         .cmd_with_data(spi, Command::PanelSetting, &[0x1f]).await?;
 
     //     // resolution setting
     //     self.interface
-    //         .cmd_with_data(spi, Command::ResolutionSetting, &[0x80, 0x01, 0x28])?;
+    //         .cmd_with_data(spi, Command::ResolutionSetting, &[0x80, 0x01, 0x28]).await?;
 
     //     // VCOM AND DATA INTERVAL SETTING
     //     self.interface
@@ -315,42 +334,45 @@ where
     //     Ok(())
     // }
 
-    fn set_part_reg(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    async fn set_part_reg(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Reset the EPD driver circuit
         //TODO: 这里在微雪的例程中反复刷新了3次，后面有显示问题再进行修改
-        self.interface.reset(delay, 10_000, 2_000);
+        self.interface.reset(delay, 10_000, 2_000).await;
 
         // Power settings
         //TODO: The data in the document is [0x03,0x00,0x2b,0x2b,0x09].
-        self.interface.cmd_with_data(
-            spi,
-            Command::PowerSetting,
-            &[0x03, 0x00, 0x2b, 0x2b, 0x03],
-        )?;
+        self.interface
+            .cmd_with_data(spi, Command::PowerSetting, &[0x03, 0x00, 0x2b, 0x2b, 0x03])
+            .await?;
 
         // Soft start
         self.interface
-            .cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])?;
+            .cmd_with_data(spi, Command::BoosterSoftStart, &[0x17, 0x17, 0x17])
+            .await?;
 
         // Panel settings
         self.interface
-            .cmd_with_data(spi, Command::PanelSetting, &[0xbf, 0x0D])?;
+            .cmd_with_data(spi, Command::PanelSetting, &[0xbf, 0x0D])
+            .await?;
 
         // Setting the refresh rate
         // 3a 100HZ | 29 150Hz | 39 200HZ | 31 171HZ
         // 3a is used in the example
         self.interface
-            .cmd_with_data(spi, Command::PllControl, &[0x3C])?;
+            .cmd_with_data(spi, Command::PllControl, &[0x3C])
+            .await?;
 
         // Resolution Settings
         self.interface
-            .cmd_with_data(spi, Command::ResolutionSetting, &[0x80, 0x01, 0x28])?;
+            .cmd_with_data(spi, Command::ResolutionSetting, &[0x80, 0x01, 0x28])
+            .await?;
 
         // vcom_DC settings
         self.interface
-            .cmd_with_data(spi, Command::VcmDcSetting, &[0x12])?;
+            .cmd_with_data(spi, Command::VcmDcSetting, &[0x12])
+            .await?;
 
-        self.set_lut(spi, delay, None)?;
+        self.set_lut(spi, delay, None).await?;
 
         // Power on
         // self.interface.cmd_with_data(
@@ -358,21 +380,21 @@ where
         //     Command::PowerOn,
         //     &[0x04],
         // );
-        self.interface.cmd(spi, Command::PowerOn)?;
+        self.interface.cmd(spi, Command::PowerOn).await?;
 
         // Get the BUSY level, high to continue, low to wait for the screen to respond.
         //TODO: This is the recommended step in the documentation, but I've ignored it since I've seen other screens that don't wait.
-        self.wait_until_idle(spi, delay)?;
+        self.wait_until_idle(spi, delay).await?;
 
         // vcom and data interval settings
         // self.interface
-        //     .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97])?;
+        //     .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0x97]).await?;
 
         Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn set_lut_helper(
+    async fn set_lut_helper(
         &mut self,
         spi: &mut SPI,
         delay: &mut DELAY,
@@ -385,23 +407,28 @@ where
         let _ = delay;
         // LUT VCOM
         self.interface
-            .cmd_with_data(spi, Command::LutForVcom, lut_vcom)?;
+            .cmd_with_data(spi, Command::LutForVcom, lut_vcom)
+            .await?;
 
         // LUT WHITE to WHITE
         self.interface
-            .cmd_with_data(spi, Command::LutWhiteToWhite, lut_ww)?;
+            .cmd_with_data(spi, Command::LutWhiteToWhite, lut_ww)
+            .await?;
 
         // LUT BLACK to WHITE
         self.interface
-            .cmd_with_data(spi, Command::LutBlackToWhite, lut_bw)?;
+            .cmd_with_data(spi, Command::LutBlackToWhite, lut_bw)
+            .await?;
 
         // LUT WHITE to BLACK
         self.interface
-            .cmd_with_data(spi, Command::LutWhiteToBlack, lut_wb)?;
+            .cmd_with_data(spi, Command::LutWhiteToBlack, lut_wb)
+            .await?;
 
         // LUT BLACK to BLACK
         self.interface
-            .cmd_with_data(spi, Command::LutBlackToBlack, lut_bb)?;
+            .cmd_with_data(spi, Command::LutBlackToBlack, lut_bb)
+            .await?;
         Ok(())
     }
 }
