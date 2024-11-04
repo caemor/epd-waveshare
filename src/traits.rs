@@ -136,7 +136,9 @@ where
 ///
 ///```rust, no_run
 ///# use epd_waveshare::epd4in2::Display4in2;
-///# use embedded_graphics::prelude::*;
+///# use epd_waveshare::prelude::*;
+///# use embedded_graphics_core::prelude::*;
+///# use embedded_graphics::primitives::*;
 ///let mut display = Box::new(Display4in2::default());
 ///let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
 ///     .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
