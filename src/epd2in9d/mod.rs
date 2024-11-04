@@ -5,16 +5,15 @@
 //!
 //! Specification: <https://www.waveshare.net/w/upload/b/b5/2.9inch_e-Paper_%28D%29_Specification.pdf>
 
+use core::fmt::{Debug, Display};
 use core::slice::from_raw_parts;
 
-use embedded_hal::{
-    delay::DelayNs,
-    digital::{InputPin, OutputPin},
-    spi::SpiDevice,
-};
+use embedded_hal::delay::DelayNs;
+use embedded_hal::digital::{InputPin, OutputPin};
+use embedded_hal::spi::SpiDevice;
 
-use crate::interface::DisplayInterface;
 use crate::traits::{InternalWiAdditions, RefreshLut, WaveshareDisplay};
+use crate::{interface::DisplayInterface, prelude::ErrorKind, traits::ErrorType};
 
 //The Lookup Tables for the Display
 mod constants;
@@ -64,17 +63,37 @@ pub struct Epd2in9d<'a, SPI, BUSY, DC, RST, DELAY> {
     is_partial_refresh: bool,
 }
 
+impl<'a, SPI, BUSY, DC, RST, DELAY> ErrorType<SPI, BUSY, DC, RST>
+    for Epd2in9d<'a, SPI, BUSY, DC, RST, DELAY>
+where
+    SPI: SpiDevice,
+    SPI::Error: Debug + Display,
+    BUSY: InputPin,
+    BUSY::Error: Debug + Display,
+    DC: OutputPin,
+    DC::Error: Debug + Display,
+    RST: OutputPin,
+    RST::Error: Debug + Display,
+    DELAY: DelayNs,
+{
+    type Error = ErrorKind<SPI, BUSY, DC, RST>;
+}
+
 impl<SPI, BUSY, DC, RST, DELAY> InternalWiAdditions<SPI, BUSY, DC, RST, DELAY>
     for Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
-    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
-        self.interface.reset(delay, 10_000, 2_000);
+    fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
+        self.interface.reset(delay, 10_000, 2_000)?;
 
         //panel setting
         //LUT from OTP，KW-BF   KWR-AF	BWROTP 0f	BWOTP 1f
@@ -100,9 +119,13 @@ impl<SPI, BUSY, DC, RST, DELAY> WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
     for Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     type DisplayColor = Color;
@@ -113,7 +136,7 @@ where
         rst: RST,
         delay: &mut DELAY,
         delay_us: Option<u32>,
-    ) -> Result<Self, SPI::Error> {
+    ) -> Result<Self, Self::Error> {
         let interface = DisplayInterface::new(busy, dc, rst, delay_us);
         let color = DEFAULT_BACKGROUND_COLOR;
         let old_data: &[u8] = &[];
@@ -132,7 +155,7 @@ where
         Ok(epd)
     }
 
-    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn sleep(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.is_partial_refresh = false;
         self.interface
             .cmd_with_data(spi, Command::VcomAndDataIntervalSetting, &[0xf7])?;
@@ -145,7 +168,7 @@ where
         Ok(())
     }
 
-    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wake_up(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.init(spi, delay)?;
         Ok(())
     }
@@ -173,7 +196,7 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         if self.is_partial_refresh {
             // Modify local refresh status if full refresh is performed.
             self.is_partial_refresh = false;
@@ -200,7 +223,7 @@ where
         y: u32,
         width: u32,
         height: u32,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         if !self.is_partial_refresh {
             // Initialize only on first call
             self.set_part_reg(spi, delay)?;
@@ -231,7 +254,7 @@ where
     }
 
     /// actually is the "Turn on Display" sequence
-    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn display_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.interface.cmd(spi, Command::DisplayRefresh)?;
         delay.delay_us(1_000);
         self.wait_until_idle(spi, delay)?;
@@ -243,13 +266,13 @@ where
         spi: &mut SPI,
         buffer: &[u8],
         delay: &mut DELAY,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         self.update_frame(spi, buffer, delay)?;
         self.display_frame(spi, delay)?;
         Ok(())
     }
 
-    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn clear_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface.data_x_times(spi, 0x00, EPD_ARRAY)?;
 
@@ -266,7 +289,7 @@ where
         spi: &mut SPI,
         delay: &mut DELAY,
         refresh_rate: Option<RefreshLut>,
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), Self::Error> {
         if let Some(refresh_lut) = refresh_rate {
             self.refresh = refresh_lut;
         }
@@ -277,7 +300,7 @@ where
         Ok(())
     }
 
-    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn wait_until_idle(&mut self, _spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
         self.interface.wait_until_idle(delay, IS_BUSY_LOW);
         Ok(())
     }
@@ -286,18 +309,22 @@ where
 impl<SPI, BUSY, DC, RST, DELAY> Epd2in9d<'_, SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
+    SPI::Error: Debug + Display,
     BUSY: InputPin,
+    BUSY::Error: Debug + Display,
     DC: OutputPin,
+    DC::Error: Debug + Display,
     RST: OutputPin,
+    RST::Error: Debug + Display,
     DELAY: DelayNs,
 {
     /// Wake Up Screen
     ///
     /// After the screen sleeps, it enters deep sleep mode. If you need to refresh the screen while in deep sleep mode, you must first execute awaken().
     /// Wake the screen.
-    // fn awaken(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    // fn awaken(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), Self::Error> {
     //     // reset the device
-    //     self.interface.reset(delay, 20_000, 2_000);
+    //     self.interface.reset(delay, 20_000, 2_000)?;
     //     self.wait_until_idle(spi, delay)?;
 
     //     // panel setting
@@ -315,10 +342,14 @@ where
     //     Ok(())
     // }
 
-    fn set_part_reg(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
+    fn set_part_reg(
+        &mut self,
+        spi: &mut SPI,
+        delay: &mut DELAY,
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         // Reset the EPD driver circuit
         //TODO: 这里在微雪的例程中反复刷新了3次，后面有显示问题再进行修改
-        self.interface.reset(delay, 10_000, 2_000);
+        self.interface.reset(delay, 10_000, 2_000)?;
 
         // Power settings
         //TODO: The data in the document is [0x03,0x00,0x2b,0x2b,0x09].
@@ -381,7 +412,7 @@ where
         lut_bw: &[u8],
         lut_wb: &[u8],
         lut_bb: &[u8],
-    ) -> Result<(), SPI::Error> {
+    ) -> Result<(), <Self as ErrorType<SPI, BUSY, DC, RST>>::Error> {
         let _ = delay;
         // LUT VCOM
         self.interface

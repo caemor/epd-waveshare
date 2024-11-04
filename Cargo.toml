@@ -22,6 +22,7 @@ embedded-graphics = "0.8"
 embedded-hal-mock = { version = "0.11", default-features = false, features = [
     "eh1",
 ] }
+anyhow = { version = "1.0", default-features = false}
 
 [target.'cfg(unix)'.dev-dependencies]
 linux-embedded-hal = "0.4.0"
