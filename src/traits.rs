@@ -126,6 +126,24 @@ where
 ///# Ok(())
 ///# }
 ///```
+///
+/// # Heap allocation
+///
+/// For systems where stack space is limited but heap space is available
+/// (i.e. ESP32 platforms with PSRAM) it's possible to allocate the display buffer
+/// in heap; the Displayxxxx:default() is implemented as always inline, so you can
+/// use Box::new to request heap space for the display buffer.
+///
+///```rust, no_run
+///# use epd_waveshare::epd4in2::Display4in2;
+///# use epd_waveshare::prelude::*;
+///# use embedded_graphics_core::prelude::*;
+///# use embedded_graphics::primitives::*;
+///let mut display = Box::new(Display4in2::default());
+///let _ = Line::new(Point::new(0, 120), Point::new(0, 295))
+///     .into_styled(PrimitiveStyle::with_stroke(Color::Black, 1))
+///     .draw(&mut *display);
+///```
 pub trait WaveshareDisplay<SPI, BUSY, DC, RST, DELAY>
 where
     SPI: SpiDevice,
