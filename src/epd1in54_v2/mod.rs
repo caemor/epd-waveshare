@@ -44,7 +44,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10_000, 10_000);
@@ -68,9 +68,6 @@ where
 
         self.set_ram_area(spi, delay, 0, 0, WIDTH - 1, HEIGHT - 1)?;
 
-        self.interface
-            .cmd_with_data(spi, Command::BorderWaveformControl, &[0x1])?;
-
         self.interface.cmd_with_data(
             spi,
             Command::TemperatureSensorSelection,
@@ -81,6 +78,9 @@ where
             .cmd_with_data(spi, Command::TemperatureSensorControl, &[0xB1, 0x20])?;
 
         self.set_ram_counter(spi, delay, 0, 0)?;
+
+        //Initialize the lookup table with a refresh waveform
+        self.set_lut(spi, delay, None)?;
 
         self.wait_until_idle(spi, delay)?;
         Ok(())
@@ -94,7 +94,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -267,7 +267,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     pub(crate) fn use_full_frame(
         &mut self,

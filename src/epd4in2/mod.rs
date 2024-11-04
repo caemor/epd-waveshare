@@ -18,10 +18,10 @@
 //!# let expectations = [];
 //!# let mut spi = spi::Mock::new(&expectations);
 //!# let expectations = [];
-//!# let cs_pin = pin::Mock::new(&expectations);
-//!# let busy_in = pin::Mock::new(&expectations);
-//!# let dc = pin::Mock::new(&expectations);
-//!# let rst = pin::Mock::new(&expectations);
+//!# let cs_pin = digital::Mock::new(&expectations);
+//!# let busy_in = digital::Mock::new(&expectations);
+//!# let dc = digital::Mock::new(&expectations);
+//!# let rst = digital::Mock::new(&expectations);
 //!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
@@ -101,7 +101,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
@@ -155,7 +155,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     type DisplayColor = Color;
     fn new(
@@ -354,7 +354,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)
@@ -449,7 +449,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// To be followed immediately after by `update_old_frame`.
     fn update_old_frame(

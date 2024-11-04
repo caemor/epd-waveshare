@@ -54,7 +54,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // reset the device
@@ -119,7 +119,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     type DisplayColor = Color;
     fn new(
@@ -168,7 +168,7 @@ where
         // Clear chromatic layer since we won't be using it here
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface
-            .data_x_times(spi, !self.color.get_byte_value(), WIDTH * HEIGHT / 8)?;
+            .data_x_times(spi, !self.color.get_byte_value(), WIDTH / 8 * HEIGHT)?;
 
         self.interface.cmd(spi, Command::DataStop)?;
         Ok(())
@@ -225,13 +225,13 @@ where
         let color_value = self.color.get_byte_value();
         self.interface.cmd(spi, Command::DataStartTransmission1)?;
         self.interface
-            .data_x_times(spi, color_value, WIDTH * HEIGHT / 8)?;
+            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
 
         self.interface.cmd(spi, Command::DataStop)?;
 
         self.interface.cmd(spi, Command::DataStartTransmission2)?;
         self.interface
-            .data_x_times(spi, color_value, WIDTH * HEIGHT / 8)?;
+            .data_x_times(spi, color_value, WIDTH / 8 * HEIGHT)?;
         self.interface.cmd(spi, Command::DataStop)?;
         Ok(())
     }
@@ -280,7 +280,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn update_color_frame(
         &mut self,
@@ -335,7 +335,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)

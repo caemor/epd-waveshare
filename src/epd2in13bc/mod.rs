@@ -13,10 +13,10 @@
 //!# let expectations = [];
 //!# let mut spi = spi::Mock::new(&expectations);
 //!# let expectations = [];
-//!# let cs_pin = pin::Mock::new(&expectations);
-//!# let busy_in = pin::Mock::new(&expectations);
-//!# let dc = pin::Mock::new(&expectations);
-//!# let rst = pin::Mock::new(&expectations);
+//!# let cs_pin = digital::Mock::new(&expectations);
+//!# let busy_in = digital::Mock::new(&expectations);
+//!# let dc = digital::Mock::new(&expectations);
+//!# let rst = digital::Mock::new(&expectations);
 //!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
@@ -65,7 +65,7 @@ pub const HEIGHT: u32 = 212;
 pub const DEFAULT_BACKGROUND_COLOR: TriColor = TriColor::White;
 
 /// Number of bits for b/w buffer and same for chromatic buffer
-const NUM_DISPLAY_BITS: u32 = WIDTH * HEIGHT / 8;
+const NUM_DISPLAY_BITS: u32 = WIDTH / 8 * HEIGHT;
 
 const IS_BUSY_LOW: bool = true;
 const VCOM_DATA_INTERVAL: u8 = 0x07;
@@ -104,7 +104,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // Values taken from datasheet and sample code
@@ -147,7 +147,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn update_color_frame(
         &mut self,
@@ -198,7 +198,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     type DisplayColor = TriColor;
     fn new(
@@ -347,7 +347,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn command(&mut self, spi: &mut SPI, command: Command) -> Result<(), SPI::Error> {
         self.interface.cmd(spi, command)

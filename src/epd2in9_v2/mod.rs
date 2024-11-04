@@ -15,10 +15,10 @@
 //!# let expectations = [];
 //!# let mut spi = spi::Mock::new(&expectations);
 //!# let expectations = [];
-//!# let cs_pin = pin::Mock::new(&expectations);
-//!# let busy_in = pin::Mock::new(&expectations);
-//!# let dc = pin::Mock::new(&expectations);
-//!# let rst = pin::Mock::new(&expectations);
+//!# let cs_pin = digital::Mock::new(&expectations);
+//!# let busy_in = digital::Mock::new(&expectations);
+//!# let dc = digital::Mock::new(&expectations);
+//!# let rst = digital::Mock::new(&expectations);
 //!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
@@ -75,6 +75,18 @@ const LUT_PARTIAL_2IN9: [u8; 159] = [
     0x22, 0x0, 0x0, 0x0, 0x22, 0x17, 0x41, 0xB0, 0x32, 0x36,
 ];
 
+const WS_20_30: [u8; 159] = [
+    0x80, 0x66, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x0, 0x0, 0x0, 0x10, 0x66, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x80, 0x66, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x40, 0x0, 0x0, 0x0,
+    0x10, 0x66, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x14, 0x8, 0x0, 0x0, 0x0, 0x0, 0x1, 0xA, 0xA, 0x0, 0xA, 0xA, 0x0,
+    0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x14, 0x8, 0x0, 0x1, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x44, 0x44, 0x44, 0x44,
+    0x44, 0x44, 0x0, 0x0, 0x0, 0x22, 0x17, 0x41, 0x0, 0x32, 0x36,
+];
+
 use embedded_hal::{delay::*, digital::*, spi::SpiDevice};
 
 use crate::type_a::command::Command;
@@ -114,7 +126,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10_000, 2_000);
@@ -144,6 +156,18 @@ where
         self.set_ram_counter(spi, delay, 0, 0)?;
 
         self.wait_until_idle(spi, delay)?;
+
+        // set LUT by host
+        self.set_lut_helper(spi, delay, &WS_20_30[0..153])?;
+        self.interface
+            .cmd_with_data(spi, Command::WriteLutRegisterEnd, &WS_20_30[153..154])?;
+        self.interface
+            .cmd_with_data(spi, Command::GateDrivingVoltage, &WS_20_30[154..155])?;
+        self.interface
+            .cmd_with_data(spi, Command::SourceDrivingVoltage, &WS_20_30[155..158])?;
+        self.interface
+            .cmd_with_data(spi, Command::WriteVcomRegister, &WS_20_30[158..159])?;
+
         Ok(())
     }
 }
@@ -155,7 +179,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -235,7 +259,7 @@ where
         self.wait_until_idle(spi, delay)?;
         // Enable clock signal, Enable Analog, Load temperature value, DISPLAY with DISPLAY Mode 1, Disable Analog, Disable OSC
         self.interface
-            .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xF7])?;
+            .cmd_with_data(spi, Command::DisplayUpdateControl2, &[0xC7])?;
         self.interface.cmd(spi, Command::MasterActivation)?;
         self.wait_until_idle(spi, delay)?;
         Ok(())
@@ -297,7 +321,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn use_full_frame(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         // choose full frame/ram
@@ -383,7 +407,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// To be followed immediately by `update_new_frame`.
     fn update_old_frame(
@@ -393,6 +417,8 @@ where
         delay: &mut DELAY,
     ) -> Result<(), SPI::Error> {
         self.wait_until_idle(spi, delay)?;
+        self.interface
+            .cmd_with_data(spi, Command::WriteRam, buffer)?;
         self.interface
             .cmd_with_data(spi, Command::WriteRam2, buffer)
     }

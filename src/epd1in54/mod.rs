@@ -13,10 +13,10 @@
 //!# let expectations = [];
 //!# let mut spi = spi::Mock::new(&expectations);
 //!# let expectations = [];
-//!# let cs_pin = pin::Mock::new(&expectations);
-//!# let busy_in = pin::Mock::new(&expectations);
-//!# let dc = pin::Mock::new(&expectations);
-//!# let rst = pin::Mock::new(&expectations);
+//!# let cs_pin = digital::Mock::new(&expectations);
+//!# let busy_in = digital::Mock::new(&expectations);
+//!# let dc = digital::Mock::new(&expectations);
+//!# let rst = digital::Mock::new(&expectations);
 //!# let mut delay = delay::NoopDelay::new();
 //!
 //!// Setup EPD
@@ -94,7 +94,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     fn init(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
         self.interface.reset(delay, 10_000, 10_000);
@@ -149,7 +149,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     type DisplayColor = Color;
     fn width(&self) -> u32 {
@@ -300,7 +300,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     pub(crate) fn use_full_frame(
         &mut self,

@@ -24,7 +24,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// This initialises the EPD and powers it up
     ///
@@ -47,7 +47,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// Transmit data to the SRAM of the EPD
     ///
@@ -99,10 +99,10 @@ where
 ///# let expectations = [];
 ///# let mut spi = spi::Mock::new(&expectations);
 ///# let expectations = [];
-///# let cs_pin = pin::Mock::new(&expectations);
-///# let busy_in = pin::Mock::new(&expectations);
-///# let dc = pin::Mock::new(&expectations);
-///# let rst = pin::Mock::new(&expectations);
+///# let cs_pin = digital::Mock::new(&expectations);
+///# let busy_in = digital::Mock::new(&expectations);
+///# let dc = digital::Mock::new(&expectations);
+///# let rst = digital::Mock::new(&expectations);
 ///# let mut delay = delay::NoopDelay::new();
 ///
 ///// Setup EPD
@@ -148,7 +148,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// The Color Type used by the Display
     type DisplayColor;
@@ -277,10 +277,10 @@ where
 ///# let expectations = [];
 ///# let mut spi = spi::Mock::new(&expectations);
 ///# let expectations = [];
-///# let cs_pin = pin::Mock::new(&expectations);
-///# let busy_in = pin::Mock::new(&expectations);
-///# let dc = pin::Mock::new(&expectations);
-///# let rst = pin::Mock::new(&expectations);
+///# let cs_pin = digital::Mock::new(&expectations);
+///# let busy_in = digital::Mock::new(&expectations);
+///# let dc = digital::Mock::new(&expectations);
+///# let rst = digital::Mock::new(&expectations);
 ///# let mut delay = delay::NoopDelay::new();
 ///#
 ///# // Setup EPD
@@ -307,7 +307,7 @@ where
     BUSY: InputPin,
     DC: OutputPin,
     RST: OutputPin,
-    DELAY: DelayUs,
+    DELAY: DelayNs,
 {
     /// Updates the old frame.
     fn update_old_frame(

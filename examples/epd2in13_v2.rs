@@ -6,7 +6,7 @@ use embedded_graphics::{
     primitives::{Circle, Line, PrimitiveStyle},
     text::{Baseline, Text, TextStyleBuilder},
 };
-use embedded_hal::delay::DelayUs;
+use embedded_hal::delay::DelayNs;
 use epd_waveshare::{
     color::*,
     epd2in13_v2::{Display2in13, Epd2in13},
@@ -16,7 +16,7 @@ use epd_waveshare::{
 use linux_embedded_hal::{
     spidev::{self, SpidevOptions},
     sysfs_gpio::Direction,
-    Delay, SPIError, Spidev, SysfsPin,
+    Delay, SPIError, SpidevDevice, SysfsPin,
 };
 
 // The pins in this example are for the Universal e-Paper Raw Panel Driver HAT
@@ -27,7 +27,7 @@ use linux_embedded_hal::{
 fn main() -> Result<(), SPIError> {
     // Configure SPI
     // Settings are taken from
-    let mut spi = Spidev::open("/dev/spidev0.0").expect("spidev directory");
+    let mut spi = SpidevDevice::open("/dev/spidev0.0").expect("spidev directory");
     let options = SpidevOptions::new()
         .bits_per_word(8)
         .max_speed_hz(4_000_000)
