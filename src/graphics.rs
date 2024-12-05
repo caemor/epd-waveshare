@@ -192,7 +192,7 @@ pub struct VarDisplay<'a, COLOR: ColorType + PixelColor> {
 }
 
 /// For use with embedded_grahics
-impl<'a, COLOR: ColorType + PixelColor> DrawTarget for VarDisplay<'a, COLOR> {
+impl<COLOR: ColorType + PixelColor> DrawTarget for VarDisplay<'_, COLOR> {
     type Color = COLOR;
     type Error = core::convert::Infallible;
 
@@ -208,7 +208,7 @@ impl<'a, COLOR: ColorType + PixelColor> DrawTarget for VarDisplay<'a, COLOR> {
 }
 
 /// For use with embedded_grahics
-impl<'a, COLOR: ColorType + PixelColor> OriginDimensions for VarDisplay<'a, COLOR> {
+impl<COLOR: ColorType + PixelColor> OriginDimensions for VarDisplay<'_, COLOR> {
     fn size(&self) -> Size {
         match self.rotation {
             DisplayRotation::Rotate0 | DisplayRotation::Rotate180 => {
@@ -296,7 +296,7 @@ impl<'a, COLOR: ColorType + PixelColor> VarDisplay<'a, COLOR> {
 }
 
 /// Some Tricolor specifics
-impl<'a> VarDisplay<'a, TriColor> {
+impl VarDisplay<'_, TriColor> {
     /// get black/white internal buffer to use it (to draw in epd)
     pub fn bw_buffer(&self) -> &[u8] {
         &self.buffer[..self.buffer_size() / 2]

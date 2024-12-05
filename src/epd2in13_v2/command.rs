@@ -89,7 +89,6 @@ impl DriverOutput {
 ///  | | `------------- load temp
 ///  | `--------------- enable clock
 ///  `----------------- enable analog
-
 pub(crate) struct DisplayUpdateControl2(pub u8);
 #[allow(dead_code)]
 impl DisplayUpdateControl2 {
