@@ -111,10 +111,10 @@ pub(crate) enum Command {
     /// This command defines alternative resolution and this setting is of higher priority
     /// than the RES\[1:0\] in R00H (PSR).
     TconResolution = 0x61,
-    /// This command defines MCU host direct access external memory mode.
+    // /// This command defines MCU host direct access external memory mode.
     //SpiFlashControl = 0x65,
 
-    /// The LUT_REV / Chip Revision is read from OTP address = 25001 and 25000.
+    // /// The LUT_REV / Chip Revision is read from OTP address = 25001 and 25000.
     //Revision = 0x70,
     /// This command reads the IC status.
     GetStatus = 0x71,

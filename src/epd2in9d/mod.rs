@@ -291,10 +291,10 @@ where
     RST: OutputPin,
     DELAY: DelayNs,
 {
-    /// Wake Up Screen
-    ///
-    /// After the screen sleeps, it enters deep sleep mode. If you need to refresh the screen while in deep sleep mode, you must first execute awaken().
-    /// Wake the screen.
+    // /// Wake Up Screen
+    // ///
+    // /// After the screen sleeps, it enters deep sleep mode. If you need to refresh the screen while in deep sleep mode, you must first execute awaken().
+    // /// Wake the screen.
     // fn awaken(&mut self, spi: &mut SPI, delay: &mut DELAY) -> Result<(), SPI::Error> {
     //     // reset the device
     //     self.interface.reset(delay, 20_000, 2_000);
