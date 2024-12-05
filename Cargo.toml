@@ -16,6 +16,7 @@ rust-version = "1.62"
 [dependencies]
 embedded-graphics-core = { version = "0.4", optional = true }
 embedded-hal = "1.0.0"
+embedded-hal-async = "1.0.0"
 bit_field = "0.10.1"
 
 [dev-dependencies]

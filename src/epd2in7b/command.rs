@@ -20,7 +20,7 @@ pub(crate) enum Command {
     /// Starting data transmission
     ///
     /// ```ignore
-    /// self.send_data(&[0x07, 0x07, 0x17])?;
+    /// self.send_data(&[0x07, 0x07, 0x17]).await?;
     /// ```
     BoosterSoftStart = 0x06,
     /// After this command is transmitted, the chip would enter the deep-sleep mode to save power.
