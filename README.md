@@ -11,7 +11,7 @@ Display ones).
 
 It uses the [embedded graphics](https://crates.io/crates/embedded-graphics) library for the optional graphics support.
 
-A 2018-edition compatible version (Rust 1.31+) is needed.
+A 2021-edition compatible version (Rust 1.62+) is needed.
 
 Other similar libraries with support for much more displays are [u8g2](https://github.com/olikraus/u8g2)
 and [GxEPD](https://github.com/ZinggJM/GxEPD) for arduino.
@@ -46,6 +46,7 @@ epd4in2.update_and_display_frame(&mut spi, display.buffer(), &mut delay).expect(
 // Going to sleep
 epd4in2.sleep(&mut spi, &mut delay)
 ```
+
 > Check the complete example [here](./examples/epd4in2.rs).
 
 ## (Supported) Devices
