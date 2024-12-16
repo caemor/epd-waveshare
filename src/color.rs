@@ -25,31 +25,34 @@ impl OutOfColorRangeParseError {
 
 /// Only for the Black/White-Displays
 // TODO : 'color' is not a good name for black and white, rename it to BiColor/BWColor ?
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub enum Color {
     /// Black color
     Black,
     /// White color
+    #[default]
     White,
 }
 
 /// Only for the Black/White/Color-Displays
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub enum TriColor {
     /// Black color
     Black,
     /// White color
+    #[default]
     White,
     /// Chromatic color
     Chromatic,
 }
 
 /// For the 7 Color Displays
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub enum OctColor {
     /// Black Color
     Black = 0x00,
     /// White Color
+    #[default]
     White = 0x01,
     /// Green Color
     Green = 0x02,
